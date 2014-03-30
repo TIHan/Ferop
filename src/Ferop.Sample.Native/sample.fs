@@ -6,11 +6,11 @@ open System.Runtime.InteropServices
 #nowarn "9"
 
 [<Ferop>]
-[<CFlagsOsx ("-DGL_GLEXT_PROTOTYPES")>]
-[<CLibsOsx ("-framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
-[<CInclude ("<stdio.h>")>]
-[<CInclude ("<SDL2/SDL.h>")>]
-[<CInclude ("<SDL2/SDL_opengl.h>")>]
+[<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES")>]
+[<ClangLibsOsx ("-framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
+[<Include ("<stdio.h>")>]
+[<Include ("<SDL2/SDL.h>")>]
+[<Include ("<SDL2/SDL_opengl.h>")>]
 module App =
     let test (x: int) : int = C """ return x; """
 (*

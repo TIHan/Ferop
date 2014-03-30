@@ -171,7 +171,7 @@ module Osx =
     let flags (moduleType: Type) =
         let attrs =
             moduleType.CustomAttributes
-            |> Seq.filter (fun x -> x.AttributeType = typeof<CFlagsOsxAttribute>)
+            |> Seq.filter (fun x -> x.AttributeType = typeof<ClangFlagsOsxAttribute>)
         let attr = Seq.exactlyOne attrs
         let args = Seq.exactlyOne attr.ConstructorArguments
         args.Value :?> string
@@ -179,7 +179,7 @@ module Osx =
     let libs (moduleType: Type) =
         let attrs =
             moduleType.CustomAttributes
-            |> Seq.filter (fun x -> x.AttributeType = typeof<CLibsOsxAttribute>)
+            |> Seq.filter (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
         let attr = Seq.exactlyOne attrs
         let args = Seq.exactlyOne attr.ConstructorArguments
         args.Value :?> string
@@ -187,7 +187,7 @@ module Osx =
     let includes (moduleType: Type) =
         let attrs =
             moduleType.CustomAttributes
-            |> Seq.filter (fun x -> x.AttributeType = typeof<CIncludeAttribute>)
+            |> Seq.filter (fun x -> x.AttributeType = typeof<IncludeAttribute>)
         attrs
         |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
         |> Seq.map (fun x -> "#include " + (x.Value :?> string))
