@@ -9,12 +9,12 @@ open Ferop.Internal
 
 [<RequireQualifiedAccess>]
 module Ferop =
-    let compileDynamic name outputDir asm =
+    let compileDynamic name outputPath dllPath asm =
         let dllName = Path.GetFileName (Path.ChangeExtension (name, ".dll"))
-        processAssembly outputDir dllName asm
+        processAssembly dllName outputPath dllPath asm
     
-    let compile name outputDir asm =
-        let asm = compileDynamic name outputDir asm
+    let compile name outputPath dllPath asm =
+        let asm = compileDynamic name outputPath dllPath asm
         let asmName = asm.GetName ()
         asm.Save (asmName.Name)
-        Path.Combine (outputDir, asmName.Name)
+        Path.Combine (dllPath, asmName.Name)

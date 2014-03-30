@@ -10,11 +10,11 @@ open Ferop.Core
 open Ferop.Code
 open Ferop.Helpers
 
-let createDynamicAssembly (path: string) dllName =
-    AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, path)
+let createDynamicAssembly (dllPath: string) dllName =
+    AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
     
-let processAssembly (path: string) dllName (asm: Assembly) =
-    let dasm = createDynamicAssembly path dllName
+let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembly) =
+    let dasm = createDynamicAssembly dllPath dllName
     let mb = dasm.DefineDynamicModule dllName
 
     Assembly.modules asm
@@ -23,7 +23,7 @@ let processAssembly (path: string) dllName (asm: Assembly) =
         |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
     |> List.map (fun x ->
         let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-        Ferop.C.compileModule path tb x)
+        Ferop.C.compileModule outputPath tb x)
     |> ignore
 
     dasm

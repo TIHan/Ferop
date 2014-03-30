@@ -86,11 +86,12 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         let refName = args.[0] :?> string
         let relativeDir = args.[1] :?> string
 
-        let file = "sample"
-        let outputDir = Path.Combine (cfg.ResolutionFolder, relativeDir)
+        let name = Path.GetTempFileName ()
+        let outputPath = Path.Combine (cfg.ResolutionFolder, relativeDir)
+        let dllPath = Path.GetTempPath ()
         let refAsm = this.FindAssembly refName
 
-        let dasmLocation = Ferop.Compiler.Ferop.compile file outputDir refAsm
+        let dasmLocation = Ferop.Compiler.Ferop.compile name outputPath dllPath refAsm
         let dasm = Assembly.LoadFrom (dasmLocation)
 
         let def = ProvidedTypeDefinition (asm, ns, typeName, Some typeof<obj>, IsErased = false) 
