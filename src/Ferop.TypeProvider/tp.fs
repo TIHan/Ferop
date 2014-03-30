@@ -61,20 +61,19 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         ProvidedStaticParameter ("relativeDir", typeof<string>)]
 
     do
-        // THIS IS NECESSARY
-        AppDomain.CurrentDomain.add_AssemblyResolve (fun _ args ->
-            let name = System.Reflection.AssemblyName(args.Name)
-            let existingAssembly = 
-                System.AppDomain.CurrentDomain.GetAssemblies()
-                |> Seq.tryFind(fun a -> System.Reflection.AssemblyName.ReferenceMatchesDefinition(name, a.GetName()))
-            match existingAssembly with
-            | Some a -> a
-            | None -> null)
-
         let def = ProvidedTypeDefinition (asm, ns, pn, Some typeof<obj>, IsErased = false) 
         tempAsm.AddTypes [def]
         def.DefineStaticParameters (parameters, this.GenerateTypes)
         this.AddNamespace(ns, [def])
+
+    override this.ResolveAssembly args =
+        let name = System.Reflection.AssemblyName (args.Name)
+        let existingAssembly = 
+            System.AppDomain.CurrentDomain.GetAssemblies ()
+            |> Seq.tryFind (fun a -> System.Reflection.AssemblyName.ReferenceMatchesDefinition (name, a.GetName ()))
+        match existingAssembly with
+        | Some a -> a
+        | None -> null       
 
     /// FindAssembly
     member internal this.FindAssembly fileName =
