@@ -37,6 +37,9 @@ type IOBuilder () =
 
     member inline this.ReturnFrom (IO x : IO<'a>) : IO<'a> =
         IO (fun _ -> x ())
+
+    member inline this.Zero () : IO<unit> =
+        IO (fun _ -> ())
  
 let io = IOBuilder ()
 
@@ -87,6 +90,15 @@ let defaultCode =
 #   error Compiler not supported.
 #endif
 "
+
+let includes (moduleType: Type) =
+    let attrs =
+        moduleType.CustomAttributes
+        |> Seq.filter (fun x -> x.AttributeType = typeof<IncludeAttribute>)
+    attrs
+    |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
+    |> Seq.map (fun x -> "#include " + (x.Value :?> string))
+    |> Seq.reduce (fun x y -> x + "\n" + y)
 
 let rec findCall call = function
     | SpecificCall <@ C @> (_, _, exprList) -> (<@@ C @@>, exprList.[0])
@@ -184,24 +196,11 @@ module Osx =
         let args = Seq.exactlyOne attr.ConstructorArguments
         args.Value :?> string
 
-    let includes (moduleType: Type) =
-        let attrs =
-            moduleType.CustomAttributes
-            |> Seq.filter (fun x -> x.AttributeType = typeof<IncludeAttribute>)
-        attrs
-        |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
-        |> Seq.map (fun x -> "#include " + (x.Value :?> string))
-        |> Seq.reduce (fun x y -> x + "\n" + y)
-
-
     let checkProcessError (p: Process) =
         if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
-    let gccCompileC flags cFile oFile code : IO<string> = io {
-        File.WriteAllText (cFile, code)
-
-        let args = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
-        let pinfo = ProcessStartInfo ("gcc", args)
+    let startClang args = io {
+        let pinfo = ProcessStartInfo ("clang", args)
 
         pinfo.UseShellExecute <- false
         pinfo.RedirectStandardError <- true
@@ -209,7 +208,24 @@ module Osx =
         let p = Process.Start (pinfo)
         p.WaitForExit ()
 
-        checkProcessError p
+        checkProcessError p }
+
+    let startAr args = io {
+        let pinfo = ProcessStartInfo ("ar", args)
+
+        pinfo.UseShellExecute <- false
+        pinfo.RedirectStandardError <- true
+
+        let p = Process.Start (pinfo)
+        p.WaitForExit ()
+
+        checkProcessError p }
+
+    let compileC flags cFile oFile code : IO<string> = io {
+        File.WriteAllText (cFile, code)
+
+        let args = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+        do! startClang args
 
         File.Delete (cFile)
         return oFile }
@@ -231,24 +247,15 @@ module Osx =
 
         let! pinvokeMeth = definePInvokeMethod meth.Name dllName name returnType parameters tb
 
-        return! gccCompileC flags cFile oFile code }
+        return! compileC flags cFile oFile code }
 
-    let arCompileToStaticLibrary () =
-        //let p = Process.Start ("ar", sprintf "rcs %s %s" fileNameA ofiles)
-        //p.WaitForExit ()
-        ()
+    let compileToStaticLibrary aFile oFiles = io {
+        let args = sprintf "rcs %s %s" aFile oFiles
+        do! startAr args }
 
-    let gccCompileToDynamicLibrary libs oFiles dylibName = io {
+    let compileToDynamicLibrary libs oFiles dylibName = io {
         let args = sprintf "-arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 %s %s -o %s " libs oFiles dylibName
-        let pinfo = ProcessStartInfo ("gcc", args)
-
-        pinfo.UseShellExecute <- false
-        pinfo.RedirectStandardError <- true
-
-        let p = Process.Start (pinfo)
-        p.WaitForExit () 
-
-        return checkProcessError p }
+        do! startClang args }
 
     let compileFunctions path tb moduleType = io {
         let! functions = Type.moduleFunctions moduleType |> List.map (compileFunction path tb)
@@ -266,7 +273,7 @@ module Osx =
         let libs = libs moduleType
         io {
             let! oFiles = compileFunctions path tb moduleType
-            do! gccCompileToDynamicLibrary libs oFiles dylibName
+            do! compileToDynamicLibrary libs oFiles dylibName
             return! cleanObjectFiles path }
         |> IO.run
 
