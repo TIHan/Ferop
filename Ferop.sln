@@ -1,11 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Sample", "src\Ferop.Sample\Ferop.Sample.fsproj", "{24CEAB4B-C244-49D6-9DA6-958795993A67}"
-EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop", "src\Ferop\Ferop.fsproj", "{90A45EB2-1122-4BFF-A921-04D926400AC0}"
 EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.TypeProvider", "src\Ferop.TypeProvider\Ferop.TypeProvider.fsproj", "{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7249F228-579F-4214-A2FC-AFF15C482CE5}"
+EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Tests", "src\Ferop.Tests\Ferop.Tests.fsproj", "{6AFEE669-397C-4339-8146-1FDC54D1FA6E}"
+EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Tests.Native", "src\Ferop.Tests.Native\Ferop.Tests.Native.fsproj", "{6678562D-A620-48F4-A3E3-06FAE7FB50B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{0B09760F-3566-4AA2-82FA-4BF2214DB4F2}"
+EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Sample", "src\Ferop.Sample\Ferop.Sample.fsproj", "{24CEAB4B-C244-49D6-9DA6-958795993A67}"
 EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Sample.Native", "src\Ferop.Sample.Native\Ferop.Sample.Native.fsproj", "{2858E0A3-A638-45DA-9174-C98F0A422993}"
 EndProject
@@ -27,10 +35,24 @@ Global
 		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Debug|x86.Build.0 = Debug|Any CPU
 		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Release|x86.ActiveCfg = Release|Any CPU
 		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Release|x86.Build.0 = Release|Any CPU
+		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Debug|x86.Build.0 = Debug|Any CPU
+		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|x86.ActiveCfg = Release|Any CPU
+		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|x86.Build.0 = Release|Any CPU
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x86.Build.0 = Debug|Any CPU
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x86.ActiveCfg = Release|Any CPU
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x86.Build.0 = Release|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Debug|x86.Build.0 = Debug|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.ActiveCfg = Release|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
+		{6678562D-A620-48F4-A3E3-06FAE7FB50B1} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
+		{24CEAB4B-C244-49D6-9DA6-958795993A67} = {0B09760F-3566-4AA2-82FA-4BF2214DB4F2}
+		{2858E0A3-A638-45DA-9174-C98F0A422993} = {0B09760F-3566-4AA2-82FA-4BF2214DB4F2}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = src\Ferop.Sample\Ferop.Sample.fsproj
