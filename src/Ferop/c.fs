@@ -100,11 +100,6 @@ let includes (moduleType: Type) =
     |> Seq.map (fun x -> "#include " + (x.Value :?> string))
     |> Seq.reduce (fun x y -> x + "\n" + y)
 
-let rec findCall call = function
-    | SpecificCall <@ C @> (_, _, exprList) -> (<@@ C @@>, exprList.[0])
-    | SpecificCall <@ CExtern @> (_, _, exprList) -> (<@@ CExtern @@>, exprList.[0])
-    | x -> failwith "Invalid interop."
-
 let rec findBody = function
     | Value (value, _) ->
         value.ToString ()
