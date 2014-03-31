@@ -72,15 +72,12 @@ let compileFunction outputPath modul func definePInvoke = io {
 
     let codeSpec = makeCodeSpec (modul.Includes) func
 
-    let name = codeSpec.FunctionName
-    let returnType = codeSpec.ReturnType
-    let parameters = codeSpec.Parameters
     let cFile = makeCFilePath outputPath codeSpec
     let oFile = makeOFilePath outputPath codeSpec
 
     let code = generateCode codeSpec
 
-    do! definePInvoke name dllName name returnType parameters
+    do! definePInvoke dllName codeSpec
 
     return! compileC flags cFile oFile code }
 

@@ -9,6 +9,7 @@ open Microsoft.FSharp.Reflection
 open Ferop.Core
 open Ferop.Code
 open Ferop.Helpers
+open Ferop.CodeSpec
 
 let compileModule path tb moduleType =
     Osx.compileModule path tb moduleType
@@ -27,7 +28,7 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
     |> List.map (fun x ->
         let modul = makeModule x
         let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-        let definePInvoke = definePInvokeMethod tb
+        let definePInvoke = definePInvokeOfCodeSpec tb
         compileModule outputPath modul definePInvoke
         tb.CreateType ())
     |> ignore

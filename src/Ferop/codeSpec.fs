@@ -101,3 +101,5 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
             (generateParameters codeSpec.Parameters)
             codeSpec.Body
 
+let definePInvokeOfCodeSpec tb dllName codeSpec =
+    definePInvokeMethod tb dllName codeSpec.FunctionName codeSpec.FunctionName codeSpec.ReturnType codeSpec.Parameters

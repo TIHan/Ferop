@@ -126,7 +126,7 @@ let makeModule (typ: Type) =
 
     { Name = name; Functions = funcs; Attributes = attrs }
 
-let definePInvokeMethod (tb: TypeBuilder) name dllName entryName returnType parameters = io {
+let definePInvokeMethod (tb: TypeBuilder) dllName name entryName returnType parameters = io {
     let meth = 
         tb.DefinePInvokeMethod (
             name,
