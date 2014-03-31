@@ -55,18 +55,20 @@ let compileC flags cFile oFile code = io {
     File.Delete (cFile)
     return oFile }
 
-let makeCodeSpec includes = function
-    | Inline { Name = name; ReturnType = returnType; Parameters = parameters; Code = code } ->
-        {
-        Includes = includes
-        FunctionName = name
-        ReturnType = returnType
-        Parameters = parameters
-        Body = code }
-    | Extern _ ->
-        failwith "not supported"
+/// Compiles a dummy c file that contains nothing. This ensures we at least get a dylib.
+let compileDummyC flags = io {
+    let cFile = "_ferop_dummy_.c"
+    let oFile = "_ferop_dummy_.o"
 
-let compileFunction outputPath modul func definePInvoke = io {
+    File.WriteAllText ("_ferop_dummy_.c", "")
+
+    let args = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+    do! startClang args
+
+    File.Delete (cFile)
+    return oFile }
+
+let compileInlineFunction outputPath modul func definePInvoke = io {
     let dllName = makeDllName modul
     let flags = modul.ClangFlagsOsx
 
@@ -81,6 +83,15 @@ let compileFunction outputPath modul func definePInvoke = io {
 
     return! compileC flags cFile oFile code }
 
+let compileExternFunction modul func definePInvoke = io {
+    let dllName = makeDllName modul
+    let flags = modul.ClangFlagsOsx
+
+    let codeSpec = makeCodeSpec (modul.Includes) func
+
+    do! definePInvoke dllName codeSpec
+    return "" }
+
 let compileToStaticLibrary aFile oFiles = io {
     let args = sprintf "rcs %s %s" aFile oFiles
     do! startAr args }
@@ -90,8 +101,13 @@ let compileToDynamicLibrary libs oFiles dylibName = io {
     do! startClang args }
 
 let compileFunctions path modul definePInvoke = io {
-    let! functions = modul.Functions |> List.map (fun x -> compileFunction path modul x definePInvoke)
-    return List.reduce (fun x y -> sprintf "%s %s" x y) functions }
+    let! functions = modul.Functions |> List.map (function
+        | Inline x as func ->
+            compileInlineFunction path modul func definePInvoke
+        | Extern x as func ->
+            compileExternFunction modul func definePInvoke)
+    let! dummy = compileDummyC modul.ClangFlagsOsx
+    return List.reduce (fun x y -> sprintf "%s %s" x y) (dummy :: functions) }
 
 let cleanObjectFiles outputPath = io {
     return

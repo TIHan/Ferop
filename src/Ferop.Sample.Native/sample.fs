@@ -12,8 +12,8 @@ open System.Runtime.InteropServices
 [<Include ("<SDL2/SDL.h>")>]
 [<Include ("<SDL2/SDL_opengl.h>")>]
 module App =
-    let test (x: int) : int = C """ return x + 1; """
-    let test2 (x: int) : int = C """ return x; """
+    let test (x: int) : int = C """ return x; """
+    let test2 (x: int) : int = C """ return x + x; """
 (*
     let init (window: SDL_Window) (gl_context: SDL_GLContext) : unit =
         C """

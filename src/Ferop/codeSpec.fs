@@ -14,6 +14,22 @@ type CodeSpec =
     Parameters: Parameter list
     Body: string }
 
+let makeCodeSpec includes = function
+    | Inline { Name = name; ReturnType = returnType; Parameters = parameters; Code = code } ->
+        {
+        Includes = includes
+        FunctionName = name
+        ReturnType = returnType
+        Parameters = parameters
+        Body = code }
+    | Extern { Name = name; ReturnType = returnType; Parameters = parameters } ->
+        {
+        Includes = includes
+        FunctionName = name
+        ReturnType = returnType
+        Parameters = parameters
+        Body = "" }
+
 let stdTypes =
     [
     (typeof<byte>,      "uint8_t")

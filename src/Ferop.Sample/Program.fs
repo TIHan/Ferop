@@ -11,5 +11,5 @@ type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Debug">
 
 [<EntryPoint>]
 let main args =
-    printfn "%A" (Native.App.test (1337))
+    printfn "%A" (Native.App.test2 (1337))
     0
