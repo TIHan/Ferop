@@ -42,8 +42,10 @@
   <ItemGroup>
     <Compile Include="ferop.fs" />
     <Compile Include="helpers.fs" />
+    <Compile Include="io.fs" />
     <Compile Include="core.fs" />
-    <Compile Include="c.fs" />
+    <Compile Include="codeSpec.fs" />
+    <Compile Include="osx.fs" />
     <Compile Include="internalFerop.fs" />
     <Compile Include="compiler.fs" />
   </ItemGroup>

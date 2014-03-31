@@ -2,6 +2,8 @@
 
 open System
 open System.Reflection
+open System.Reflection.Emit
+open System.Runtime.InteropServices
 
 open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Core.CompilerServices
@@ -14,17 +16,19 @@ open Microsoft.FSharp.Quotations.ExprShape
 open Ferop.Helpers
 open Ferop.Code
 
-type Parameter = Parameter of string * System.Type
+open FSharp.Control.IO
 
-type FunctionInline =
-    {
+type Parameter = {
+    Name: string
+    Type: Type }
+
+type FunctionInline = {
     Name: string
     ReturnType: Type
     Parameters: Parameter list
     Code: string }
 
-type FunctionExtern =
-    {
+type FunctionExtern = {
     Name: string
     ReturnType: Type
     Parameters: Parameter list }
@@ -33,11 +37,40 @@ type Function =
     | Inline of FunctionInline
     | Extern of FunctionExtern
 
-type Module =
-    {
+type Module = {
     Name: string
     Functions: Function list
-    Attributes: CustomAttributeData list }
+    Attributes: CustomAttributeData list } with
+
+    member this.IncludeAttributes =
+        this.Attributes
+        |> Seq.filter (fun x -> x.AttributeType = typeof<IncludeAttribute>)
+
+    member this.ClangFlagsOsxAttribute =
+        this.Attributes
+        |> Seq.filter (fun x -> x.AttributeType = typeof<ClangFlagsOsxAttribute>)
+        |> Seq.exactlyOne
+
+    member this.ClangLibsOsxAttribute =
+        this.Attributes
+        |> Seq.filter (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
+        |> Seq.exactlyOne
+
+    member this.Includes =
+        this.IncludeAttributes
+        |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
+        |> Seq.map (fun x -> "#include " + (x.Value :?> string))
+        |> Seq.reduce (fun x y -> x + "\n" + y)
+
+    member this.ClangFlagsOsx =
+        let attr = this.ClangFlagsOsxAttribute
+        let args = Seq.exactlyOne attr.ConstructorArguments
+        args.Value :?> string
+
+    member this.ClangLibsOsx =
+        let attr = this.ClangLibsOsxAttribute
+        let args = Seq.exactlyOne attr.ConstructorArguments
+        args.Value :?> string
 
 let methodExpr meth =
     match Expr.TryGetReflectedDefinition meth with
@@ -45,7 +78,7 @@ let methodExpr meth =
     | Some expr -> expr
 
 let makeParameter (param: ParameterInfo) =
-    Parameter (param.Name, param.ParameterType)
+    { Name = param.Name; Type = param.ParameterType }
 
 let findParameters (meth: MethodInfo) =
     meth.GetParameters ()
@@ -87,8 +120,24 @@ let findAttributes (typ: Type) =
     |> List.ofSeq
 
 let makeModule (typ: Type) =
-    let name = typ.Name
+    let name = typ.FullName
     let funcs = findFunctions typ
     let attrs = findAttributes typ 
 
     { Name = name; Functions = funcs; Attributes = attrs }
+
+let definePInvokeMethod name dllName entryName returnType (parameters: Parameter list) (tb: TypeBuilder) = io {
+    let meth = 
+        tb.DefinePInvokeMethod (
+            name,
+            dllName,
+            entryName,
+            MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
+            CallingConventions.Standard,
+            returnType,
+            parameters |> List.map (fun x -> x.Type) |> Array.ofList,
+            CallingConvention.Cdecl,
+            CharSet.Ansi)
+
+    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+    return meth }
