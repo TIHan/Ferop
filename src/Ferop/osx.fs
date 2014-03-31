@@ -4,9 +4,6 @@ module internal Ferop.Osx
 open System
 open System.IO
 open System.Diagnostics
-open System.Reflection
-open System.Reflection.Emit
-open System.Runtime.InteropServices
 
 open Ferop.Code
 open Ferop.Core
@@ -17,13 +14,13 @@ open FSharp.Control.IO
 
 let makeDllName modul = sprintf "lib%s.dylib" modul.Name
 
-let makeCFilePath path name = Path.Combine (path, sprintf "%s.c" name)
+let makeCFilePath path codeSpec = Path.Combine (path, sprintf "%s.c" codeSpec.FunctionName)
 
-let makeOFilePath path name = Path.Combine (path, sprintf "%s.o" name)
+let makeOFilePath path codeSpec = Path.Combine (path, sprintf "%s.o" codeSpec.FunctionName)
 
-let makeStaticLibraryPath path name = Path.Combine (path, sprintf "lib%s.a" name)
+let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
 
-let makeDynamicLibraryPath path name = Path.Combine (path, sprintf "lib%s.dylib" name)
+let makeDynamicLibraryPath path modul = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
 
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
@@ -49,7 +46,7 @@ let startAr args = io {
 
     checkProcessError p }
 
-let compileC flags cFile oFile code : IO<string> = io {
+let compileC flags cFile oFile code = io {
     File.WriteAllText (cFile, code)
 
     let args = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
@@ -69,21 +66,21 @@ let makeCodeSpec includes = function
     | Extern _ ->
         failwith "not supported"
 
-let compileFunction (path: string) (tb: TypeBuilder) (modul: Module) (func: Function) = io {
+let compileFunction outputPath modul func definePInvoke = io {
+    let dllName = makeDllName modul
+    let flags = modul.ClangFlagsOsx
+
     let codeSpec = makeCodeSpec (modul.Includes) func
 
     let name = codeSpec.FunctionName
     let returnType = codeSpec.ReturnType
     let parameters = codeSpec.Parameters
-    let cFile = makeCFilePath path name
-    let oFile = makeOFilePath path name
-
-    let flags = modul.ClangFlagsOsx
-    let dllName = makeDllName modul
+    let cFile = makeCFilePath outputPath codeSpec
+    let oFile = makeOFilePath outputPath codeSpec
 
     let code = generateCode codeSpec
 
-    let! pinvokeMeth = definePInvokeMethod name dllName name returnType parameters tb
+    do! definePInvoke name dllName name returnType parameters
 
     return! compileC flags cFile oFile code }
 
@@ -95,23 +92,21 @@ let compileToDynamicLibrary libs oFiles dylibName = io {
     let args = sprintf "-arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 %s %s -o %s " libs oFiles dylibName
     do! startClang args }
 
-let compileFunctions path tb modul = io {
-    let! functions = modul.Functions |> List.map (compileFunction path tb modul)
+let compileFunctions path modul definePInvoke = io {
+    let! functions = modul.Functions |> List.map (fun x -> compileFunction path modul x definePInvoke)
     return List.reduce (fun x y -> sprintf "%s %s" x y) functions }
 
-let cleanObjectFiles path = io {
+let cleanObjectFiles outputPath = io {
     return
-        Directory.GetFiles (path, "*.o")
+        Directory.GetFiles (outputPath, "*.o")
         |> Array.iter (fun x -> File.Delete x) }
 
-let compileModule (path: string) (tb: TypeBuilder) (modul: Module) =
-    let dylibName = makeDynamicLibraryPath path modul.Name
-
+let compileModule outputPath modul definePInvoke =
+    let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
-    io {
-        let! oFiles = compileFunctions path tb modul
-        do! compileToDynamicLibrary libs oFiles dylibName
-        return! cleanObjectFiles path }
-    |> IO.run
 
-    tb.CreateType ()
+    io {
+        let! oFiles = compileFunctions outputPath modul definePInvoke
+        do! compileToDynamicLibrary libs oFiles dylibName
+        return! cleanObjectFiles outputPath }
+    |> IO.run

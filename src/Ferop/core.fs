@@ -126,7 +126,7 @@ let makeModule (typ: Type) =
 
     { Name = name; Functions = funcs; Attributes = attrs }
 
-let definePInvokeMethod name dllName entryName returnType (parameters: Parameter list) (tb: TypeBuilder) = io {
+let definePInvokeMethod (tb: TypeBuilder) name dllName entryName returnType parameters = io {
     let meth = 
         tb.DefinePInvokeMethod (
             name,
@@ -139,5 +139,4 @@ let definePInvokeMethod name dllName entryName returnType (parameters: Parameter
             CallingConvention.Cdecl,
             CharSet.Ansi)
 
-    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-    return meth }
+    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig) }

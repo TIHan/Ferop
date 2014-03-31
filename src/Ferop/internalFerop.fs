@@ -27,7 +27,9 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
     |> List.map (fun x ->
         let modul = makeModule x
         let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-        compileModule outputPath tb modul)
+        let definePInvoke = definePInvokeMethod tb
+        compileModule outputPath modul definePInvoke
+        tb.CreateType ())
     |> ignore
 
     dasm
