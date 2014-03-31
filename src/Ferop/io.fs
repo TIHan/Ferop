@@ -6,6 +6,9 @@ type IOBuilder () =
     member this.Bind (IO x : IO<'a>, f: 'a -> IO<'b>) : IO<'b> = 
         f (x ())
 
+    member this.Bind (x: IO<'a> [], f: 'a [] -> IO<'b>) : IO<'b> =
+        f (x |> Array.map (fun (IO x) -> x ()))
+
     member this.Bind (x: IO<'a> list, f: 'a list -> IO<'b>) : IO<'b> =
         f (x |> List.map (fun (IO x) -> x ()))
 
