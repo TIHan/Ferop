@@ -86,6 +86,18 @@ let defaultCode =
 #endif
 "
 
+let codeSpecf =
+    sprintf """
+%s
+%s
+
+FEROP_EXPORT %s FEROP_DECL %s (%s)
+{
+    %s
+}
+"""
+            defaultCode
+
 let findReturnType typ =
     match
         returnTypes
@@ -113,16 +125,7 @@ let generateParameters = function
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)
 
 let generateCode codeSpec =
-        sprintf """
-%s
-%s
-
-FEROP_EXPORT %s FEROP_DECL %s (%s)
-{
-    %s
-}
-"""
-            defaultCode
+    codeSpecf
             codeSpec.Includes
             (findReturnType codeSpec.ReturnType)
             codeSpec.FunctionName
