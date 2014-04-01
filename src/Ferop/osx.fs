@@ -18,14 +18,34 @@ let makeCFilePath path codeSpec = Path.Combine (path, sprintf "%s.c" codeSpec.Fu
 
 let makeOFilePath path codeSpec = Path.Combine (path, sprintf "%s.o" codeSpec.FunctionName)
 
+let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
+
+let makeDummyOFilePath path = Path.Combine (path, "_ferop_dummy_.o")
+
 let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
 
 let makeDynamicLibraryPath path modul = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
 
+let makeArgs flags cFile oFile = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+
+let makeStaticArgs aFile oFiles = sprintf "rcs %s %s" aFile oFiles
+
+let makeDynamicArgs libs oFiles dylibName = sprintf "-arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 %s %s -o %s " libs oFiles dylibName
+
+let makeClangStartInfo args = ProcessStartInfo ("clang", args)
+
+let makeArStartInfo args = ProcessStartInfo ("ar", args)
+
+let flattenObjectFiles = List.reduce (fun x y -> sprintf "%s %s" x y)
+
+let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
+
+let dummyC = ""
+
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
 let startClang args = io {
-    let pinfo = ProcessStartInfo ("clang", args)
+    let pinfo = makeClangStartInfo args
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
@@ -36,7 +56,7 @@ let startClang args = io {
     checkProcessError p }
 
 let startAr args = io {
-    let pinfo = ProcessStartInfo ("ar", args)
+    let pinfo = makeArStartInfo args
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
@@ -49,30 +69,32 @@ let startAr args = io {
 let compileC flags cFile oFile code = io {
     File.WriteAllText (cFile, code)
 
-    let args = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+    let args = makeArgs flags cFile oFile
     do! startClang args
 
     File.Delete (cFile)
     return oFile }
 
 /// Compiles a dummy c file that contains nothing. This ensures we at least get a dylib.
-let compileDummyC flags = io {
-    let cFile = "_ferop_dummy_.c"
-    let oFile = "_ferop_dummy_.o"
+let compileDummyC outputPath flags = io {
+    let cFile = makeDummyCFilePath outputPath
+    let oFile = makeDummyOFilePath outputPath
 
-    File.WriteAllText ("_ferop_dummy_.c", "")
+    File.WriteAllText (cFile, dummyC)
 
-    let args = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+    let args = makeArgs flags cFile oFile
     do! startClang args
 
     File.Delete (cFile)
     return oFile }
 
-let compileInlineFunction outputPath modul func definePInvoke = io {
-    let dllName = makeDllName modul
-    let flags = modul.ClangFlagsOsx
+let compilationFunctionData modul func =
+    makeDllName modul,
+    modul.ClangFlagsOsx,
+    makeCodeSpec modul.Includes func
 
-    let codeSpec = makeCodeSpec (modul.Includes) func
+let compileInlineFunction outputPath modul func definePInvoke = io {
+    let dllName, flags, codeSpec = compilationFunctionData modul func
 
     let cFile = makeCFilePath outputPath codeSpec
     let oFile = makeOFilePath outputPath codeSpec
@@ -84,35 +106,32 @@ let compileInlineFunction outputPath modul func definePInvoke = io {
     return! compileC flags cFile oFile code }
 
 let compileExternFunction modul func definePInvoke = io {
-    let dllName = makeDllName modul
-    let flags = modul.ClangFlagsOsx
-
-    let codeSpec = makeCodeSpec (modul.Includes) func
+    let dllName, flags, codeSpec = compilationFunctionData modul func
 
     do! definePInvoke dllName codeSpec
-    return "" }
+    return dummyC }
 
 let compileToStaticLibrary aFile oFiles = io {
-    let args = sprintf "rcs %s %s" aFile oFiles
+    let args = makeStaticArgs aFile oFiles
     do! startAr args }
 
 let compileToDynamicLibrary libs oFiles dylibName = io {
-    let args = sprintf "-arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 %s %s -o %s " libs oFiles dylibName
+    let args = makeDynamicArgs libs oFiles dylibName
     do! startClang args }
 
-let compileFunctions path modul definePInvoke = io {
+let compileFunctions outputPath modul definePInvoke = io {
     let! functions = modul.Functions |> List.map (function
         | Inline x as func ->
-            compileInlineFunction path modul func definePInvoke
+            compileInlineFunction outputPath modul func definePInvoke
         | Extern x as func ->
             compileExternFunction modul func definePInvoke)
-    let! dummy = compileDummyC modul.ClangFlagsOsx
-    return List.reduce (fun x y -> sprintf "%s %s" x y) (dummy :: functions) }
+    let! dummy = compileDummyC outputPath modul.ClangFlagsOsx
+    return flattenObjectFiles (dummy :: functions) }
 
 let cleanObjectFiles outputPath = io {
     return
-        Directory.GetFiles (outputPath, "*.o")
-        |> Array.iter (fun x -> File.Delete x) }
+        findAllObjectFiles outputPath
+        |> List.iter (fun x -> File.Delete x) }
 
 let compileModule outputPath modul definePInvoke =
     let dylibName = makeDynamicLibraryPath outputPath modul

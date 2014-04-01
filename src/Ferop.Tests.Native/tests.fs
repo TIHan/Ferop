@@ -11,3 +11,5 @@ open System.Runtime.InteropServices
 [<Include ("<stdio.h>")>]
 module Tests =
     let testByte (x: byte) : byte = C """ return x; """
+
+    let testSbyte (x: sbyte) : sbyte = C """ return x; """

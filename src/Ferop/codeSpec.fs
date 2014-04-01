@@ -6,8 +6,7 @@ open Ferop.Code
 open Ferop.Core
 open Ferop.Helpers
 
-type CodeSpec =
-    {
+type CodeSpec = {
     Includes: string
     FunctionName: string
     ReturnType: Type
@@ -30,6 +29,13 @@ let makeCodeSpec includes = function
         Parameters = parameters
         Body = "" }
 
+let definePInvokeOfCodeSpec tb dllName codeSpec =
+    definePInvokeMethod tb dllName codeSpec.FunctionName codeSpec.FunctionName codeSpec.ReturnType codeSpec.Parameters
+
+// ********************************************
+//      C
+// ********************************************
+
 let stdTypes =
     [
     (typeof<byte>,      "uint8_t")
@@ -51,11 +57,17 @@ let returnTypes =
 let parameterTypes =
     stdTypes @
     [
-    (typeof<string>,            "const char *")
     (typeof<nativeptr<byte>>,   "uint8_t *")
     (typeof<nativeptr<sbyte>>,  "int8_t *")
+    (typeof<nativeptr<uint16>>, "uint16_t *")
+    (typeof<nativeptr<int16>>,  "int16_t *")
+    (typeof<nativeptr<uint32>>, "uint32_t *")
+    (typeof<nativeptr<int>>,    "int32_t *")
+    (typeof<nativeptr<uint64>>, "uint64_t *")
+    (typeof<nativeptr<int64>>,  "int64_t *")
     (typeof<nativeptr<single>>, "float *")
-    (typeof<nativeptr<double>>, "double *")]
+    (typeof<nativeptr<double>>, "double *")
+    (typeof<nativeint>,         "void *")]
 
 let defaultCode =
     @"
@@ -116,6 +128,3 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
             codeSpec.FunctionName
             (generateParameters codeSpec.Parameters)
             codeSpec.Body
-
-let definePInvokeOfCodeSpec tb dllName codeSpec =
-    definePInvokeMethod tb dllName codeSpec.FunctionName codeSpec.FunctionName codeSpec.ReturnType codeSpec.Parameters
