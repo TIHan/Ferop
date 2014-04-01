@@ -106,7 +106,7 @@ let findReturnType typ =
     | None ->
         match Type.isUnmanaged typ with
         | true -> typ.Name
-        | _ -> "Invalid return type."
+        | _ -> failwith "Invalid return type."
     | Some (_, x) -> x
 
 let findParameterType typ =
@@ -117,7 +117,7 @@ let findParameterType typ =
     | None ->
         match Type.isUnmanaged typ with
         | true -> typ.Name
-        | _ -> "Invalid parameter type."
+        | _ -> failwith "Invalid parameter type."
     | Some (_, x) -> x
 
 let generateParameters = function
