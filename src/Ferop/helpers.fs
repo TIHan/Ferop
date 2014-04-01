@@ -24,6 +24,13 @@ module Type =
         x.Name <> "Equals" && 
         x.Name <> "ToString")
 
+    let rec isUnmanaged (typ: Type) =
+        (typ.IsValueType && not typ.IsGenericType) &&
+        (typ.GetProperties ()
+        |> Array.forall (fun x -> isUnmanaged x.PropertyType)) &&
+        (typ.GetFields ()
+        |> Array.forall (fun x -> isUnmanaged x.FieldType))
+
 [<RequireQualifiedAccess>]
 module Assembly =
     let types (asm: Assembly) =

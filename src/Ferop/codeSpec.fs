@@ -103,7 +103,10 @@ let findReturnType typ =
         returnTypes
         |> List.tryFind (fun (x, _) -> x = typ)
         with
-    | None -> failwith "Invalid return type."
+    | None ->
+        match Type.isUnmanaged typ with
+        | true -> typ.Name
+        | _ -> "Invalid return type."
     | Some (_, x) -> x
 
 let findParameterType typ =
@@ -111,7 +114,10 @@ let findParameterType typ =
         parameterTypes
         |> List.tryFind (fun (x, _) -> x = typ)
         with
-    | None -> failwith "Invalid parameter type."
+    | None ->
+        match Type.isUnmanaged typ with
+        | true -> typ.Name
+        | _ -> "Invalid parameter type."
     | Some (_, x) -> x
 
 let generateParameters = function

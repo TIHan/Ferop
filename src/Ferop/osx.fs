@@ -102,11 +102,10 @@ let compileInlineFunction outputPath modul func definePInvoke = io {
     let code = generateCode codeSpec
 
     do! definePInvoke dllName codeSpec
-
     return! compileC flags cFile oFile code }
 
 let compileExternFunction modul func definePInvoke = io {
-    let dllName, flags, codeSpec = compilationFunctionData modul func
+    let dllName, _, codeSpec = compilationFunctionData modul func
 
     do! definePInvoke dllName codeSpec
     return dummyC }
