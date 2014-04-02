@@ -7,27 +7,36 @@ open Ferop.Core
 open Ferop.Helpers
 
 type CodeSpec = {
-    Includes: string
+    HeaderName: string
     FunctionName: string
     ReturnType: Type
     Parameters: Parameter list
     Body: string }
 
-let makeCodeSpec includes = function
+(*
+type TypeSpec =
+    | Standard of name: string
+    | Custom of name: string * fields: FieldSpec list
+
+and FieldSpec = { Name: string; TypeSpec: TypeSpec }
+*)
+let makeCodeSpec headerName = function
     | Inline { Name = name; ReturnType = returnType; Parameters = parameters; Code = code } ->
         {
-        Includes = includes
+        HeaderName = headerName
         FunctionName = name
         ReturnType = returnType
         Parameters = parameters
         Body = code }
     | Extern { Name = name; ReturnType = returnType; Parameters = parameters } ->
         {
-        Includes = includes
+        HeaderName = headerName
         FunctionName = name
         ReturnType = returnType
         Parameters = parameters
         Body = "" }
+
+let makeHeaderFileName name = sprintf "%s.h" name
 
 let definePInvokeOfCodeSpec tb dllName codeSpec =
     definePInvokeMethod tb dllName codeSpec.FunctionName codeSpec.FunctionName codeSpec.ReturnType codeSpec.Parameters
@@ -69,7 +78,7 @@ let parameterTypes =
     (typeof<nativeptr<double>>, "double *")
     (typeof<nativeint>,         "void *")]
 
-let defaultCode =
+let defaultHeader =
     @"
 #include <stdint.h>
 
@@ -84,19 +93,37 @@ let defaultCode =
 #else
 #   error Compiler not supported.
 #endif
-"
+    "
 
-let codeSpecf =
+let headerf (name: string) =
     sprintf """
+#ifndef __%s_H__
+#define __%s_H__
 %s
 %s
+#endif
+""" 
+        (name.ToUpper ())
+        (name.ToUpper ())
+        defaultHeader
+
+let codef headerName =
+    sprintf """
+#include "%s"
 
 FEROP_EXPORT %s FEROP_DECL %s (%s)
 {
     %s
 }
 """
-            defaultCode
+        (makeHeaderFileName headerName)
+
+let structf =
+    sprintf """
+typedef struct {
+    %s
+} %s;
+"""
 
 let findReturnType typ =
     match
@@ -130,10 +157,15 @@ let generateParameters = function
         sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)
 
+//let makeTypeSpecStandard (typ: Type) = Standard (findParameterType typ)
+
+let generateHeader name code =
+    headerf name code
+
 let generateCode codeSpec =
-    codeSpecf
-            codeSpec.Includes
-            (findReturnType codeSpec.ReturnType)
-            codeSpec.FunctionName
-            (generateParameters codeSpec.Parameters)
-            codeSpec.Body
+    codef
+        codeSpec.HeaderName
+        (findReturnType codeSpec.ReturnType)
+        codeSpec.FunctionName
+        (generateParameters codeSpec.Parameters)
+        codeSpec.Body

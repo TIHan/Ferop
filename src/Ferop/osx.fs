@@ -14,6 +14,10 @@ open FSharp.Control.IO
 
 let makeDllName modul = sprintf "lib%s.dylib" modul.Name
 
+let makeHeaderName modul = modul.ShortName
+
+let makeHFilePath path modul = Path.Combine (path, makeHeaderFileName modul.ShortName)
+
 let makeCFilePath path codeSpec = Path.Combine (path, sprintf "%s.c" codeSpec.FunctionName)
 
 let makeOFilePath path codeSpec = Path.Combine (path, sprintf "%s.o" codeSpec.FunctionName)
@@ -91,7 +95,7 @@ let compileDummyC outputPath flags = io {
 let compilationFunctionData modul func =
     makeDllName modul,
     modul.ClangFlagsOsx,
-    makeCodeSpec modul.Includes func
+    makeCodeSpec (makeHeaderName modul) func
 
 let compileInlineFunction outputPath modul func definePInvoke = io {
     let dllName, flags, codeSpec = compilationFunctionData modul func
@@ -132,11 +136,17 @@ let cleanObjectFiles outputPath = io {
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
 
+let makeHeaderFile outputPath modul = io {
+    let header = makeHFilePath outputPath modul
+    let headerCode = generateHeader (makeHeaderName modul) (modul.Includes)
+    File.WriteAllText (header, headerCode) }
+
 let compileModule outputPath modul definePInvoke =
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 
     io {
+        do! makeHeaderFile outputPath modul
         let! oFiles = compileFunctions outputPath modul definePInvoke
         do! compileToDynamicLibrary libs oFiles dylibName
         return! cleanObjectFiles outputPath }

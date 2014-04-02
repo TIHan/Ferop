@@ -39,6 +39,7 @@ type Function =
 
 type Module = {
     Name: string
+    ShortName: string
     Functions: Function list
     Attributes: CustomAttributeData list } with
 
@@ -121,10 +122,11 @@ let findAttributes (typ: Type) =
 
 let makeModule (typ: Type) =
     let name = typ.FullName
+    let shortName = typ.Name
     let funcs = findFunctions typ
     let attrs = findAttributes typ 
 
-    { Name = name; Functions = funcs; Attributes = attrs }
+    { Name = name; ShortName = shortName; Functions = funcs; Attributes = attrs }
 
 let definePInvokeMethod (tb: TypeBuilder) dllName name entryName returnType parameters = io {
     let meth = 
