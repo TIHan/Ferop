@@ -81,7 +81,7 @@ let methodExpr meth =
 let makeParameter (param: ParameterInfo) =
     { Name = param.Name; Type = param.ParameterType }
 
-let findParameters (meth: MethodInfo) =
+let makeParameters (meth: MethodInfo) =
     meth.GetParameters ()
     |> List.ofArray
     |> List.map makeParameter
@@ -89,7 +89,7 @@ let findParameters (meth: MethodInfo) =
 let makeFunction (meth: MethodInfo) =
     let name = meth.Name
     let returnType = meth.ReturnType
-    let parameters = findParameters meth
+    let parameters = makeParameters meth
     let expr = methodExpr meth
 
     let rec make = function
@@ -112,19 +112,15 @@ let makeFunction (meth: MethodInfo) =
 
     make expr
 
-let findFunctions (typ: Type) =
+let makeFunctions (typ: Type) =
     Type.moduleFunctions typ
     |> List.map makeFunction
-
-let findAttributes (typ: Type) =
-    typ.CustomAttributes
-    |> List.ofSeq
 
 let makeModule (typ: Type) =
     let name = typ.FullName
     let shortName = typ.Name
-    let funcs = findFunctions typ
-    let attrs = findAttributes typ 
+    let funcs = makeFunctions typ
+    let attrs = typ.CustomAttributes |> List.ofSeq
 
     { Name = name; ShortName = shortName; Functions = funcs; Attributes = attrs }
 

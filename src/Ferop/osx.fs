@@ -12,15 +12,15 @@ open Ferop.CodeSpec
 
 open FSharp.Control.IO
 
-let makeDllName modul = sprintf "lib%s.dylib" modul.Name
+let makeDllName (modul: Module) = sprintf "lib%s.dylib" modul.Name
 
 let makeHeaderName modul = modul.ShortName
 
 let makeHFilePath path modul = Path.Combine (path, makeHeaderFileName modul.ShortName)
 
-let makeCFilePath path codeSpec = Path.Combine (path, sprintf "%s.c" codeSpec.FunctionName)
+let makeCFilePath path (funcSpec: FunctionSpec) = Path.Combine (path, sprintf "%s.c" funcSpec.Name)
 
-let makeOFilePath path codeSpec = Path.Combine (path, sprintf "%s.o" codeSpec.FunctionName)
+let makeOFilePath path (funcSpec: FunctionSpec) = Path.Combine (path, sprintf "%s.o" funcSpec.Name)
 
 let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
 
@@ -28,7 +28,7 @@ let makeDummyOFilePath path = Path.Combine (path, "_ferop_dummy_.o")
 
 let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
 
-let makeDynamicLibraryPath path modul = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
+let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
 
 let makeArgs flags cFile oFile = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
 
@@ -100,18 +100,18 @@ let compilationFunctionData modul func =
 let compileInlineFunction outputPath modul func definePInvoke = io {
     let dllName, flags, codeSpec = compilationFunctionData modul func
 
-    let cFile = makeCFilePath outputPath codeSpec
-    let oFile = makeOFilePath outputPath codeSpec
+    let cFile = makeCFilePath outputPath codeSpec.FunctionSpec
+    let oFile = makeOFilePath outputPath codeSpec.FunctionSpec
 
     let code = generateCode codeSpec
 
-    do! definePInvoke dllName codeSpec
+    do! definePInvoke dllName codeSpec.FunctionSpec
     return! compileC flags cFile oFile code }
 
 let compileExternFunction modul func definePInvoke = io {
     let dllName, _, codeSpec = compilationFunctionData modul func
 
-    do! definePInvoke dllName codeSpec
+    do! definePInvoke dllName codeSpec.FunctionSpec
     return dummyC }
 
 let compileToStaticLibrary aFile oFiles = io {

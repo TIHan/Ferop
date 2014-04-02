@@ -6,12 +6,15 @@ open Ferop.Code
 open Ferop.Core
 open Ferop.Helpers
 
-type CodeSpec = {
-    HeaderName: string
-    FunctionName: string
+type FunctionSpec = {
+    Name: string
     ReturnType: Type
     Parameters: Parameter list
     Body: string }
+
+type CodeSpec = {
+    HeaderName: string
+    FunctionSpec: FunctionSpec }
 
 (*
 type TypeSpec =
@@ -20,26 +23,28 @@ type TypeSpec =
 
 and FieldSpec = { Name: string; TypeSpec: TypeSpec }
 *)
-let makeCodeSpec headerName = function
+
+let makeFunctionSpec = function
     | Inline { Name = name; ReturnType = returnType; Parameters = parameters; Code = code } ->
         {
-        HeaderName = headerName
-        FunctionName = name
+        Name = name
         ReturnType = returnType
         Parameters = parameters
         Body = code }
     | Extern { Name = name; ReturnType = returnType; Parameters = parameters } ->
         {
-        HeaderName = headerName
-        FunctionName = name
+        Name = name
         ReturnType = returnType
         Parameters = parameters
         Body = "" }
 
+let makeCodeSpec headerName func =
+    { HeaderName = headerName; FunctionSpec = makeFunctionSpec func }
+
 let makeHeaderFileName name = sprintf "%s.h" name
 
-let definePInvokeOfCodeSpec tb dllName codeSpec =
-    definePInvokeMethod tb dllName codeSpec.FunctionName codeSpec.FunctionName codeSpec.ReturnType codeSpec.Parameters
+let definePInvokeOfCodeSpec tb dllName funcSpec =
+    definePInvokeMethod tb dllName funcSpec.Name funcSpec.Name funcSpec.ReturnType funcSpec.Parameters
 
 // ********************************************
 //      C
@@ -165,7 +170,7 @@ let generateHeader name code =
 let generateCode codeSpec =
     codef
         codeSpec.HeaderName
-        (findReturnType codeSpec.ReturnType)
-        codeSpec.FunctionName
-        (generateParameters codeSpec.Parameters)
-        codeSpec.Body
+        (findReturnType codeSpec.FunctionSpec.ReturnType)
+        codeSpec.FunctionSpec.Name
+        (generateParameters codeSpec.FunctionSpec.Parameters)
+        codeSpec.FunctionSpec.Body
