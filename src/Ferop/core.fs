@@ -18,30 +18,11 @@ open Ferop.Code
 
 open FSharp.Control.IO
 
-type Parameter = {
-    Name: string
-    Type: Type }
-
-type FunctionInline = {
-    Name: string
-    ReturnType: Type
-    Parameters: Parameter list
-    Code: string }
-
-type FunctionExtern = {
-    Name: string
-    ReturnType: Type
-    Parameters: Parameter list }
-
-type Function =
-    | Inline of FunctionInline
-    | Extern of FunctionExtern
-
 type Module = {
     Name: string
-    ShortName: string
-    Functions: Function list
-    Attributes: CustomAttributeData list } with
+    FullName: string
+    Attributes: CustomAttributeData list
+    Functions: MethodInfo list } with
 
     member this.IncludeAttributes =
         this.Attributes
@@ -73,68 +54,26 @@ type Module = {
         let args = Seq.exactlyOne attr.ConstructorArguments
         args.Value :?> string
 
-let methodExpr meth =
-    match Expr.TryGetReflectedDefinition meth with
-    | None -> failwithf "Reflected definition for %s not found" meth.Name
-    | Some expr -> expr
-
-let makeParameter (param: ParameterInfo) =
-    { Name = param.Name; Type = param.ParameterType }
-
-let makeParameters (meth: MethodInfo) =
-    meth.GetParameters ()
-    |> List.ofArray
-    |> List.map makeParameter
-
-let makeFunction (meth: MethodInfo) =
-    let name = meth.Name
-    let returnType = meth.ReturnType
-    let parameters = makeParameters meth
-    let expr = methodExpr meth
-
-    let rec make = function
-        | SpecificCall <@ C @> (_, _, exprList) ->
-            match exprList.[0] with
-            | Value (value, _) ->
-                Inline { Name = name; ReturnType = returnType; Parameters = parameters; Code = value.ToString () }
-            | _ -> failwith "Invalid interop."
-
-        | SpecificCall <@ CExtern @> (_, _, _) ->
-            Extern { Name = name; ReturnType = returnType; Parameters = parameters }
-
-        | Call (_, _, exprList) ->
-            make exprList.[0]
-
-        | Lambda (_, body) ->
-            make body
-
-        | x -> failwith "Invalid interop."
-
-    make expr
-
-let makeFunctions (typ: Type) =
-    Type.moduleFunctions typ
-    |> List.map makeFunction
-
 let makeModule (typ: Type) =
-    let name = typ.FullName
+    let name = typ.Name
+    let fullName = typ.FullName
     let shortName = typ.Name
-    let funcs = makeFunctions typ
     let attrs = typ.CustomAttributes |> List.ofSeq
+    let funcs = Type.moduleFunctions typ
 
-    { Name = name; ShortName = shortName; Functions = funcs; Attributes = attrs }
+    { Name = name; FullName = shortName; Attributes = attrs; Functions = funcs }
 
-let definePInvokeMethod (tb: TypeBuilder) dllName name entryName returnType parameters = io {
+let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
     let meth = 
         tb.DefinePInvokeMethod (
-            name,
+            func.Name,
             dllName,
-            entryName,
+            func.Name,
             MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
             CallingConventions.Standard,
-            returnType,
-            parameters |> List.map (fun x -> x.Type) |> Array.ofList,
+            func.ReturnType,
+            func.GetParameters () |> Array.map (fun x -> x.ParameterType),
             CallingConvention.Cdecl,
             CharSet.Ansi)
 
-    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig) }
+    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)

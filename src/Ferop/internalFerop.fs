@@ -9,13 +9,16 @@ open Microsoft.FSharp.Reflection
 open Ferop.Core
 open Ferop.Code
 open Ferop.Helpers
-open Ferop.CodeSpec
 
-let compileModule path tb moduleType =
-    Osx.compileModule path tb moduleType
+let makeDllOsxName modul = sprintf "lib%s.dylib" modul.Name
+
+let compileModule path modul =
+    Osx.compileModule path modul
 
 let createDynamicAssembly (dllPath: string) dllName =
     AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
+
+let generatePInvokeMethods modul tb = modul.Functions |> List.iter (definePInvokeMethod tb (makeDllOsxName modul))
     
 let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName
@@ -28,8 +31,8 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
     |> List.map (fun x ->
         let modul = makeModule x
         let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-        let definePInvoke = definePInvokeOfCodeSpec tb
-        compileModule outputPath modul definePInvoke
+        generatePInvokeMethods modul tb
+        compileModule outputPath modul
         tb.CreateType ())
     |> ignore
 

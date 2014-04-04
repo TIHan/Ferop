@@ -1,4 +1,4 @@
-﻿module Ferop.C
+﻿module Ferop.CConversion
 
 open System
 open System.Reflection
@@ -48,18 +48,15 @@ let makeParameter (info: ParameterInfo) = CLocalVar (makeCType info.ParameterTyp
 let makeParameters (infos: ParameterInfo []) = infos |> List.ofArray |> List.map makeParameter
 
 let rec makeCExpr = function
-    | SpecificCall <@ C @> (_, _, exprList) ->
-        match exprList.[0] with
-        | Value (value, _) -> Text <| value.ToString ()
-        | _ -> failwith "Expression not supported."
-
     | SpecificCall <@ CExtern @> (_, _, _) -> Text ""
 
     | Call (_, _, exprList) -> makeCExpr exprList.[0]
 
     | Lambda (_, body) -> makeCExpr body
 
-    | x -> failwith "Expression not supported."
+    | Value (value, _) -> Text <| value.ToString ()
+
+    | x -> failwithf "Expression, %A, not supported." x
 
 let makeCFunction (func: MethodInfo) =
     let returnType = makeReturnType func.ReturnType

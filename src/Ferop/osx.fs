@@ -8,19 +8,22 @@ open System.Diagnostics
 open Ferop.Code
 open Ferop.Core
 open Ferop.Helpers
-open Ferop.CodeSpec
+open Ferop.CConversion
+open Ferop.CGen
 
 open FSharp.Control.IO
 
-let makeDllName (modul: Module) = sprintf "lib%s.dylib" modul.Name
+let makeHeaderName modul = modul.Name
 
-let makeHeaderName modul = modul.ShortName
+let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
 
-let makeHFilePath path modul = Path.Combine (path, makeHeaderFileName modul.ShortName)
+let makeHeaderIncludes (modul: Module) = modul.Includes
 
-let makeCFilePath path (funcSpec: FunctionSpec) = Path.Combine (path, sprintf "%s.c" funcSpec.Name)
+let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
 
-let makeOFilePath path (funcSpec: FunctionSpec) = Path.Combine (path, sprintf "%s.o" funcSpec.Name)
+let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
+
+let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
 
@@ -48,6 +51,21 @@ let dummyC = ""
 
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
+let generateC includes body =
+    sprintf """%s
+%s
+"""
+        includes body
+
+let makeC outputPath modul =
+    let includes = makeHeaderInclude (makeHeaderName modul)
+    let funcsGen =
+        modul.Functions
+        |> List.map makeCFunction
+        |> List.map generateCDecl
+        |> List.reduce (fun x y -> x + "\n\n" + y)
+    generateC includes funcsGen
+
 let startClang args = io {
     let pinfo = makeClangStartInfo args
 
@@ -70,7 +88,11 @@ let startAr args = io {
 
     checkProcessError p }
 
-let compileC flags cFile oFile code = io {
+let compileC outputPath modul code = io {
+    let cFile = makeCFilePath outputPath modul
+    let oFile = makeOFilePath outputPath modul
+    let flags = modul.ClangFlagsOsx
+
     File.WriteAllText (cFile, code)
 
     let args = makeArgs flags cFile oFile
@@ -92,28 +114,6 @@ let compileDummyC outputPath flags = io {
     File.Delete (cFile)
     return oFile }
 
-let compilationFunctionData modul func =
-    makeDllName modul,
-    modul.ClangFlagsOsx,
-    makeCodeSpec (makeHeaderName modul) func
-
-let compileInlineFunction outputPath modul func definePInvoke = io {
-    let dllName, flags, codeSpec = compilationFunctionData modul func
-
-    let cFile = makeCFilePath outputPath codeSpec.FunctionSpec
-    let oFile = makeOFilePath outputPath codeSpec.FunctionSpec
-
-    let code = generateCode codeSpec
-
-    do! definePInvoke dllName codeSpec.FunctionSpec
-    return! compileC flags cFile oFile code }
-
-let compileExternFunction modul func definePInvoke = io {
-    let dllName, _, codeSpec = compilationFunctionData modul func
-
-    do! definePInvoke dllName codeSpec.FunctionSpec
-    return dummyC }
-
 let compileToStaticLibrary aFile oFiles = io {
     let args = makeStaticArgs aFile oFiles
     do! startAr args }
@@ -122,15 +122,6 @@ let compileToDynamicLibrary libs oFiles dylibName = io {
     let args = makeDynamicArgs libs oFiles dylibName
     do! startClang args }
 
-let compileFunctions outputPath modul definePInvoke = io {
-    let! functions = modul.Functions |> List.map (function
-        | Inline x as func ->
-            compileInlineFunction outputPath modul func definePInvoke
-        | Extern x as func ->
-            compileExternFunction modul func definePInvoke)
-    let! dummy = compileDummyC outputPath modul.ClangFlagsOsx
-    return flattenObjectFiles (dummy :: functions) }
-
 let cleanObjectFiles outputPath = io {
     return
         findAllObjectFiles outputPath
@@ -138,16 +129,19 @@ let cleanObjectFiles outputPath = io {
 
 let makeHeaderFile outputPath modul = io {
     let header = makeHFilePath outputPath modul
-    let headerCode = generateHeader (makeHeaderName modul) (modul.Includes)
-    File.WriteAllText (header, headerCode) }
+    let headerGen = generateMainHeader (makeHeaderName modul) modul.Includes
+    File.WriteAllText (header, headerGen)
+    return header }
 
-let compileModule outputPath modul definePInvoke =
+let compileModule outputPath modul =
+    let code = makeC outputPath modul
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 
     io {
-        do! makeHeaderFile outputPath modul
-        let! oFiles = compileFunctions outputPath modul definePInvoke
-        do! compileToDynamicLibrary libs oFiles dylibName
+        let! header = makeHeaderFile outputPath modul
+        let! oFile = compileC outputPath modul code
+        do! compileToDynamicLibrary libs oFile dylibName
+        File.Delete (header)
         return! cleanObjectFiles outputPath }
     |> IO.run

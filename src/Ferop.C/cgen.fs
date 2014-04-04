@@ -1,6 +1,6 @@
 ﻿module Ferop.CGen
 
-open Ferop.C
+open Ferop.CConversion
 open Ferop.CTypedAST
 
 let generateHeaderf (name: string) =
@@ -44,6 +44,10 @@ let generateCDeclf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
 %s 
 }"""
 
+let generateHeader name body = generateHeaderf name body
+
+let generateMainHeader name body = generateMainHeaderf name body
+
 let generateCType = function
     | Byte ->   "uint8_t"
     | SByte ->  "int8_t"
@@ -53,6 +57,8 @@ let generateCType = function
     | Int32 ->  "int32_t"
     | UInt64 -> "uint64_t"
     | Int64 ->  "int64_t"
+    | Float ->  "float"
+    | Double -> "double"
     | x -> failwithf "%A generated type not found." x
 
 let generateReturnType = function
