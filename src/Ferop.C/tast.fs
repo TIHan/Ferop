@@ -1,4 +1,4 @@
-﻿module Ferop.CTypedAST
+module Ferop.CTypedAST
 
 // This is a micro micro micro typed ast. Only handles types and function declarations.
 
@@ -19,11 +19,17 @@ type CType =
     | Double
     | Pointer of CType
     | Array of CType * size: int option
-    | Struct of name: string * fields: CField list
+    | Struct of CStruct
+
+and CStruct = { Name: string; Fields: CField list }
 
 and CField = CField of CType * name: string
+
+type CEnv = { StructMap: Map<string, CStruct> }
 
 type CLocalVar = CLocalVar of CType * name: string
 
 type CDecl =
     | Function of returnType: CType option * name: string * parameters: CLocalVar list * CExpr
+
+let makeEmptyEnv () = { StructMap = Map.empty }

@@ -59,9 +59,10 @@ let generateC includes body =
 
 let makeC outputPath modul =
     let includes = makeHeaderInclude (makeHeaderName modul)
+    let env = Ferop.CTypedAST.makeEmptyEnv ()
     let funcsGen =
         modul.Functions
-        |> List.map makeCFunction
+        |> List.map (makeCFunction env)
         |> List.map generateCDecl
         |> List.reduce (fun x y -> x + "\n\n" + y)
     generateC includes funcsGen

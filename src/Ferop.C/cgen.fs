@@ -3,7 +3,7 @@
 open Ferop.CConversion
 open Ferop.CTypedAST
 
-let generateHeaderf (name: string) =
+let generateHeaderf (name : string) =
     sprintf """
 #ifndef __%s_H__
 #define __%s_H__
@@ -32,7 +32,7 @@ let generateMainHeaderf name body =
 %s
 "           body
 
-let generateStructf =
+let generateCStructf =
     sprintf """
 typedef struct {
 %s
@@ -59,7 +59,21 @@ let generateCType = function
     | Int64 ->  "int64_t"
     | Float ->  "float"
     | Double -> "double"
+    | Struct x -> x.Name
     | x -> failwithf "%A generated type not found." x
+
+let generateCFields = function
+    | [] -> ""
+    | fields ->
+        
+    fields
+    |> List.map (function
+        | CField (typ, name) ->
+            let ctype = generateCType typ
+            sprintf "%s %s" ctype (name.Replace (" ", "_")))
+    |> List.reduce (fun x y -> sprintf "%s\n%s" x y)
+
+let generateCStruct stru = generateCStructf (generateCFields stru.Fields) stru.Name
 
 let generateReturnType = function
     | None -> "void"
