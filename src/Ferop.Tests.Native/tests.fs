@@ -9,6 +9,7 @@ open System.Runtime.InteropServices
 type Struct1 =
     val X : single
     val Y : single
+    val Z : single
 
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
@@ -35,4 +36,4 @@ module Tests =
 
     let testDouble (x: double) : double = C """ return x; """
 
-   // let testStruct1 (x: Struct1) : Struct1 = C """ return x; """
+    let testStruct1 (x: Struct1) : Struct1 = C """ return x; """

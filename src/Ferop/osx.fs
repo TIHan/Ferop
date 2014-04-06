@@ -88,8 +88,11 @@ let compileC outputPath modul cgen = io {
     let args = makeArgs flags cFile oFile
     do! startClang args
 
+#if DEBUG
+#else
     File.Delete hFile
     File.Delete cFile
+#endif
     return oFile }
 
 /// Compiles a dummy c file that contains nothing. This ensures we at least get a dylib.

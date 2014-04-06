@@ -73,7 +73,7 @@ let generateCFields = function
         | CField (typ, name) ->
             let ctype = generateCType typ
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
-    |> List.reduce (fun x y -> sprintf "%s\n%s" x y)
+    |> List.reduce (fun x y -> sprintf "%s;\n%s;" x y)
 
 let generateCStruct (CStruct (name, fields)) = generateCStructf (generateCFields fields) name
 

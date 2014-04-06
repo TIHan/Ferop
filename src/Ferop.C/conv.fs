@@ -27,6 +27,8 @@ let CExtern () = failwith errorMsg
 
 let runtimeFields (typ: Type) = typ.GetRuntimeFields () |> List.ofSeq
 
+let properties (typ: Type) = typ.GetProperties () |> List.ofSeq
+
 let allNestedRuntimeFieldTypes (typ: Type) =
     let f (x: Type) : Type list =
         (x.GetRuntimeFields ())
@@ -78,8 +80,8 @@ let rec lookupCType env = function
 and makeCStruct env (typ: Type) =
     let name = typ.Name
     let fields =
-        runtimeFields typ
-        |> List.map (fun x -> CField (lookupCType env x.FieldType, x.Name))
+        properties typ
+        |> List.map (fun x -> CField (lookupCType env x.PropertyType, x.Name))
 
     CStruct (name, fields)
 
