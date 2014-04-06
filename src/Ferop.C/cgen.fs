@@ -40,8 +40,7 @@ let generateCStructf =
     sprintf """
 typedef struct {
 %s
-} %s;
-"""
+} %s;"""
 
 let generateCDeclf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
 {
@@ -83,6 +82,14 @@ let generateCStructs = function
     | structs ->
 
     structs
+    |> List.sortWith (fun x (CStruct(fields=fields)) ->
+        if fields |> List.exists (fun (CField(typ,_)) -> 
+            match typ with
+            | Struct y -> x = y
+            | _ -> false) then
+            0
+        else
+            1)
     |> List.map (fun x -> generateCStruct x)
     |> List.reduce (fun x y -> x + "\n\n" + y)       
 

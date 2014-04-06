@@ -60,33 +60,44 @@ let methodExpr meth =
     | None -> failwithf "Reflected definition for %s not found" meth.Name
     | Some expr -> expr
 
-let lookupStruct env (typ: Type) = env.Structs |> List.tryFind (fun (CStruct(x,_)) -> x = typ.Name)
+let tryLookupStruct env (typ: Type) = env.Structs |> List.tryFind (fun (CStruct(x,_)) -> x = typ.Name)
 
-let rec lookupCType env = function
-    | x when x = typeof<byte> ->    Byte
-    | x when x = typeof<sbyte> ->   SByte
-    | x when x = typeof<uint16> ->  UInt16
-    | x when x = typeof<int16> ->   Int16
-    | x when x = typeof<uint32> ->  UInt32
-    | x when x = typeof<int32> ->   Int32
-    | x when x = typeof<uint64> ->  UInt64
-    | x when x = typeof<int64> ->   Int64
-    | x when x = typeof<single> ->  Float
-    | x when x = typeof<double> ->  Double
-    | x when x = typeof<nativeint> -> Pointer (Int32)
+let rec tryLookupCType env = function
+    | x when x = typeof<byte> ->    Some Byte
+    | x when x = typeof<sbyte> ->   Some SByte
+    | x when x = typeof<uint16> ->  Some UInt16
+    | x when x = typeof<int16> ->   Some Int16
+    | x when x = typeof<uint32> ->  Some UInt32
+    | x when x = typeof<int32> ->   Some Int32
+    | x when x = typeof<uint64> ->  Some UInt64
+    | x when x = typeof<int64> ->   Some Int64
+    | x when x = typeof<single> ->  Some Float
+    | x when x = typeof<double> ->  Some Double
+    | x when x = typeof<nativeint> -> Some <| Pointer (Int32)
     | x when isTypeUnmanaged x ->
-        match lookupStruct env x with
-        | None -> failwithf "%A not found." x.Name
-        | Some x -> Struct x
-    | x -> failwithf "%A not supported." x.FullName
+        match tryLookupStruct env x with
+        | None -> None
+        | Some x -> Some <| Struct x
+    | _ -> None
+
+and lookupCType env typ =
+    match tryLookupCType env typ with
+    | None -> failwithf "%A not supported." typ.FullName
+    | Some x -> x
 
 and makeCStruct env (typ: Type) =
     let name = typ.Name
-    let fields =
+    let env, fields =
         properties typ
-        |> List.map (fun x -> CField (lookupCType env x.PropertyType, x.Name))
+        |> List.fold (fun (env, fields) x -> 
+            match tryLookupCType env x.PropertyType with
+            | Some ctype ->
+                env, CField (ctype, x.Name) :: fields
+            | None ->
+                let env = makeCStruct env x.PropertyType
+                env,CField (lookupCType env x.PropertyType, x.Name) :: fields) (env, [])
 
-    CStruct (name, fields)
+    { env with Structs = CStruct (name, List.rev fields) :: env.Structs }
 
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
@@ -118,13 +129,12 @@ let makeCFunction env (func: MethodInfo) =
 let makeCDecl env func = makeCFunction env func
 
 let makeCStructs env modul =
-    let types =
-        modul.Functions
-        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
-        |> List.reduce (fun x y -> x @ y)
-        |> List.map (fun x -> x.ParameterType)
-        |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
-    { env with Structs = types |> List.map (makeCStruct env) }
+    modul.Functions
+    |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+    |> List.reduce (fun x y -> x @ y)
+    |> List.map (fun x -> x.ParameterType)
+    |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
+    |> List.fold (fun env x -> makeCStruct env x) env
 
 let makeCDecls env modul =
     { env with Decls = modul.Functions |> List.map (makeCDecl env) }

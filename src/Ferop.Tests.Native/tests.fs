@@ -6,11 +6,17 @@ open System.Runtime.InteropServices
 #nowarn "9"
 
 [<Struct>]
+type Struct2 =
+    val X : int
+    val Y : int
+
+[<Struct>]
 type Struct1 =
     val X : single
     val Y : single
     val Z : single
     val W : nativeptr<single>
+    val St2 : Struct2
 
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
