@@ -105,3 +105,12 @@ let makeCFunction env (func: MethodInfo) =
     let expr = methodExpr func |> makeCExpr
 
     Function (returnType, name, parameters, expr)
+
+let makeCDecl env func = makeCFunction env func
+
+let addCDecls env decls = { env with Decls = env.Decls @ decls }
+
+let makeTypedAst funcs =
+    let env = makeEmptyEnv ()
+    let decls = funcs |> List.map (makeCDecl env)
+    addCDecls env decls

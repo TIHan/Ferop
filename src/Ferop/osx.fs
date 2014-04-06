@@ -58,14 +58,9 @@ let generateC includes body =
         includes body
 
 let makeC outputPath modul =
-    let includes = makeHeaderInclude (makeHeaderName modul)
-    let env = Ferop.CTypedAST.makeEmptyEnv ()
-    let funcsGen =
-        modul.Functions
-        |> List.map (makeCFunction env)
-        |> List.map generateCDecl
-        |> List.reduce (fun x y -> x + "\n\n" + y)
-    generateC includes funcsGen
+    let tast = makeTypedAst modul.Functions
+    let gen = generate tast
+    generateC (makeHeaderInclude (makeHeaderName modul)) gen
 
 let startClang args = io {
     let pinfo = makeClangStartInfo args

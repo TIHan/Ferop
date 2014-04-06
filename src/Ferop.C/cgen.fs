@@ -100,3 +100,8 @@ let generateCDecl = function
         let body = generateCExpr expr
 
         generateCDeclf returnType' name parameters' body
+
+let generate tast =
+    tast.Decls
+    |> List.map generateCDecl
+    |> List.reduce (fun x y -> x + "\n\n" + y)
