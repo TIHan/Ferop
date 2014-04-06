@@ -5,6 +5,11 @@ open System.Runtime.InteropServices
 
 #nowarn "9"
 
+[<Struct>]
+type Application =
+    val Window : nativeint
+    val GLContext : nativeint
+
 [<Ferop>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES")>]
 [<ClangLibsOsx ("-framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
@@ -12,36 +17,36 @@ open System.Runtime.InteropServices
 [<Include ("<SDL2/SDL.h>")>]
 [<Include ("<SDL2/SDL_opengl.h>")>]
 module App =
-    let test (x: int) : int = C """ return x; """
-    let test2 (x: int) : int = C """ return x + x; """
-(*
-    let init (window: SDL_Window) (gl_context: SDL_GLContext) : unit =
+    let init () : Application =
         C """
 SDL_Init (SDL_INIT_VIDEO);
 
-window = 
-    SDL_CreateWindow(
+Application app;
+
+app.Window = 
+    (int32_t*)SDL_CreateWindow(
         "Ferop.Sample",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        100, 900,
+        900, 900,
         SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
 
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 2);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-gl_context = SDL_GL_CreateContext (window);
+app.GLContext = (int32_t*)SDL_GL_CreateContext ((SDL_Window*)app.Window);
+return app;
         """
 
-    let exit (window: SDL_Window) (gl_context: SDL_GLContext) : int =
+    let exit (app: Application) : int =
         C """
-SDL_GL_DeleteContext (gl_context);
-SDL_DestroyWindow (window);
+SDL_GL_DeleteContext ((SDL_Window*)app.GLContext);
+SDL_DestroyWindow ((SDL_GLContext*)app.Window);
 SDL_Quit ();
 return 0;
         """
-
+(*
     let generateVBO (size: int) (data: byte []) : int =
         C """
 GLuint vbo;

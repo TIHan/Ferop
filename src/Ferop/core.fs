@@ -68,7 +68,7 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
         tb.DefinePInvokeMethod (
             func.Name,
             dllName,
-            func.Name,
+            sprintf "%s_%s" func.DeclaringType.Name func.Name,
             MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
             CallingConventions.Standard,
             func.ReturnType,

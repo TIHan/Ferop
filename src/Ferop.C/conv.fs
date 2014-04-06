@@ -120,7 +120,7 @@ let rec makeCExpr = function
 
 let makeCFunction env (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
-    let name = func.Name
+    let name = sprintf "%s_%s" env.Name func.Name
     let parameters = func.GetParameters () |> makeParameters env
     let expr = methodExpr func |> makeCExpr
 
@@ -133,6 +133,9 @@ let makeCStructs env modul =
     |> List.map (fun x -> x.GetParameters () |> List.ofArray)
     |> List.reduce (fun x y -> x @ y)
     |> List.map (fun x -> x.ParameterType)
+    |> Seq.ofList
+    |> Seq.distinct
+    |> List.ofSeq
     |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
     |> List.fold (fun env x -> makeCStruct env x) env
 
