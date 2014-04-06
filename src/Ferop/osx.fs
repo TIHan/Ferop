@@ -8,8 +8,6 @@ open System.Diagnostics
 open Ferop.Code
 open Ferop.Core
 open Ferop.Helpers
-open Ferop.CConversion
-open Ferop.CGen
 
 open FSharp.Control.IO
 
@@ -57,8 +55,13 @@ let generateC includes body =
 """
         includes body
 
-let makeC outputPath modul =
-    let env = makeCEnv modul.Name modul.Functions
+open Ferop.CConversion
+open Ferop.CGen
+
+let makeFsModule (modul: Module) = { Name = modul.Name; Functions = modul.Functions }
+
+let makeC outputPath (modul: Module) =
+    let env = makeCEnv <| makeFsModule modul
     let gen = generate env
     generateC (makeHeaderInclude (makeHeaderName modul)) gen.Body
 

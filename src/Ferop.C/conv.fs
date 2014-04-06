@@ -13,6 +13,10 @@ open Microsoft.FSharp.Quotations.ExprShape
  
 open Ferop.CTypedAST
 
+type FsModule = { 
+    Name : string
+    Functions : MethodInfo list }
+
 let private errorMsg = "This should not be called directly. Instead, call the generated version."
 
 let C (code: string) =
@@ -85,7 +89,7 @@ let makeReturnType env = function
 
 let makeParameter env (info: ParameterInfo) = CLocalVar (makeCType env info.ParameterType, info.Name)
 
-let makeParameters env (infos: ParameterInfo []) = infos |> List.ofArray |> List.map (makeParameter env)
+let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
 let rec makeCExpr = function
     | SpecificCall <@ CExtern @> (_, _, _) -> Text ""
@@ -108,7 +112,7 @@ let makeCFunction env (func: MethodInfo) =
 
 let makeCDecl env func = makeCFunction env func
 
-let makeCEnv name funcs =
-    let env = makeEmptyEnv name
-    let decls = funcs |> List.map (makeCDecl env)
+let makeCEnv modul =
+    let env = makeEmptyEnv modul.Name
+    let decls = modul.Functions |> List.map (makeCDecl env)
     { env with Decls = decls }
