@@ -58,9 +58,9 @@ let generateC includes body =
         includes body
 
 let makeC outputPath modul =
-    let tast = makeTypedAst modul.Functions
-    let gen = generate tast
-    generateC (makeHeaderInclude (makeHeaderName modul)) gen
+    let env = makeCEnv modul.Name modul.Functions
+    let gen = generate env
+    generateC (makeHeaderInclude (makeHeaderName modul)) gen.Body
 
 let startClang args = io {
     let pinfo = makeClangStartInfo args

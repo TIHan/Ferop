@@ -3,6 +3,10 @@
 open Ferop.CConversion
 open Ferop.CTypedAST
 
+type CGenEnv = {
+    Header : string
+    Body : string }
+
 let generateHeaderf (name : string) =
     sprintf """
 #ifndef __%s_H__
@@ -101,7 +105,10 @@ let generateCDecl = function
 
         generateCDeclf returnType' name parameters' body
 
-let generate tast =
-    tast.Decls
+let generateBody env =
+    env.Decls
     |> List.map generateCDecl
     |> List.reduce (fun x y -> x + "\n\n" + y)
+
+let generate env =
+    { Header = ""; Body = generateBody env }

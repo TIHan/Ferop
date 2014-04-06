@@ -108,9 +108,7 @@ let makeCFunction env (func: MethodInfo) =
 
 let makeCDecl env func = makeCFunction env func
 
-let addCDecls env decls = { env with Decls = env.Decls @ decls }
-
-let makeTypedAst funcs =
-    let env = makeEmptyEnv ()
+let makeCEnv name funcs =
+    let env = makeEmptyEnv name
     let decls = funcs |> List.map (makeCDecl env)
-    addCDecls env decls
+    { env with Decls = decls }
