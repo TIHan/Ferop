@@ -63,7 +63,7 @@ let generateCType = function
     | Int64 ->  "int64_t"
     | Float ->  "float"
     | Double -> "double"
-    | Struct x -> x.Name
+    | Struct (CStruct (name=x)) -> x
     | x -> failwithf "%A generated type not found." x
 
 let generateCFields = function
@@ -77,7 +77,7 @@ let generateCFields = function
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s\n%s" x y)
 
-let generateCStruct stru = generateCStructf (generateCFields stru.Fields) stru.Name
+let generateCStruct (CStruct (name, fields)) = generateCStructf (generateCFields fields) name
 
 let generateReturnType = function
     | None -> "void"
@@ -89,7 +89,7 @@ let generateParameters = function
 
     parameters
     |> List.map (function
-        | CLocalVar (typ, name) ->
+        | CVar (typ, name) ->
             let ctype = generateCType typ
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)

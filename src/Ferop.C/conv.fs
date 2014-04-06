@@ -56,9 +56,9 @@ let methodExpr meth =
     | None -> failwithf "Reflected definition for %s not found" meth.Name
     | Some expr -> expr
 
-let lookupStruct env (typ: Type) = env.StructMap |> Map.tryFind (typ.Name)
+let lookupStruct env (typ: Type) = env.Structs |> List.tryFind (fun (CStruct(x,_)) -> x = typ.Name)
 
-let rec makeCType env = function
+let rec lookupCType env = function
     | x when x = typeof<byte> ->    Byte
     | x when x = typeof<sbyte> ->   SByte
     | x when x = typeof<uint16> ->  UInt16
@@ -79,15 +79,15 @@ and makeCStruct env (typ: Type) =
     let name = typ.Name
     let fields =
         runtimeFields typ
-        |> List.map (fun x -> CField (makeCType env x.FieldType, x.Name))
+        |> List.map (fun x -> CField (lookupCType env x.FieldType, x.Name))
 
-    Struct { Name = name; Fields = fields }
+    CStruct (name, fields)
 
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
-    | x -> Some <| makeCType env x
+    | x -> Some <| lookupCType env x
 
-let makeParameter env (info: ParameterInfo) = CLocalVar (makeCType env info.ParameterType, info.Name)
+let makeParameter env (info: ParameterInfo) = CVar (lookupCType env info.ParameterType, info.Name)
 
 let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
@@ -112,7 +112,19 @@ let makeCFunction env (func: MethodInfo) =
 
 let makeCDecl env func = makeCFunction env func
 
+let makeCStructs env modul =
+    let types =
+        modul.Functions
+        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+        |> List.reduce (fun x y -> x @ y)
+        |> List.map (fun x -> x.ParameterType)
+        |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
+    { env with Structs = types |> List.map (makeCStruct env) }
+
+let makeCDecls env modul =
+    { env with Decls = modul.Functions |> List.map (makeCDecl env) }
+
 let makeCEnv modul =
     let env = makeEmptyEnv modul.Name
-    let decls = modul.Functions |> List.map (makeCDecl env)
-    { env with Decls = decls }
+    let env' = makeCStructs env modul
+    makeCDecls env' modul

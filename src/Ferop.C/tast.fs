@@ -21,18 +21,18 @@ type CType =
     | Array of CType * size: int option
     | Struct of CStruct
 
-and CStruct = { Name: string; Fields: CField list }
+and CStruct = CStruct of name: string * fields: CField list
 
 and CField = CField of CType * name: string
 
-type CLocalVar = CLocalVar of CType * name: string
+type CVar = CVar of CType * name: string
 
 type CDecl =
-    | Function of returnType: CType option * name: string * parameters: CLocalVar list * CExpr
+    | Function of returnType: CType option * name: string * parameters: CVar list * CExpr
 
 type CEnv = { 
     Name : string
     Decls : CDecl list
-    StructMap : Map<string, CStruct> }
+    Structs : CStruct list }
 
-let makeEmptyEnv name = { Name = name; Decls = List.empty; StructMap = Map.empty }
+let makeEmptyEnv name = { Name = name; Decls = List.empty; Structs = List.empty }
