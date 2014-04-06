@@ -3,7 +3,7 @@
 open Ferop.CConversion
 open Ferop.CTypedAST
 
-type CGenEnv = {
+type CGen = {
     Header : string
     Body : string }
 
@@ -48,9 +48,7 @@ let generateCDeclf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
 %s 
 }"""
 
-let generateHeader name body = generateHeaderf name body
-
-let generateMainHeader name body = generateMainHeaderf name body
+let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
 
 let generateCType = function
     | Byte ->   "uint8_t"
@@ -79,6 +77,14 @@ let generateCFields = function
 
 let generateCStruct (CStruct (name, fields)) = generateCStructf (generateCFields fields) name
 
+let generateCStructs = function
+    | [] -> ""
+    | structs ->
+
+    structs
+    |> List.map (fun x -> generateCStruct x)
+    |> List.reduce (fun x y -> x + "\n\n" + y)       
+
 let generateReturnType = function
     | None -> "void"
     | Some x -> generateCType x
@@ -105,10 +111,16 @@ let generateCDecl = function
 
         generateCDeclf returnType' name parameters' body
 
-let generateBody env =
-    env.Decls
-    |> List.map generateCDecl
-    |> List.reduce (fun x y -> x + "\n\n" + y)
+let generateHeader env includes =
+    let structDefs = generateCStructs env.Structs
+    generateMainHeaderf env.Name <|
+        sprintf "%s\n\n%s" includes structDefs 
 
-let generate env =
-    { Header = ""; Body = generateBody env }
+let generateBody env =
+    (makeHeaderInclude env.Name) +
+    (env.Decls
+    |> List.map generateCDecl
+    |> List.reduce (fun x y -> x + "\n\n" + y))
+
+let generate env includes =
+    { Header = generateHeader env includes; Body = generateBody env }

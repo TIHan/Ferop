@@ -11,10 +11,6 @@ open Ferop.Helpers
 
 open FSharp.Control.IO
 
-let makeHeaderName modul = modul.Name
-
-let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
-
 let makeHeaderIncludes (modul: Module) = modul.Includes
 
 let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
@@ -49,12 +45,6 @@ let dummyC = ""
 
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
-let generateC includes body =
-    sprintf """%s
-%s
-"""
-        includes body
-
 open Ferop.CConversion
 open Ferop.CGen
 
@@ -62,8 +52,7 @@ let makeFsModule (modul: Module) = { Name = modul.Name; Functions = modul.Functi
 
 let makeC outputPath (modul: Module) =
     let env = makeCEnv <| makeFsModule modul
-    let gen = generate env
-    generateC (makeHeaderInclude (makeHeaderName modul)) gen.Body
+    generate env modul.Includes
 
 let startClang args = io {
     let pinfo = makeClangStartInfo args
@@ -87,17 +76,20 @@ let startAr args = io {
 
     checkProcessError p }
 
-let compileC outputPath modul code = io {
+let compileC outputPath modul cgen = io {
+    let hFile = makeHFilePath outputPath modul
     let cFile = makeCFilePath outputPath modul
     let oFile = makeOFilePath outputPath modul
     let flags = modul.ClangFlagsOsx
 
-    File.WriteAllText (cFile, code)
+    File.WriteAllText (hFile, cgen.Header)
+    File.WriteAllText (cFile, cgen.Body)
 
     let args = makeArgs flags cFile oFile
     do! startClang args
 
-    File.Delete (cFile)
+    File.Delete hFile
+    File.Delete cFile
     return oFile }
 
 /// Compiles a dummy c file that contains nothing. This ensures we at least get a dylib.
@@ -126,21 +118,13 @@ let cleanObjectFiles outputPath = io {
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
 
-let makeHeaderFile outputPath modul = io {
-    let header = makeHFilePath outputPath modul
-    let headerGen = generateMainHeader (makeHeaderName modul) modul.Includes
-    File.WriteAllText (header, headerGen)
-    return header }
-
 let compileModule outputPath modul =
-    let code = makeC outputPath modul
+    let cgen = makeC outputPath modul
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 
     io {
-        let! header = makeHeaderFile outputPath modul
-        let! oFile = compileC outputPath modul code
+        let! oFile = compileC outputPath modul cgen
         do! compileToDynamicLibrary libs oFile dylibName
-        File.Delete (header)
         return! cleanObjectFiles outputPath }
     |> IO.run
