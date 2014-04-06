@@ -10,6 +10,7 @@ type Struct1 =
     val X : single
     val Y : single
     val Z : single
+    val W : nativeptr<single>
 
 [<Ferop>]
 [<ClangFlagsOsx ("")>]

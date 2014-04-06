@@ -47,8 +47,10 @@ let allNestedRuntimeFieldTypes (typ: Type) =
                 
     fr [] (f typ)  
 
-let isTypeUnmanaged (typ: Type) =
-    let check (x: Type) = (x.IsValueType && not x.IsGenericType)
+let rec isTypeUnmanaged (typ: Type) =
+    let check (x: Type) = 
+        (x.IsValueType && not x.IsGenericType) ||
+        (x.IsPointer && (x.GenericTypeArguments |> Array.forall (isTypeUnmanaged)))
     match check typ with
     | false -> false
     | _ -> allNestedRuntimeFieldTypes typ |> List.forall check
@@ -71,6 +73,7 @@ let rec lookupCType env = function
     | x when x = typeof<int64> ->   Int64
     | x when x = typeof<single> ->  Float
     | x when x = typeof<double> ->  Double
+    | x when x = typeof<nativeint> -> Pointer (Int32)
     | x when isTypeUnmanaged x ->
         match lookupStruct env x with
         | None -> failwithf "%A not found." x.Name

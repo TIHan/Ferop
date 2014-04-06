@@ -50,7 +50,7 @@ let generateCDeclf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
 
 let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
 
-let generateCType = function
+let rec generateCType = function
     | Byte ->   "uint8_t"
     | SByte ->  "int8_t"
     | UInt16 -> "uint16_t"
@@ -61,6 +61,7 @@ let generateCType = function
     | Int64 ->  "int64_t"
     | Float ->  "float"
     | Double -> "double"
+    | Pointer x -> generateCType x + "*"
     | Struct (CStruct (name=x)) -> x
     | x -> failwithf "%A generated type not found." x
 
