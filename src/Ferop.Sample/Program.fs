@@ -28,18 +28,13 @@ type DrawLine =
 
     new (x, y) = { X = x; Y = y }
 
-[<EntryPoint>]
-let main args =
-    let app = Native.App.init ()
+let clear () = Native.App.clear ()
 
-    let beginPoint = vec2 (0.f, 0.f)
-    let endPoint = vec2 (0.5f, 1.5f)
-    let mutable drawLine = DrawLine (beginPoint, endPoint)
+let draw app = Native.App.draw app
 
+let loadShaders () =
     let mutable vertexFile = ([|0uy|]) |> Array.append (File.ReadAllBytes ("v.vertex"))
     let mutable fragmentFile = ([|0uy|]) |> Array.append (File.ReadAllBytes ("f.fragment"))
-
-    let vbo = Native.App.generateVbo (sizeof<DrawLine>, NativePtr.toNativeInt &&drawLine)
 
     // Fixed
     let vh = GCHandle.Alloc (vertexFile, GCHandleType.Pinned)
@@ -54,12 +49,41 @@ let main args =
     fh.Free ()
     // End Fixed
 
-    Native.App.clear ()
+let makeVbo (drawLines: DrawLine []) = 
+    let h = GCHandle.Alloc (drawLines, GCHandleType.Pinned)
+    let p = h.AddrOfPinnedObject ()
+    let vbo = Native.App.generateVbo (drawLines.Length * sizeof<DrawLine>, p)
+    h.Free ()
+    vbo
 
-    Native.App.drawVbo (sizeof<DrawLine>, NativePtr.toNativeInt &&drawLine, vbo)
+let drawVbo (drawLines: DrawLine []) vbo =
+    let h = GCHandle.Alloc (drawLines, GCHandleType.Pinned)
+    let p = h.AddrOfPinnedObject ()
+    Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, p, vbo)
+    h.Free ()
 
-    Native.App.draw app
+let init () = Native.App.init ()
+
+let exit app = Native.App.exit app
+
+[<EntryPoint>]
+let main args =
+    let app = init ()
+
+    let beginPoint = vec2 (0.f, 0.f)
+    let endPoint = vec2 (0.5f, 1.5f)
+    let drawLine = DrawLine (beginPoint, endPoint)
+
+    let drawLines = [|drawLine|]
+
+    let vbo = makeVbo drawLines
+
+    loadShaders ()
+
+    clear ()
+    drawVbo drawLines vbo
+    draw app
 
     Thread.Sleep (2000)
 
-    Native.App.exit (app)
+    exit (app)
