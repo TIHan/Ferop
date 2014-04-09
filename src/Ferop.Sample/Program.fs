@@ -66,24 +66,53 @@ let init () = Native.App.init ()
 
 let exit app = Native.App.exit app
 
+// http://wiki.libsdl.org/SDL_EventType
+let shouldQuit () = Native.App.shouldQuit ()
+
+
+let torad = 0.0174532925f
+
+let makeEndpoint degrees length (v: vec2) = 
+    vec2 (v.X + length * cos (degrees * torad), v.Y + length * sin (degrees * torad))
+
+let makeDrawLine degrees length (line: DrawLine) = DrawLine (line.Y, makeEndpoint degrees length line.Y)
+
+let makeLines degrees length (line: DrawLine) =
+
+    let rec makeLines degrees length (lines: DrawLine list) n cont =
+        match n with
+        | 14 -> lines @ cont []
+        | _ ->
+            let ldeg = degrees + 20.f
+            let rdeg = degrees - 20.f
+            let ll = makeDrawLine ldeg length lines.Head
+            let rl = makeDrawLine rdeg length lines.Head
+      
+            makeLines ldeg (length * 0.7f) (ll :: lines) (n + 1) (fun x ->
+                makeLines rdeg (length * 0.7f) (rl :: x) (n + 1) (fun y -> cont y))
+
+    makeLines degrees length [line] 0 (fun x -> x)
+        
+
 [<EntryPoint>]
 let main args =
     let app = init ()
 
-    let beginPoint = vec2 (0.f, 0.f)
-    let endPoint = vec2 (0.5f, 1.5f)
+    let beginPoint = vec2 (0.f, -1.f)
+    let endPoint = vec2 (0.f, -0.5f)
     let drawLine = DrawLine (beginPoint, endPoint)
 
-    let drawLines = [|drawLine|]
+    let drawLines = 
+        makeLines 90.f (0.4f) drawLine
+        |> Array.ofList
 
     let vbo = makeVbo drawLines
 
     loadShaders ()
 
-    clear ()
-    drawVbo drawLines vbo
-    draw app
-
-    Thread.Sleep (2000)
+    while not <| shouldQuit () do
+        clear ()
+        drawVbo drawLines vbo
+        draw app
 
     exit (app)

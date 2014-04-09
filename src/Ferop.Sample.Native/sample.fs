@@ -51,6 +51,13 @@ return 0;
 
     let draw (app: Application) : unit = C """ SDL_GL_SwapWindow (app.Window); """
 
+    let shouldQuit () : bool =
+        C """
+SDL_Event e;
+SDL_PollEvent (&e);
+return e.type == SDL_QUIT;
+        """
+
     let generateVbo (size: int) (data: nativeint) : int =
         C """
 GLuint vbo;
