@@ -50,6 +50,7 @@ let generateCDeclf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
 let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
 
 let rec generateCType = function
+    | Void ->   "void"
     | Byte ->   "uint8_t"
     | SByte ->  "int8_t"
     | UInt16 -> "uint16_t"

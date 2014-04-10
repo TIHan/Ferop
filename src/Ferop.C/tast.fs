@@ -7,6 +7,7 @@ type CExpr =
     | Text of string
 
 type CType =
+    | Void
     | Byte
     | SByte
     | UInt16
@@ -25,9 +26,9 @@ and CStruct = CStruct of name: string * fields: CField list
 
 and CField = CField of CType * name: string
 
-type CVar = CVar of CType * name: string
+and CVar = CVar of CType * name: string
 
-type CDecl =
+and CDecl =
     | Function of returnType: CType option * name: string * parameters: CVar list * CExpr
 
 type CEnv = { 

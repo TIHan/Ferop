@@ -24,7 +24,7 @@ SDL_Init (SDL_INIT_VIDEO);
 Application app;
 
 app.Window = 
-    (int32_t*)SDL_CreateWindow(
+    SDL_CreateWindow(
         "Ferop.Sample",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
@@ -35,7 +35,7 @@ SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 2);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-app.GLContext = (int32_t*)SDL_GL_CreateContext ((SDL_Window*)app.Window);
+app.GLContext = SDL_GL_CreateContext ((SDL_Window*)app.Window);
 return app;
         """
 
