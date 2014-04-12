@@ -86,19 +86,36 @@ and lookupCType env typ =
     | None -> failwithf "%A not supported." typ.FullName
     | Some x -> x
 
+and makeCDeclStructField typ name = CField (typ, name)
+
+and makeCDeclStructFields env (typ: Type) =
+    properties typ
+    |> List.fold (fun (env, fields) x -> 
+        match tryLookupCType env x.PropertyType with
+        | None -> 
+            let env = makeCDeclStruct env x.PropertyType
+            env, makeCDeclStructField (lookupCType env x.PropertyType) x.Name :: fields
+        | Some ctype -> env, makeCDeclStructField ctype x.Name :: fields) (env, [])
+
+and makeCDeclStruct env (typ: Type) =
+    let name = typ.Name
+    let env', fields = makeCDeclStructFields env typ
+
+    { env' with Structs = CStruct (name, fields) :: env'.Structs }
+
+and makeCField typ name = CField (typ, name)
+
+and makeCFields env (typ: Type) =
+    properties typ
+    |> List.map (fun x ->
+        let ctype = lookupCType env x.PropertyType
+        makeCField ctype x.Name)
+
 and makeCStruct env (typ: Type) =
     let name = typ.Name
-    let env, fields =
-        properties typ
-        |> List.fold (fun (env, fields) x -> 
-            match tryLookupCType env x.PropertyType with
-            | Some ctype ->
-                env, CField (ctype, x.Name) :: fields
-            | None ->
-                let env = makeCStruct env x.PropertyType
-                env,CField (lookupCType env x.PropertyType, x.Name) :: fields) (env, [])
+    let fields = makeCFields env typ
 
-    { env with Structs = CStruct (name, List.rev fields) :: env.Structs }
+    CStruct (name, fields)
 
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
@@ -129,7 +146,7 @@ let makeCFunction env (func: MethodInfo) =
 
 let makeCDecl env func = makeCFunction env func
 
-let makeCStructs env modul =
+let makeCDeclStructs env modul =
     modul.Functions
     |> List.map (fun x -> x.GetParameters () |> List.ofArray)
     |> List.reduce (fun x y -> x @ y)
@@ -138,12 +155,12 @@ let makeCStructs env modul =
     |> Seq.distinct
     |> List.ofSeq
     |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
-    |> List.fold (fun env x -> makeCStruct env x) env
+    |> List.fold (fun env x -> makeCDeclStruct env x) env
 
 let makeCDecls env modul =
     { env with Decls = modul.Functions |> List.map (makeCDecl env) }
 
 let makeCEnv modul =
     let env = makeEmptyEnv modul.Name
-    let env' = makeCStructs env modul
+    let env' = makeCDeclStructs env modul
     makeCDecls env' modul
