@@ -9,7 +9,11 @@ open System.Threading
 
 open Microsoft.FSharp.NativeInterop
 
+#if DEBUG
 type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Debug">
+#else
+type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Release">
+#endif
 
 #nowarn "9"
 #nowarn "51"
@@ -72,16 +76,16 @@ let shouldQuit () = Native.App.shouldQuit ()
 
 let torad = 0.0174532925f
 
-let makeEndpoint degrees length (v: vec2) = 
+let inline makeEndpoint degrees length (v: vec2) =
     vec2 (v.X + length * cos (degrees * torad), v.Y + length * sin (degrees * torad))
 
-let makeDrawLine degrees length (line: DrawLine) = DrawLine (line.Y, makeEndpoint degrees length line.Y)
+let inline makeDrawLine degrees length (line: DrawLine) = DrawLine (line.Y, makeEndpoint degrees length line.Y)
 
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines degrees length (lines: DrawLine list) n cont =
         match n with
-        | 14 -> lines @ cont []
+        | 14 -> cont lines
         | _ ->
             let ldeg = degrees + 20.f
             let rdeg = degrees - 20.f
@@ -102,9 +106,19 @@ let main args =
     let endPoint = vec2 (0.f, -0.5f)
     let drawLine = DrawLine (beginPoint, endPoint)
 
+    let stopwatch = Stopwatch.StartNew ()
     let drawLines = 
         makeLines 90.f (0.4f) drawLine
         |> Array.ofList
+    stopwatch.Stop ()
+
+    let stopwatch = Stopwatch.StartNew ()
+    let drawLines = 
+        makeLines 90.f (0.4f) drawLine
+        |> Array.ofList
+    stopwatch.Stop ()
+        
+    printfn "%A" stopwatch.ElapsedMilliseconds
 
     let vbo = makeVbo drawLines
 
