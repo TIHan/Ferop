@@ -42,7 +42,7 @@ typedef struct {
 %s
 } %s;"""
 
-let generateCDeclf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
+let generateCDeclFunctionf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
 {
 %s 
 }"""
@@ -111,12 +111,13 @@ let generateCExpr = function
     | Text x -> x
 
 let generateCDecl = function
-    | Function (returnType, name, parameters, expr) ->
+    | CDecl.Function (returnType, name, parameters, expr) ->
         let returnType' = generateReturnType returnType
         let parameters' = generateParameters parameters
         let body = generateCExpr expr
 
-        generateCDeclf returnType' name parameters' body
+        generateCDeclFunctionf returnType' name parameters' body
+    | _ -> failwith "not supported"
 
 let generateHeader env includes =
     let structDefs = generateCStructs env.Structs

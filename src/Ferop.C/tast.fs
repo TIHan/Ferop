@@ -28,8 +28,11 @@ and CField = CField of CType * name: string
 
 and CFunction = CFunction of returnType: CType option * name: string * parameterTypes: CType list
 
-and CDecl =
+and 
+    [<RequireQualifiedAccess>]
+    CDecl =
     | Function of returnType: CType option * name: string * parameters: (CType * string) list * CExpr
+    | Struct of name: string * fields: CField list
 
 type CEnv = { 
     Name : string

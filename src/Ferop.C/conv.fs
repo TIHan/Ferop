@@ -136,15 +136,15 @@ let rec makeCExpr = function
 
     | x -> failwithf "Expression, %A, not supported." x
 
-let makeCFunction env (func: MethodInfo) =
+let makeCDeclFunction env (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
     let name = sprintf "%s_%s" env.Name func.Name
     let parameters = func.GetParameters () |> makeParameters env
     let expr = methodExpr func |> makeCExpr
 
-    Function (returnType, name, parameters, expr)
+    CDecl.Function (returnType, name, parameters, expr)
 
-let makeCDecl env func = makeCFunction env func
+let makeCDecl env func = makeCDeclFunction env func
 
 let makeCDeclStructs env modul =
     modul.Functions
