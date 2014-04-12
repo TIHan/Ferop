@@ -7,7 +7,6 @@ type CExpr =
     | Text of string
 
 type CType =
-    | Void
     | Byte
     | SByte
     | UInt16
@@ -18,7 +17,7 @@ type CType =
     | Int64
     | Float
     | Double
-    | Pointer of CType
+    | Pointer of CType option
     | Array of CType * size: int option
     | Struct of CStruct
 

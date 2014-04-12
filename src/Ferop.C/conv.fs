@@ -74,7 +74,7 @@ let rec tryLookupCType env = function
     | x when x = typeof<single> ->  Some Float
     | x when x = typeof<double> ->  Some Double
     | x when x = typeof<bool> ->    Some Int32
-    | x when x = typeof<nativeint> -> Some <| Pointer (Void)
+    | x when x = typeof<nativeint> -> Some <| Pointer None
     | x when isTypeUnmanaged x ->
         match tryLookupStruct env x with
         | None -> None
