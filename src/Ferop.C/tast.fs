@@ -22,11 +22,18 @@ type CType =
     | Struct of CStruct
     | Function of CFunction
 
-and CStruct = CStruct of name: string * fields: CField list
+and CStruct = { 
+    Name: string
+    Fields: CField list }
 
-and CField = CField of CType * name: string
+and CField = {
+    Type: CType
+    Name: string }
 
-and CFunction = CFunction of returnType: CType option * name: string * parameterTypes: CType list
+and CFunction = {
+    ReturnType: CType option
+    Name: string 
+    ParameterTypes: CType list }
 
 and 
     [<RequireQualifiedAccess>]
@@ -39,7 +46,7 @@ let hasFieldType fieldTypeName = function
     | fields ->
 
     fields
-    |> List.exists (function | CField (Struct (CStruct (x, _)), _) -> x = fieldTypeName | _ -> false)
+    |> List.exists (function | {Type = Struct x} -> x.Name = fieldTypeName | _ -> false)
 
 type CEnv = { 
     Name : string

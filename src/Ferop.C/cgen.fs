@@ -71,7 +71,7 @@ let rec generateCType = function
     | Float ->  "float"
     | Double -> "double"
     | Pointer None -> "void*"
-    | Struct (CStruct (name=x)) -> x
+    | Struct ({ Name = x }) -> x
     | x -> failwithf "%A generated type not found." x
 
 let generateCFields = function
@@ -80,7 +80,7 @@ let generateCFields = function
         
     fields
     |> List.map (function
-        | CField (typ, name) ->
+        | { Type = typ; Name = name } ->
             let ctype = generateCType typ
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s;\n%s;" x y)

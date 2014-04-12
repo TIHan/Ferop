@@ -60,7 +60,10 @@ let methodExpr meth =
     | None -> failwithf "Reflected definition for %s not found" meth.Name
     | Some expr -> expr
 
-let makeCStruct = function | CDecl.Struct (name, fields) -> CStruct (name, fields) | _ -> failwith "Invalid struct"
+let makeCStruct = function 
+    | CDecl.Struct (name, fields) -> 
+        { Name = name; Fields = fields }
+    | _ -> failwith "Invalid struct"
 
 let tryLookupStruct env (typ: Type) = 
     env.Decls 
@@ -93,7 +96,7 @@ and lookupCType env typ =
     | None -> failwithf "%A not supported." typ.FullName
     | Some x -> x
 
-and makeCField typ name = CField (typ, name)
+and makeCField typ name = { Type = typ; Name = name }
 
 and makeCFields env (typ: Type) =
     properties typ
