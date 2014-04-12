@@ -6,23 +6,23 @@ open System.Runtime.InteropServices
 #nowarn "9"
 
 [<Struct>]
-type Struct3 =
-    val X : double
-    val Y : double
-
-[<Struct>]
 type Struct2 =
     val X : Struct3
     val Y : int
 
-[<Struct>]
-type Struct1 =
+and [<Struct>]
+    Struct1 =
     val X : single
     val Y : single
     val Z : single
     val W : nativeptr<single>
     val St2 : Struct2
     val St3 : Struct3
+
+and [<Struct>]
+    Struct3 =
+    val X : double
+    val Y : double
 
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
@@ -50,3 +50,5 @@ module Tests =
     let testDouble (x: double) : double = C """ return x; """
 
     let testStruct1 (x: Struct1) : Struct1 = C """ return x; """
+
+    let testStruct3 (x: Struct3) : Struct3 = C """ return x; """

@@ -59,12 +59,5 @@ type CEnv = {
     member this.DeclStructs = 
         this.Decls 
         |> List.filter (function | CDecl.Struct _ -> true | _ -> false)
-        |> List.sortWith (fun x y ->
-            match (x, y) with
-            | (CDecl.Struct (_, fields)), (CDecl.Struct (name, _)) -> 
-                    match hasFieldType name fields with
-                    | true -> 1
-                    | _ -> 0
-            | _ -> 0)
 
 let makeEmptyEnv name = { Name = name; Decls = List.empty }

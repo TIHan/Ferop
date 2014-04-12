@@ -145,21 +145,23 @@ let rec makeCDeclStructFields env (typ: Type) =
         | Some ctype -> env, makeCField ctype x.Name :: fields) (env, [])
             
 and makeCDeclStruct env (typ: Type) =
-    let name = typ.Name
-    let env', fields = makeCDeclStructFields env typ
+    match tryLookupCType env typ with
+    | Some _ -> env
+    | _ ->
+        let name = typ.Name
+        let env', fields = makeCDeclStructFields env typ
 
-    { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }
+        { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }
 
 let makeCDeclStructs (env: CEnv) modul =
-    modul.Functions
-    |> List.map (fun x -> x.GetParameters () |> List.ofArray)
-    |> List.reduce (fun x y -> x @ y)
-    |> List.map (fun x -> x.ParameterType)
-    |> Seq.ofList
-    |> Seq.distinct
-    |> List.ofSeq
-    |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
-    |> List.fold (fun env x -> makeCDeclStruct env x) env
+    let env' =
+        modul.Functions
+        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+        |> List.reduce (fun x y -> x @ y)
+        |> List.map (fun x -> x.ParameterType)
+        |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
+        |> List.fold (fun env x -> makeCDeclStruct env x) env
+    { env' with Decls = List.rev env'.Decls }
 
 let makeCDeclFunctions env modul =
     let funcs = modul.Functions |> List.map (makeCDeclFunction env)

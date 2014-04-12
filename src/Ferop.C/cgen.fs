@@ -130,7 +130,7 @@ let generateSource (env: CEnv) =
     (generateHeaderInclude env.Name) +
     (env.DeclFunctions
     |> List.map generateCDecl
-    |> List.reduce (fun x y -> x + "\n\n" + y))
+    |> List.reduce (fun x y -> x + "\n" + y))
 
 let generate env includes =
     { Header = generateHeader env includes; Source = generateSource env }
