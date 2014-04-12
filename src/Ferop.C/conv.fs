@@ -104,7 +104,7 @@ let makeReturnType env = function
     | x when x = typeof<Void> -> None
     | x -> Some <| lookupCType env x
 
-let makeParameter env (info: ParameterInfo) = CVar (lookupCType env info.ParameterType, info.Name)
+let makeParameter env (info: ParameterInfo) = (lookupCType env info.ParameterType, info.Name)
 
 let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 

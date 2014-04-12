@@ -28,10 +28,8 @@ and CField = CField of CType * name: string
 
 and CFunction = CFunction of returnType: CType option * name: string * parameterTypes: CType list
 
-and CVar = CVar of CType * name: string
-
 and CDecl =
-    | Function of returnType: CType option * name: string * parameters: CVar list * CExpr
+    | Function of returnType: CType option * name: string * parameters: (CType * string) list * CExpr
 
 type CEnv = { 
     Name : string

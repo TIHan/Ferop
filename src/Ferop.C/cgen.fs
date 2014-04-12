@@ -102,8 +102,7 @@ let generateParameters = function
     | parameters ->
 
     parameters
-    |> List.map (function
-        | CVar (typ, name) ->
+    |> List.map (fun (typ, name: string) ->
             let ctype = generateCType typ
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)
