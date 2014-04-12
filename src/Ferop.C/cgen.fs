@@ -33,24 +33,31 @@ let generateMainHeaderf name body =
 #else
 #   error Compiler not supported.
 #endif
+
 %s
 "           body
 
-let generateCDeclStructf =
+let generateCFunctionPrototypef =
     sprintf """
-typedef struct {
-%s
-} %s;
+FEROP_EXPORT %s FEROP_DECL %s (%s);
 """
 
-let generateCDeclFunctionf = sprintf """
+let generateCFunctionf = 
+    sprintf """
 FEROP_EXPORT %s FEROP_DECL %s (%s)
 {
 %s 
 }
 """
 
-let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
+let generateCStructf =
+    sprintf """
+typedef struct {
+%s
+} %s;
+"""
+
+let generateHeaderInclude name = sprintf "#include \"%s.h\" \n" name
 
 let rec generateCType = function
     | Byte ->   "uint8_t"
@@ -78,29 +85,6 @@ let generateCFields = function
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s;\n%s;" x y)
 
-let generateCDeclStruct = function
-    | CDecl.Struct (name, fields) -> 
-        generateCDeclStructf (generateCFields fields) name
-    | _ -> failwith "Expected a struct decl"
-
-let generateCDeclStructs = function
-    | [] -> ""
-    | structs ->
-
-    structs
-    |> List.sortWith (fun x -> function
-        | CDecl.Struct (name1, fields) ->
-            if fields |> List.exists (fun (CField(typ,_)) -> 
-                match typ with
-                | Struct (CStruct (name2, _)) -> name1 = name2
-                | _ -> false) then
-                0
-            else
-                1
-        | _ -> 0)
-    |> List.map (fun x -> generateCDeclStruct x)
-    |> List.reduce (fun x y -> x + "\n\n" + y)       
-
 let generateReturnType = function
     | None -> "void"
     | Some x -> generateCType x
@@ -118,23 +102,33 @@ let generateParameters = function
 let generateCExpr = function
     | Text x -> x
 
+let generateCDeclPrototype = function
+    | CDecl.Function (returnType, name, parameters, _) ->
+        let returnType' = generateReturnType returnType
+        let parameters' = generateParameters parameters
+
+        generateCFunctionPrototypef returnType' name parameters'
+    | _ -> ""
+
 let generateCDecl = function
     | CDecl.Function (returnType, name, parameters, expr) ->
         let returnType' = generateReturnType returnType
         let parameters' = generateParameters parameters
         let body = generateCExpr expr
 
-        generateCDeclFunctionf returnType' name parameters' body
-    | _ -> ""
+        generateCFunctionf returnType' name parameters' body
+    | CDecl.Struct (name, fields) -> 
+        generateCStructf (generateCFields fields) name
 
 let generateHeader env includes =
-    let structDefs = generateCDeclStructs (env.Decls |> List.filter (function | CDecl.Struct _ -> true | _ -> false))
+    let prototypes = List.map generateCDeclPrototype env.Decls |> List.reduce (fun x y -> x + "\n" + y)
+    let structs = List.map generateCDecl env.DeclStructs |> List.reduce (fun x y -> x + "\n" + y)
     generateMainHeaderf env.Name <|
-        sprintf "%s\n\n%s" includes structDefs 
+        sprintf "%s\n%s\n%s" includes structs prototypes
 
-let generateSource env =
-    (makeHeaderInclude env.Name) +
-    (env.Decls
+let generateSource (env: CEnv) =
+    (generateHeaderInclude env.Name) +
+    (env.DeclFunctions
     |> List.map generateCDecl
     |> List.reduce (fun x y -> x + "\n\n" + y))
 

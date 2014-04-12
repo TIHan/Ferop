@@ -34,8 +34,30 @@ and
     | Function of returnType: CType option * name: string * parameters: (CType * string) list * CExpr
     | Struct of name: string * fields: CField list
 
+let hasFieldType fieldTypeName = function
+    | [] -> false
+    | fields ->
+
+    fields
+    |> List.exists (function | CField (Struct (CStruct (x, _)), _) -> x = fieldTypeName | _ -> false)
+
 type CEnv = { 
     Name : string
-    Decls : CDecl list }
+    Decls : CDecl list } with
+
+    member this.DeclFunctions = 
+        this.Decls
+        |> List.filter (function | CDecl.Function _ -> true | _ -> false)
+
+    member this.DeclStructs = 
+        this.Decls 
+        |> List.filter (function | CDecl.Struct _ -> true | _ -> false)
+        |> List.sortWith (fun x y ->
+            match (x, y) with
+            | (CDecl.Struct (_, fields)), (CDecl.Struct (name, _)) -> 
+                    match hasFieldType name fields with
+                    | true -> 1
+                    | _ -> 0
+            | _ -> 0)
 
 let makeEmptyEnv name = { Name = name; Decls = List.empty }
