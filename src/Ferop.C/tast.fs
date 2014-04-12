@@ -36,7 +36,6 @@ and
 
 type CEnv = { 
     Name : string
-    Decls : CDecl list
-    Structs : CStruct list }
+    Decls : CDecl list }
 
-let makeEmptyEnv name = { Name = name; Decls = List.empty; Structs = List.empty }
+let makeEmptyEnv name = { Name = name; Decls = List.empty }

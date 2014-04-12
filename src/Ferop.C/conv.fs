@@ -60,7 +60,14 @@ let methodExpr meth =
     | None -> failwithf "Reflected definition for %s not found" meth.Name
     | Some expr -> expr
 
-let tryLookupStruct env (typ: Type) = env.Structs |> List.tryFind (fun (CStruct(x,_)) -> x = typ.Name)
+let makeCStruct = function | CDecl.Struct (name, fields) -> CStruct (name, fields) | _ -> failwith "Invalid struct"
+
+let tryLookupStruct env (typ: Type) = 
+    env.Decls 
+    |> List.tryFind (function | CDecl.Struct (x,_) -> x = typ.Name | _ -> false)
+    |> function
+    | None -> None
+    | Some x -> Some <| makeCStruct x
 
 let rec tryLookupCType env = function
     | x when x = typeof<byte> ->    Some Byte
@@ -101,7 +108,7 @@ and makeCDeclStruct env (typ: Type) =
     let name = typ.Name
     let env', fields = makeCDeclStructFields env typ
 
-    { env' with Structs = CStruct (name, fields) :: env'.Structs }
+    { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }
 
 and makeCField typ name = CField (typ, name)
 
@@ -110,12 +117,6 @@ and makeCFields env (typ: Type) =
     |> List.map (fun x ->
         let ctype = lookupCType env x.PropertyType
         makeCField ctype x.Name)
-
-and makeCStruct env (typ: Type) =
-    let name = typ.Name
-    let fields = makeCFields env typ
-
-    CStruct (name, fields)
 
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
@@ -136,7 +137,7 @@ let rec makeCExpr = function
 
     | x -> failwithf "Expression, %A, not supported." x
 
-let makeCDeclFunction env (func: MethodInfo) =
+let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
     let name = sprintf "%s_%s" env.Name func.Name
     let parameters = func.GetParameters () |> makeParameters env
@@ -144,9 +145,7 @@ let makeCDeclFunction env (func: MethodInfo) =
 
     CDecl.Function (returnType, name, parameters, expr)
 
-let makeCDecl env func = makeCDeclFunction env func
-
-let makeCDeclStructs env modul =
+let makeCDeclStructs (env: CEnv) modul =
     modul.Functions
     |> List.map (fun x -> x.GetParameters () |> List.ofArray)
     |> List.reduce (fun x y -> x @ y)
@@ -157,10 +156,11 @@ let makeCDeclStructs env modul =
     |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
     |> List.fold (fun env x -> makeCDeclStruct env x) env
 
-let makeCDecls env modul =
-    { env with Decls = modul.Functions |> List.map (makeCDecl env) }
+let makeCDeclFunctions env modul =
+    let funcs = modul.Functions |> List.map (makeCDeclFunction env)
+    { env with Decls = env.Decls @ funcs }
 
 let makeCEnv modul =
     let env = makeEmptyEnv modul.Name
     let env' = makeCDeclStructs env modul
-    makeCDecls env' modul
+    makeCDeclFunctions env' modul
