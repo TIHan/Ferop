@@ -5,7 +5,7 @@ open Ferop.CTypedAST
 
 type CGen = {
     Header : string
-    Body : string }
+    Source : string }
 
 let generateHeaderf (name : string) =
     sprintf """
@@ -40,12 +40,15 @@ let generateCDeclStructf =
     sprintf """
 typedef struct {
 %s
-} %s;"""
+} %s;
+"""
 
-let generateCDeclFunctionf = sprintf """FEROP_EXPORT %s FEROP_DECL %s (%s)
+let generateCDeclFunctionf = sprintf """
+FEROP_EXPORT %s FEROP_DECL %s (%s)
 {
 %s 
-}"""
+}
+"""
 
 let makeHeaderInclude name = sprintf "#include \"%s.h\" \n" name
 
@@ -129,11 +132,11 @@ let generateHeader env includes =
     generateMainHeaderf env.Name <|
         sprintf "%s\n\n%s" includes structDefs 
 
-let generateBody env =
+let generateSource env =
     (makeHeaderInclude env.Name) +
     (env.Decls
     |> List.map generateCDecl
     |> List.reduce (fun x y -> x + "\n\n" + y))
 
 let generate env includes =
-    { Header = generateHeader env includes; Body = generateBody env }
+    { Header = generateHeader env includes; Source = generateSource env }

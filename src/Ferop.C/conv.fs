@@ -93,23 +93,6 @@ and lookupCType env typ =
     | None -> failwithf "%A not supported." typ.FullName
     | Some x -> x
 
-and makeCDeclStructField typ name = CField (typ, name)
-
-and makeCDeclStructFields env (typ: Type) =
-    properties typ
-    |> List.fold (fun (env, fields) x -> 
-        match tryLookupCType env x.PropertyType with
-        | None -> 
-            let env = makeCDeclStruct env x.PropertyType
-            env, makeCDeclStructField (lookupCType env x.PropertyType) x.Name :: fields
-        | Some ctype -> env, makeCDeclStructField ctype x.Name :: fields) (env, [])
-
-and makeCDeclStruct env (typ: Type) =
-    let name = typ.Name
-    let env', fields = makeCDeclStructFields env typ
-
-    { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }
-
 and makeCField typ name = CField (typ, name)
 
 and makeCFields env (typ: Type) =
@@ -137,6 +120,10 @@ let rec makeCExpr = function
 
     | x -> failwithf "Expression, %A, not supported." x
 
+//-------------------------------------------------------------------------
+// CDecls
+//-------------------------------------------------------------------------
+
 let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
     let name = sprintf "%s_%s" env.Name func.Name
@@ -144,6 +131,21 @@ let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let expr = methodExpr func |> makeCExpr
 
     CDecl.Function (returnType, name, parameters, expr)
+
+let rec makeCDeclStructFields env (typ: Type) =
+    properties typ
+    |> List.fold (fun (env, fields) x -> 
+        match tryLookupCType env x.PropertyType with
+        | None -> 
+            let env = makeCDeclStruct env x.PropertyType
+            env, makeCField (lookupCType env x.PropertyType) x.Name :: fields
+        | Some ctype -> env, makeCField ctype x.Name :: fields) (env, [])
+            
+and makeCDeclStruct env (typ: Type) =
+    let name = typ.Name
+    let env', fields = makeCDeclStructFields env typ
+
+    { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }
 
 let makeCDeclStructs (env: CEnv) modul =
     modul.Functions
@@ -159,6 +161,10 @@ let makeCDeclStructs (env: CEnv) modul =
 let makeCDeclFunctions env modul =
     let funcs = modul.Functions |> List.map (makeCDeclFunction env)
     { env with Decls = env.Decls @ funcs }
+
+//-------------------------------------------------------------------------
+// CEnv
+//-------------------------------------------------------------------------
 
 let makeCEnv modul =
     let env = makeEmptyEnv modul.Name

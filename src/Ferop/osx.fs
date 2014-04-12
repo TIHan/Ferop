@@ -83,7 +83,7 @@ let compileC outputPath modul cgen = io {
     let flags = modul.ClangFlagsOsx
 
     File.WriteAllText (hFile, cgen.Header)
-    File.WriteAllText (cFile, cgen.Body)
+    File.WriteAllText (cFile, cgen.Source)
 
     let args = makeArgs flags cFile oFile
     do! startClang args
