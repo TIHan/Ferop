@@ -11,15 +11,7 @@ open Ferop.Helpers
 
 open FSharp.Control.IO
 
-let makeHeaderIncludes (modul: Module) = modul.Includes
-
-let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
-
-let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
-
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
-
-let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
 
 let makeDummyOFilePath path = Path.Combine (path, "_ferop_dummy_.o")
 
@@ -40,19 +32,6 @@ let makeArStartInfo args = ProcessStartInfo ("ar", args)
 let flattenObjectFiles = List.reduce (fun x y -> sprintf "%s %s" x y)
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
-
-let dummyC = ""
-
-let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
-
-open Ferop.CConversion
-open Ferop.CGen
-
-let makeFsModule (modul: Module) = { Name = modul.Name; Functions = modul.Functions }
-
-let makeC outputPath (modul: Module) =
-    let env = makeCEnv <| makeFsModule modul
-    generate env modul.Includes
 
 let startClang args = io {
     let pinfo = makeClangStartInfo args
@@ -77,13 +56,9 @@ let startAr args = io {
     checkProcessError p }
 
 let compileC outputPath modul cgen = io {
-    let hFile = makeHFilePath outputPath modul
-    let cFile = makeCFilePath outputPath modul
+    let! hFile, cFile = writeCGen outputPath modul cgen
     let oFile = makeOFilePath outputPath modul
     let flags = modul.ClangFlagsOsx
-
-    File.WriteAllText (hFile, cgen.Header)
-    File.WriteAllText (cFile, cgen.Source)
 
     let args = makeArgs flags cFile oFile
     do! startClang args
@@ -122,7 +97,7 @@ let cleanObjectFiles outputPath = io {
         |> List.iter (fun x -> File.Delete x) }
 
 let compileModule outputPath modul =
-    let cgen = makeC outputPath modul
+    let cgen = makeCGen outputPath modul
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 

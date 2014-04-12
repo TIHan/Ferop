@@ -1,8 +1,10 @@
 ﻿module internal Ferop.Core
 
 open System
+open System.IO
 open System.Reflection
 open System.Reflection.Emit
+open System.Diagnostics
 open System.Runtime.InteropServices
 
 open Microsoft.FSharp.Reflection
@@ -63,6 +65,18 @@ let makeModule (typ: Type) =
 
     { Name = name; FullName = shortName; Attributes = attrs; Functions = funcs }
 
+let makeHeaderIncludes (modul: Module) = modul.Includes
+
+let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
+
+let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
+
+let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
+
+let dummyC = ""
+
+let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
+
 let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
     let meth = 
         tb.DefinePInvokeMethod (
@@ -77,3 +91,20 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
             CharSet.Ansi)
 
     meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+
+open Ferop.CConversion
+open Ferop.CGen
+
+let makeFsModule (modul: Module) = { Name = modul.Name; Functions = modul.Functions }
+
+let makeCGen outputPath (modul: Module) =
+    let env = makeCEnv <| makeFsModule modul
+    generate env modul.Includes
+
+let writeCGen outputPath modul cgen = io {
+    let hFile = makeHFilePath outputPath modul
+    let cFile = makeCFilePath outputPath modul
+
+    File.WriteAllText (hFile, cgen.Header)
+    File.WriteAllText (cFile, cgen.Source)
+    return hFile, cFile }

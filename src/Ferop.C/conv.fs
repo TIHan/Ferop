@@ -23,8 +23,6 @@ let C (code: string) =
     code |> ignore
     failwith errorMsg
 
-let CExtern () = failwith errorMsg
-
 let runtimeFields (typ: Type) = typ.GetRuntimeFields () |> List.ofSeq
 
 let properties (typ: Type) = typ.GetProperties () |> List.ofSeq
@@ -113,8 +111,6 @@ let makeParameter env (info: ParameterInfo) = (lookupCType env info.ParameterTyp
 let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
 let rec makeCExpr = function
-    | SpecificCall <@ CExtern @> (_, _, _) -> Text ""
-
     | Call (_, _, exprList) -> makeCExpr exprList.[0]
 
     | Lambda (_, body) -> makeCExpr body
