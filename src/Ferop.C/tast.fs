@@ -20,10 +20,13 @@ type CType =
     | Pointer of CType option
     | Array of CType * size: int option
     | Struct of CStruct
+    | Function of CFunction
 
 and CStruct = CStruct of name: string * fields: CField list
 
 and CField = CField of CType * name: string
+
+and CFunction = CFunction of returnType: CType option * name: string * parameterTypes: CType list
 
 and CVar = CVar of CType * name: string
 
