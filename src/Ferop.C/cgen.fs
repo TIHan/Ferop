@@ -50,10 +50,23 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
 }
 """
 
-let generateCFunctionPointer =
+let generateCFunctionPointer returnType name parameters =
     sprintf """
-typedef %s (*%s)(%s);
+typedef %s (*fs_%s)(%s);
+extern fs_%s Fs_%s;
+FEROP_EXPORT void FEROP_DECL ferop_set_fs_%s (fs_%s);
 """
+        returnType name parameters name name name name
+
+let genereateCFunctionPointerImpl name =
+    sprintf """
+fs_%s Fs_%s;
+FEROP_EXPORT void FEROP_DECL ferop_set_fs_%s (fs_%s ptr)
+{
+    Fs_%s = ptr;
+}
+"""
+        name name name name name
 
 let generateCStructf =
     sprintf """
@@ -133,6 +146,11 @@ let generateCDeclFunctionPointer = function
         generateCFunctionPointer returnType' name parameters'
     | _ -> ""
 
+let generateCDeclFunctionPointerImpl = function
+    | CDecl.Function (_, name, _, _) ->
+        genereateCFunctionPointerImpl name
+    | _ -> ""
+
 let generateCDeclPrototypes = function
     | [] -> ""
     | decls -> List.map generateCDeclPrototype decls |> List.reduce (fun x y -> x + "\n" + y)
@@ -149,14 +167,21 @@ let generateCDeclFunctionPointers = function
     | [] -> ""
     | funcs -> List.map generateCDeclFunctionPointer funcs |> List.reduce (fun x y -> x + "\n" + y)
 
+let genereateCDeclFunctionPointerImpls = function
+    | [] -> ""
+    | funcs -> List.map generateCDeclFunctionPointerImpl funcs |> List.reduce (fun x y -> x + "\n" + y)
+
 let generateHeader env includes =
     let prototypes = generateCDeclPrototypes env.Decls
     let structs = generateCDeclStructs env.DeclStructs
+    let funcPtrs = generateCDeclFunctionPointers env.DeclFunctions
     generateMainHeaderf env.Name <|
-        sprintf "%s\n%s\n%s" includes structs prototypes
+        sprintf "%s\n%s\n%s\n%s" includes structs prototypes funcPtrs
 
 let generateSource (env: CEnv) =
-    (generateHeaderInclude env.Name) + generateCDeclFunctions env.DeclFunctions
+    (generateHeaderInclude env.Name) + 
+    generateCDeclFunctions env.DeclFunctions + "\n" +
+    genereateCDeclFunctionPointerImpls env.DeclFunctions
 
 let generate env includes =
     { Header = generateHeader env includes; Source = generateSource env }
