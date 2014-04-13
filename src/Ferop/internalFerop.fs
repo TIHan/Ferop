@@ -10,11 +10,27 @@ open Ferop.Core
 open Ferop.Code
 open Ferop.Helpers
 
-let makeDllName modul = sprintf "%s.dll" modul.Name
+let makeDllName modul = 
+    let os = Environment.OSVersion
+
+    match os.Platform with
+    | x when 
+        x = PlatformID.Win32NT ||
+        x = PlatformID.Win32S ||
+        x = PlatformID.WinCE -> sprintf "%s.dll" modul.Name
+    | x when x = PlatformID.MacOSX -> sprintf "lib%s.dylib" modul.Name
+    | _ -> failwith "OS not supported."
 
 let compileModule path modul =
-    Win.compileModule path modul
-    //Osx.compileModule path modul
+    let os = Environment.OSVersion
+
+    match os.Platform with
+    | x when 
+        x = PlatformID.Win32NT ||
+        x = PlatformID.Win32S ||
+        x = PlatformID.WinCE -> Win.compileModule path modul
+    | x when x = PlatformID.MacOSX -> Osx.compileModule path modul
+    | _ -> failwith "OS not supported."
 
 let createDynamicAssembly (dllPath: string) dllName =
     AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
