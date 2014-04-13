@@ -27,5 +27,3 @@ let private errorMsg = "This should not be called directly. Instead, call the ge
 let C (code: string) =
     code |> ignore
     failwith errorMsg
-
-let CExtern () = failwith errorMsg

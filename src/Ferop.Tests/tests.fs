@@ -62,10 +62,52 @@ let ``with max value of double, should pass and return the same value`` () =
     Native.Tests.testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
 
-
-type Delegate_testByte = delegate of byte -> byte
 [<Test>]
 let ``with a test delegate, should pass and return the same value from testByte`` () =
-    Native.Tests.ferop_set_fs_Tests_testByte (Delegate_testByte (Native.Tests.testByte))
     Native.Tests.testDelegate_testByte (Byte.MaxValue)
     |> should equal Byte.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testSByte`` () =
+    Native.Tests.testDelegate_testSByte (SByte.MaxValue)
+    |> should equal SByte.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testUInt16`` () =
+    Native.Tests.testDelegate_testUInt16 (UInt16.MaxValue)
+    |> should equal UInt16.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testInt16`` () =
+    Native.Tests.testDelegate_testInt16 (Int16.MaxValue)
+    |> should equal Int16.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testUInt32`` () =
+    Native.Tests.testDelegate_testUInt32 (UInt32.MaxValue)
+    |> should equal UInt32.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testInt32`` () =
+    Native.Tests.testDelegate_testInt32 (Int32.MaxValue)
+    |> should equal Int32.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testUInt64`` () =
+    Native.Tests.testDelegate_testUInt64 (UInt64.MaxValue)
+    |> should equal UInt64.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testInt64`` () =
+    Native.Tests.testDelegate_testInt64 (Int64.MaxValue)
+    |> should equal Int64.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testSingle`` () =
+    Native.Tests.testDelegate_testSingle (Single.MaxValue)
+    |> should equal Single.MaxValue
+
+[<Test>]
+let ``with a test delegate, should pass and return the same value from doubleByte`` () =
+    Native.Tests.testDelegate_testDouble (Double.MaxValue)
+    |> should equal Double.MaxValue

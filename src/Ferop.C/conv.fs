@@ -17,12 +17,6 @@ type FsModule = {
     Name : string
     Functions : MethodInfo list }
 
-let private errorMsg = "This should not be called directly. Instead, call the generated version."
-
-let C (code: string) =
-    code |> ignore
-    failwith errorMsg
-
 let runtimeFields (typ: Type) = typ.GetRuntimeFields () |> List.ofSeq
 
 let properties (typ: Type) = typ.GetProperties () |> List.ofSeq

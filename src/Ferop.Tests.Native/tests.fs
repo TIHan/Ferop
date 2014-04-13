@@ -61,3 +61,48 @@ module Tests =
         C """
 return Fs_Tests_testByte (x);
 """
+
+    let testDelegate_testSByte (x: sbyte) : sbyte =
+        C """
+return Fs_Tests_testSByte (x);
+"""
+
+    let testDelegate_testUInt16 (x: uint16) : uint16 =
+        C """
+return Fs_Tests_testUInt16 (x);
+"""
+
+    let testDelegate_testInt16 (x: int16) : int16 =
+        C """
+return Fs_Tests_testInt16 (x);
+"""
+
+    let testDelegate_testUInt32 (x: uint32) : uint32 =
+        C """
+return Fs_Tests_testUInt32 (x);
+"""
+
+    let testDelegate_testInt32 (x: int) : int =
+        C """
+return Fs_Tests_testInt32 (x);
+"""
+
+    let testDelegate_testUInt64 (x: uint64) : uint64 =
+        C """
+return Fs_Tests_testUInt64 (x);
+"""
+
+    let testDelegate_testInt64 (x: int64) : int64 =
+        C """
+return Fs_Tests_testInt64 (x);
+"""
+
+    let testDelegate_testSingle (x: single) : single =
+        C """
+return Fs_Tests_testSingle (x);
+"""
+
+    let testDelegate_testDouble (x: double) : double =
+        C """
+return Fs_Tests_testDouble (x);
+"""

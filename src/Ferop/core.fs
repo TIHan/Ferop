@@ -111,8 +111,9 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
             CharSet.Ansi)
 
     meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+    meth
 
-let defineDelegate (tb: TypeBuilder) dllName (func: MethodInfo) =
+let definePInvokeMethodDelegate (tb: TypeBuilder) dllName (func: MethodInfo) =
     let meth = 
         tb.DefinePInvokeMethod (
             sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
@@ -121,11 +122,12 @@ let defineDelegate (tb: TypeBuilder) dllName (func: MethodInfo) =
             MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
             CallingConventions.Standard,
             typeof<Void>,
-            [|typeof<Delegate>|],
+            [|typeof<nativeint>|],
             CallingConvention.Cdecl,
             CharSet.Ansi)
 
     meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+    meth
 
 open Ferop.CConversion
 open Ferop.CGen
