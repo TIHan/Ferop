@@ -61,3 +61,11 @@ let ``with max value of single, should pass and return the same value`` () =
 let ``with max value of double, should pass and return the same value`` () =
     Native.Tests.testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
+
+
+type Delegate_testByte = delegate of byte -> byte
+[<Test>]
+let ``with a test delegate, should pass and return the same value from testByte`` () =
+    Native.Tests.ferop_set_fs_Tests_testByte (Delegate_testByte (Native.Tests.testByte))
+    Native.Tests.testDelegate_testByte (Byte.MaxValue)
+    |> should equal Byte.MaxValue

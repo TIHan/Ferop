@@ -57,3 +57,7 @@ module Tests =
 
     let testStruct3 (x: Struct3) : Struct3 = C """ return x; """
 
+    let testDelegate_testByte (x: byte) : byte =
+        C """
+return Fs_Tests_testByte (x);
+"""

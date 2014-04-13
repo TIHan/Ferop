@@ -58,6 +58,8 @@ let methodExpr meth =
     | None -> failwithf "Reflected definition for %s not found" meth.Name
     | Some expr -> expr
 
+let makeCStructName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
+
 let makeCStruct = function 
     | CDecl.Struct (name, fields) -> 
         { Name = name; Fields = fields }
@@ -65,7 +67,7 @@ let makeCStruct = function
 
 let tryLookupStruct env (typ: Type) = 
     env.Decls 
-    |> List.tryFind (function | CDecl.Struct (x,_) -> x = typ.Name | _ -> false)
+    |> List.tryFind (function | CDecl.Struct (x,_) -> x = makeCStructName env typ | _ -> false)
     |> function
     | None -> None
     | Some x -> Some <| makeCStruct x
@@ -144,7 +146,7 @@ and makeCDeclStruct env (typ: Type) =
     match tryLookupCType env typ with
     | Some _ -> env
     | _ ->
-        let name = typ.Name
+        let name = makeCStructName env typ
         let env', fields = makeCDeclStructFields env typ
 
         { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }

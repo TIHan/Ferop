@@ -35,7 +35,9 @@ let compileModule path modul =
 let createDynamicAssembly (dllPath: string) dllName =
     AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
 
-let generatePInvokeMethods modul tb = modul.Functions |> List.iter (definePInvokeMethod tb (makeDllName modul))
+let generatePInvokeMethods modul tb = 
+    modul.Functions |> List.iter (definePInvokeMethod tb (makeDllName modul))
+    modul.Functions |> List.iter (defineDelegate tb (makeDllName modul))
     
 let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName
