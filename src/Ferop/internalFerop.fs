@@ -18,7 +18,7 @@ let makeDllName modul =
         x = PlatformID.Win32NT ||
         x = PlatformID.Win32S ||
         x = PlatformID.WinCE -> sprintf "%s.dll" modul.Name
-    | x when x = PlatformID.MacOSX -> sprintf "lib%s.dylib" modul.Name
+    | x when x = PlatformID.Unix -> sprintf "lib%s.dylib" modul.Name
     | _ -> failwith "OS not supported."
 
 let compileModule path modul =
@@ -29,7 +29,7 @@ let compileModule path modul =
         x = PlatformID.Win32NT ||
         x = PlatformID.Win32S ||
         x = PlatformID.WinCE -> Win.compileModule path modul
-    | x when x = PlatformID.MacOSX -> Osx.compileModule path modul
+    | x when x = PlatformID.Unix -> Osx.compileModule path modul
     | _ -> failwith "OS not supported."
 
 let createDynamicAssembly (dllPath: string) dllName =
