@@ -151,13 +151,20 @@ and makeCDeclStruct env (typ: Type) =
 
 let makeCDeclStructs (env: CEnv) modul =
     let env' =
-        modul.Functions
-        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
-        |> List.reduce (fun x y -> x @ y)
-        |> List.map (fun x -> x.ParameterType)
-        |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
-        |> List.fold (fun env x -> makeCDeclStruct env x) env
-    { env' with Decls = List.rev env'.Decls }
+        match modul.Functions with
+        | [] -> failwith "There are no functions."
+        | funcs ->
+            funcs
+            |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+            |> List.reduce (fun x y -> x @ y)
+            |> List.map (fun x -> x.ParameterType)
+            |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
+            |> List.fold (fun env x -> makeCDeclStruct env x) env
+    { env' with 
+        Decls = 
+            match env'.Decls with
+            | [] -> []
+            | x ->  List.rev x }
 
 let makeCDeclFunctions env modul =
     let funcs = modul.Functions |> List.map (makeCDeclFunction env)

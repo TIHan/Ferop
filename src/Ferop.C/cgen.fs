@@ -82,8 +82,8 @@ let generateCFields = function
     |> List.map (function
         | { Type = typ; Name = name } ->
             let ctype = generateCType typ
-            sprintf "%s %s" ctype (name.Replace (" ", "_")))
-    |> List.reduce (fun x y -> sprintf "%s;\n%s;" x y)
+            sprintf "%s %s;\n" ctype (name.Replace (" ", "_")))
+    |> List.reduce (fun x y -> x + y)
 
 let generateReturnType = function
     | None -> "void"
@@ -120,9 +120,13 @@ let generateCDecl = function
     | CDecl.Struct (name, fields) -> 
         generateCStructf (generateCFields fields) name
 
+let generateCDeclStructs = function
+    | [] -> ""
+    | structs -> List.map generateCDecl structs |> List.reduce (fun x y -> x + "\n" + y)
+
 let generateHeader env includes =
     let prototypes = List.map generateCDeclPrototype env.Decls |> List.reduce (fun x y -> x + "\n" + y)
-    let structs = List.map generateCDecl env.DeclStructs |> List.reduce (fun x y -> x + "\n" + y)
+    let structs = generateCDeclStructs env.DeclStructs
     generateMainHeaderf env.Name <|
         sprintf "%s\n%s\n%s" includes structs prototypes
 

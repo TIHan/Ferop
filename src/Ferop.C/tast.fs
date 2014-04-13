@@ -57,7 +57,7 @@ type CEnv = {
         |> List.filter (function | CDecl.Function _ -> true | _ -> false)
 
     member this.DeclStructs = 
-        this.Decls 
+        this.Decls
         |> List.filter (function | CDecl.Struct _ -> true | _ -> false)
 
 let makeEmptyEnv name = { Name = name; Decls = List.empty }

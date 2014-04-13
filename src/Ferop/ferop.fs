@@ -10,6 +10,14 @@ type ClangFlagsOsxAttribute (flags: string) =
 type ClangLibsOsxAttribute (libs: string) =
     inherit System.Attribute ()
 
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type MsvcLibsWinAttribute (libs: string) =
+    inherit System.Attribute ()
+
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type MsvcIncludesWinAttribute (libs: string) =
+    inherit System.Attribute ()
+
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class, AllowMultiple = true)>]
 type IncludeAttribute (headerFile: string) =
     inherit System.Attribute ()

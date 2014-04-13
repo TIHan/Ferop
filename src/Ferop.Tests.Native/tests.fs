@@ -27,6 +27,8 @@ and [<Struct>]
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
+[<MsvcLibsWin ("")>]
+[<MsvcIncludesWin ("")>]
 [<Include ("<stdio.h>")>]
 module Tests =
     let testByte (x: byte) : byte = C """ return x; """
@@ -51,4 +53,7 @@ module Tests =
 
     let testStruct1 (x: Struct1) : Struct1 = C """ return x; """
 
+    let testStruct2 (x: Struct2) : Struct2 = C """ return x; """
+
     let testStruct3 (x: Struct3) : Struct3 = C """ return x; """
+

@@ -40,6 +40,16 @@ type Module = {
         |> Seq.filter (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
         |> Seq.exactlyOne
 
+    member this.MsvcLibsWinAttribute =
+        this.Attributes
+        |> Seq.filter (fun x -> x.AttributeType = typeof<MsvcLibsWinAttribute>)
+        |> Seq.exactlyOne
+
+    member this.MsvcIncludesWinAttribute =
+        this.Attributes
+        |> Seq.filter (fun x -> x.AttributeType = typeof<MsvcIncludesWinAttribute>)
+        |> Seq.exactlyOne
+
     member this.Includes =
         this.IncludeAttributes
         |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
@@ -53,6 +63,16 @@ type Module = {
 
     member this.ClangLibsOsx =
         let attr = this.ClangLibsOsxAttribute
+        let args = Seq.exactlyOne attr.ConstructorArguments
+        args.Value :?> string
+
+    member this.MsvcLibsWin =
+        let attr = this.MsvcIncludesWinAttribute
+        let args = Seq.exactlyOne attr.ConstructorArguments
+        args.Value :?> string
+
+    member this.MsvcIncludesWin =
+        let attr = this.MsvcIncludesWinAttribute
         let args = Seq.exactlyOne attr.ConstructorArguments
         args.Value :?> string
 

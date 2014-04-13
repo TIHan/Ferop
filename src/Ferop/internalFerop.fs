@@ -10,15 +10,16 @@ open Ferop.Core
 open Ferop.Code
 open Ferop.Helpers
 
-let makeDllOsxName modul = sprintf "lib%s.dylib" modul.Name
+let makeDllName modul = sprintf "%s.dll" modul.Name
 
 let compileModule path modul =
-    Osx.compileModule path modul
+    Win.compileModule path modul
+    //Osx.compileModule path modul
 
 let createDynamicAssembly (dllPath: string) dllName =
     AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
 
-let generatePInvokeMethods modul tb = modul.Functions |> List.iter (definePInvokeMethod tb (makeDllOsxName modul))
+let generatePInvokeMethods modul tb = modul.Functions |> List.iter (definePInvokeMethod tb (makeDllName modul))
     
 let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName
