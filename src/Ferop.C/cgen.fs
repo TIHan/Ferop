@@ -50,6 +50,11 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
 }
 """
 
+let generateCFunctionPointer =
+    sprintf """
+typedef %s (*%s)(%s);
+"""
+
 let generateCStructf =
     sprintf """
 typedef struct {
@@ -120,21 +125,38 @@ let generateCDecl = function
     | CDecl.Struct (name, fields) -> 
         generateCStructf (generateCFields fields) name
 
+let generateCDeclFunctionPointer = function
+    | CDecl.Function (returnType, name, parameters, _) ->
+        let returnType' = generateReturnType returnType
+        let parameters' = generateParameters parameters
+
+        generateCFunctionPointer returnType' name parameters'
+    | _ -> ""
+
+let generateCDeclPrototypes = function
+    | [] -> ""
+    | decls -> List.map generateCDeclPrototype decls |> List.reduce (fun x y -> x + "\n" + y)
+
+let generateCDeclFunctions = function
+    | [] -> ""
+    | funcs -> List.map generateCDecl funcs |> List.reduce (fun x y -> x + "\n" + y)
+
 let generateCDeclStructs = function
     | [] -> ""
     | structs -> List.map generateCDecl structs |> List.reduce (fun x y -> x + "\n" + y)
 
+let generateCDeclFunctionPointers = function
+    | [] -> ""
+    | funcs -> List.map generateCDeclFunctionPointer funcs |> List.reduce (fun x y -> x + "\n" + y)
+
 let generateHeader env includes =
-    let prototypes = List.map generateCDeclPrototype env.Decls |> List.reduce (fun x y -> x + "\n" + y)
+    let prototypes = generateCDeclPrototypes env.Decls
     let structs = generateCDeclStructs env.DeclStructs
     generateMainHeaderf env.Name <|
         sprintf "%s\n%s\n%s" includes structs prototypes
 
 let generateSource (env: CEnv) =
-    (generateHeaderInclude env.Name) +
-    (env.DeclFunctions
-    |> List.map generateCDecl
-    |> List.reduce (fun x y -> x + "\n" + y))
+    (generateHeaderInclude env.Name) + generateCDeclFunctions env.DeclFunctions
 
 let generate env includes =
     { Header = generateHeader env includes; Source = generateSource env }
