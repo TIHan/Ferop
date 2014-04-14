@@ -25,7 +25,8 @@ type Module = {
     Name: string
     FullName: string
     Attributes: CustomAttributeData list
-    Functions: MethodInfo list } with
+    Functions: MethodInfo list
+    Delegates: Type list } with
 
     member this.IncludeAttributes =
         this.Attributes
@@ -83,8 +84,12 @@ let makeModule (typ: Type) =
     let shortName = typ.Name
     let attrs = typ.CustomAttributes |> List.ofSeq
     let funcs = Type.moduleFunctions typ
+    let dels = 
+        typ.GetNestedTypes () 
+        |> Array.filter (fun x -> x.IsAssignableFrom (typeof<Delegate>))
+        |> List.ofArray
 
-    { Name = name; FullName = shortName; Attributes = attrs; Functions = funcs }
+    { Name = name; FullName = shortName; Attributes = attrs; Functions = funcs; Delegates = dels }
 
 let makeHeaderIncludes (modul: Module) = modul.Includes
 

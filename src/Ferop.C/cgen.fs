@@ -117,6 +117,14 @@ let generateParameters = function
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)
 
+let generateParameterTypes = function
+    | [] -> ""
+    | parameters ->
+
+    parameters
+    |> List.map generateCType
+    |> List.reduce (fun x y -> sprintf "%s, %s" x y)
+
 let generateCExpr = function
     | Text x -> x
 
@@ -135,16 +143,13 @@ let generateCDecl = function
         let body = generateCExpr expr
 
         generateCFunctionf returnType' name parameters' body
+    | CDecl.FunctionPointer (returnType, name, parameterTypes) ->
+        let returnType' = generateReturnType returnType
+        let parametersTypes' = generateParameterTypes parameterTypes
+
+        generateCFunctionPointer returnType' name parametersTypes'
     | CDecl.Struct (name, fields) -> 
         generateCStructf (generateCFields fields) name
-
-let generateCDeclFunctionPointer = function
-    | CDecl.Function (returnType, name, parameters, _) ->
-        let returnType' = generateReturnType returnType
-        let parameters' = generateParameters parameters
-
-        generateCFunctionPointer returnType' name parameters'
-    | _ -> ""
 
 let generateCDeclFunctionPointerImpl = function
     | CDecl.Function (_, name, _, _) ->
@@ -165,7 +170,7 @@ let generateCDeclStructs = function
 
 let generateCDeclFunctionPointers = function
     | [] -> ""
-    | funcs -> List.map generateCDeclFunctionPointer funcs |> List.reduce (fun x y -> x + "\n" + y)
+    | funcs -> List.map generateCDecl funcs |> List.reduce (fun x y -> x + "\n" + y)
 
 let genereateCDeclFunctionPointerImpls = function
     | [] -> ""
@@ -174,8 +179,9 @@ let genereateCDeclFunctionPointerImpls = function
 let generateHeader env includes =
     let prototypes = generateCDeclPrototypes env.Decls
     let structs = generateCDeclStructs env.DeclStructs
+    let funcPtrs = generateCDeclFunctionPointers env.DeclFunctionPointers
     generateMainHeaderf env.Name <|
-        sprintf "%s\n%s\n%s" includes structs prototypes
+        sprintf "%s\n%s\n%s\n%s" includes structs prototypes funcPtrs
 
 let generateSource (env: CEnv) =
     (generateHeaderInclude env.Name) + 

@@ -39,6 +39,7 @@ and
     [<RequireQualifiedAccess>]
     CDecl =
     | Function of returnType: CType option * name: string * parameters: (CType * string) list * CExpr
+    | FunctionPointer of returnType: CType option * name: string * parameterTypes: CType list
     | Struct of name: string * fields: CField list
 
 let hasFieldType fieldTypeName = function
@@ -55,6 +56,10 @@ type CEnv = {
     member this.DeclFunctions = 
         this.Decls
         |> List.filter (function | CDecl.Function _ -> true | _ -> false)
+
+    member this.DeclFunctionPointers =
+        this.Decls
+        |> List.filter (function | CDecl.FunctionPointer _ -> true | _ -> false)
 
     member this.DeclStructs = 
         this.Decls
