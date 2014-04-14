@@ -56,7 +56,7 @@ module Tests =
     let testStruct2 (x: Struct2) : Struct2 = C """ return x; """
 
     let testStruct3 (x: Struct3) : Struct3 = C """ return x; """
-
+(*
     let testDelegate_testByte (x: byte) : byte =
         C """
 return Fs_Tests_testByte (x);
@@ -106,3 +106,4 @@ return Fs_Tests_testSingle (x);
         C """
 return Fs_Tests_testDouble (x);
 """
+*)

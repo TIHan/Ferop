@@ -174,14 +174,12 @@ let genereateCDeclFunctionPointerImpls = function
 let generateHeader env includes =
     let prototypes = generateCDeclPrototypes env.Decls
     let structs = generateCDeclStructs env.DeclStructs
-    let funcPtrs = generateCDeclFunctionPointers env.DeclFunctions
     generateMainHeaderf env.Name <|
-        sprintf "%s\n%s\n%s\n%s" includes structs prototypes funcPtrs
+        sprintf "%s\n%s\n%s" includes structs prototypes
 
 let generateSource (env: CEnv) =
     (generateHeaderInclude env.Name) + 
-    generateCDeclFunctions env.DeclFunctions + "\n" +
-    genereateCDeclFunctionPointerImpls env.DeclFunctions
+    generateCDeclFunctions env.DeclFunctions
 
 let generate env includes =
     { Header = generateHeader env includes; Source = generateSource env }

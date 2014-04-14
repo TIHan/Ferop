@@ -36,21 +36,8 @@ let createDynamicAssembly (dllPath: string) dllName =
     AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
 
 let generatePInvokeMethods modul tb = 
-    let meths, delMeths =
-        modul.Functions |> List.map (definePInvokeMethod tb (makeDllName modul)),
-        modul.Functions |> List.map (definePInvokeMethodDelegate tb (makeDllName modul))
-
-    let ctor = tb.DefineTypeInitializer ()
-    let ctorIL = ctor.GetILGenerator ()
- 
-    ctorIL.Emit (OpCodes.Nop)
- 
-    meths
-    |> List.iter2 (fun x y ->
-        ctorIL.Emit (OpCodes.Ldftn, y :> MethodInfo)
-        ctorIL.Emit (OpCodes.Call, x :> MethodInfo)) delMeths
-
-    ctorIL.Emit (OpCodes.Ret)
+    modul.Functions |> List.map (definePInvokeMethod tb (makeDllName modul))
+    |> ignore
     
 let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName

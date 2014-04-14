@@ -61,7 +61,7 @@ let ``with max value of single, should pass and return the same value`` () =
 let ``with max value of double, should pass and return the same value`` () =
     Native.Tests.testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
-
+(*
 [<Test>]
 let ``with a test delegate, should pass and return the same value from testByte`` () =
     Native.Tests.testDelegate_testByte (Byte.MaxValue)
@@ -111,3 +111,4 @@ let ``with a test delegate, should pass and return the same value from testSingl
 let ``with a test delegate, should pass and return the same value from doubleByte`` () =
     Native.Tests.testDelegate_testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
+*)

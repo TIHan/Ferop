@@ -119,27 +119,6 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
     meth.SetCustomAttribute(attributeBuilder);
     meth
 
-let definePInvokeMethodDelegate (tb: TypeBuilder) dllName (func: MethodInfo) =
-    let meth = 
-        tb.DefinePInvokeMethod (
-            sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
-            dllName,
-            sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
-            MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
-            CallingConventions.Standard,
-            typeof<Void>,
-            [|typeof<nativeint>|],
-            CallingConvention.Cdecl,
-            CharSet.Ansi)
-
-    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-    let attributeType = 
-        typeof<SuppressUnmanagedCodeSecurityAttribute>
-    let attributeConstructorInfo = attributeType.GetConstructor([||])
-    let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
-    meth.SetCustomAttribute(attributeBuilder);
-    meth
-
 open Ferop.CConversion
 open Ferop.CGen
 
