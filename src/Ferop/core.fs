@@ -5,6 +5,7 @@ open System.IO
 open System.Reflection
 open System.Reflection.Emit
 open System.Diagnostics
+open System.Security
 open System.Runtime.InteropServices
 
 open Microsoft.FSharp.Reflection
@@ -111,6 +112,11 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
             CharSet.Ansi)
 
     meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+    let attributeType = 
+        typeof<SuppressUnmanagedCodeSecurityAttribute>
+    let attributeConstructorInfo = attributeType.GetConstructor([||])
+    let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
+    meth.SetCustomAttribute(attributeBuilder);
     meth
 
 let definePInvokeMethodDelegate (tb: TypeBuilder) dllName (func: MethodInfo) =
@@ -127,6 +133,11 @@ let definePInvokeMethodDelegate (tb: TypeBuilder) dllName (func: MethodInfo) =
             CharSet.Ansi)
 
     meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+    let attributeType = 
+        typeof<SuppressUnmanagedCodeSecurityAttribute>
+    let attributeConstructorInfo = attributeType.GetConstructor([||])
+    let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
+    meth.SetCustomAttribute(attributeBuilder);
     meth
 
 open Ferop.CConversion
