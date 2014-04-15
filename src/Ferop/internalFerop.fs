@@ -138,10 +138,8 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
         let del = dels.[0]
         let delMeth = delMeths.[0]
 
-        il.Emit (OpCodes.Nop)
         il.Emit (OpCodes.Newobj, del.GetConstructor ([||]))
-        //il.Emit (OpCodes.Call, delMeth)
-        il.Emit (OpCodes.Pop)
+        il.Emit (OpCodes.Call, delMeth)
         il.Emit (OpCodes.Ret)
 
 
