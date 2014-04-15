@@ -63,6 +63,9 @@ module Tests =
     let testStruct2 (x: Struct2) : Struct2 = C """ return x; """
 
     let testStruct3 (x: Struct3) : Struct3 = C """ return x; """
+
+    [<Export>]
+    let testReverse_testByte (x: byte) : byte = testByte x
 (*
     let testDelegate_testByte (x: byte) : byte =
         C """

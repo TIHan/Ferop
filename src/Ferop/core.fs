@@ -115,8 +115,7 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
             CharSet.Ansi)
 
     meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-    let attributeType = 
-        typeof<SuppressUnmanagedCodeSecurityAttribute>
+    let attributeType = typeof<SuppressUnmanagedCodeSecurityAttribute>
     let attributeConstructorInfo = attributeType.GetConstructor([||])
     let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
     meth.SetCustomAttribute(attributeBuilder);
