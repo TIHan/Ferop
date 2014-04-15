@@ -113,10 +113,17 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
 
         dels
         |> List.iteri2 (fun i delMeth del ->
+            let func = modul.ExportedFunctions.[i]
+            let fieldName = "_" + func.Name
+            let field = tb.DefineField ("_" + func.Name, del, FieldAttributes.Static ||| FieldAttributes.Public)
+
             il.Emit (OpCodes.Ldnull)
-            il.Emit (OpCodes.Ldftn, modul.ExportedFunctions.[i])
+            il.Emit (OpCodes.Ldftn, func)
             il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
-            il.Emit (OpCodes.Call, delMeth :> MethodInfo)) delMeths
+            il.Emit (OpCodes.Ldc_I4, int GCHandleType.Normal)
+            il.Emit (OpCodes.Call, typeof<GCHandle>.GetMethod ("Alloc", [|typeof<obj>;typeof<GCHandleType>|]))
+            //il.Emit (OpCodes.Call, delMeth :> MethodInfo)
+            ) delMeths
 
         il.Emit (OpCodes.Ret)
 
