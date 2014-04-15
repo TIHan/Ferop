@@ -41,54 +41,33 @@ let generatePInvokeMethods modul tb =
     modul.Functions |> List.map (definePInvokeMethod tb (makeDllName modul))
     |> ignore
 
-let generateReversePInvokeDelegates modul (tb: TypeBuilder) =
-    let typ = typeof<Delegate>
+let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
+    let typ = typeof<MulticastDelegate>
+    modul.ExportedFunctions |> List.map (fun x ->
+        let del = tb.DefineType (x.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, typ)
+
+        let ctordel = del.DefineConstructor (MethodAttributes.Public, CallingConventions.Standard, [|typeof<obj>; typeof<nativeint>|])
+//        let ctordel = del.DefineConstructor (MethodAttributes.Public, CallingConventions.Standard, [|typeof<Type>;typeof<string>|])
+        ctordel.SetImplementationFlags (ctordel.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
+
+        let meth =
+            del.DefineMethod (
+                "Invoke",
+                MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig,
+                x.ReturnType,
+                x.GetParameters () |> Array.map (fun x -> x.ParameterType))
+
+        meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
+        let attributeType = typeof<UnmanagedFunctionPointerAttribute>
+        let attributeConstructorInfo = attributeType.GetConstructor ([|typeof<CallingConvention>|])
+        let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, [|CallingConvention.Cdecl|])
+        del.SetCustomAttribute (attributeBuilder)     
+        del.CreateType ())
+
+let generateReversePInvokeMethods modul (tb: TypeBuilder) =
     let dllName = makeDllName modul
-    let dels =
-        modul.ExportedFunctions |> List.map (fun x ->
-            let del = tb.DefineNestedType (x.Name + "Delegate", typ.Attributes, typ)
-
-            let ctordel = del.DefineConstructor (MethodAttributes.Public, CallingConventions.Standard, [||])
-            let ctordelIL = ctordel.GetILGenerator ()
-
-            ctordelIL.Emit (OpCodes.Nop)
-            ctordelIL.Emit (OpCodes.Ret)
-
-            let paramCount = (x.GetParameters ()).Length
-
-            let meth =
-                del.DefineMethod (
-                    "Invoke",
-                    MethodAttributes.Public,
-                    x.ReturnType,
-                    x.GetParameters () |> Array.map (fun x -> x.ParameterType))
-
-            let il = meth.GetILGenerator ()
-
-            match paramCount with
-            | 1 ->
-                il.Emit (OpCodes.Ldarg_0)
-            | 2 ->
-                il.Emit (OpCodes.Ldarg_0)
-                il.Emit (OpCodes.Ldarg_1)
-            | 3 ->
-                il.Emit (OpCodes.Ldarg_0)
-                il.Emit (OpCodes.Ldarg_1)
-                il.Emit (OpCodes.Ldarg_2)
-            | 4 ->
-                il.Emit (OpCodes.Ldarg_0)
-                il.Emit (OpCodes.Ldarg_1)
-                il.Emit (OpCodes.Ldarg_2)
-                il.Emit (OpCodes.Ldarg_3)
-            | _ -> ()
-
-            il.Emit (OpCodes.Call, x)
-            il.Emit (OpCodes.Ret)
-              
-            del.CreateType ())
-    dels,
-    dels
-    |> List.map2 (fun (func: MethodInfo) del ->
+    modul.ExportedFunctions
+    |> List.map (fun func ->
         let meth = 
             tb.DefinePInvokeMethod (
                 sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
@@ -97,17 +76,16 @@ let generateReversePInvokeDelegates modul (tb: TypeBuilder) =
                 MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
                 CallingConventions.Standard,
                 typeof<Void>,
-                [|del|],
+                [|typeof<Delegate>|],
                 CallingConvention.Cdecl,
                 CharSet.Ansi)
 
         meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
         let attributeType = typeof<SuppressUnmanagedCodeSecurityAttribute>
-        let attributeConstructorInfo = attributeType.GetConstructor([||])
-        let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
-        meth.SetCustomAttribute(attributeBuilder);
-        meth
-    ) modul.ExportedFunctions
+        let attributeConstructorInfo = attributeType.GetConstructor ([||])
+        let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, [||])
+        meth.SetCustomAttribute (attributeBuilder)
+        meth)
 
 let feropModules asm =
     Assembly.modules asm
@@ -128,19 +106,27 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
 
-        let dels, delMeths = generateReversePInvokeDelegates modul tb
+        let dels = generateReversePInvokeDelegates modul mb
+        let delMeths = generateReversePInvokeMethods modul tb
+
         let ctor = tb.DefineTypeInitializer ()
         let il = ctor.GetILGenerator ()
 
-        //dels
-        //|> List.iter (fun x -> il.Emit (OpCodes.Newobj, x.GetConstructor ([||]))
-        //)
         let del = dels.[0]
         let delMeth = delMeths.[0]
 
-        il.Emit (OpCodes.Newobj, del.GetConstructor ([||]))
+        //il.Emit (OpCodes.Ldtoken, tb)
+        //il.Emit (OpCodes.Call, typeof<Type>.GetMethod ("GetTypeFromHandle", [|typeof<RuntimeTypeHandle>|]))
+        //il.Emit (OpCodes.Ldstr, delMeth.Name)
+        //il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<Type>;typeof<string>|]))
+
+        il.Emit (OpCodes.Ldnull)
+        il.Emit (OpCodes.Ldftn, modul.ExportedFunctions.[0])
+        il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
         il.Emit (OpCodes.Call, delMeth)
+       // il.Emit (OpCodes.Pop)
         il.Emit (OpCodes.Ret)
+
 
 
         //-------------------------------------------------------------------------

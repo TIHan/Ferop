@@ -4,6 +4,8 @@ open System
 open FsUnit
 open NUnit.Framework
 
+open System.Runtime.InteropServices
+
 open Ferop
 
 #if DEBUG
@@ -61,12 +63,13 @@ let ``with max value of single, should pass and return the same value`` () =
 let ``with max value of double, should pass and return the same value`` () =
     Native.Tests.testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
-(*
+
 [<Test>]
 let ``with a test delegate, should pass and return the same value from testByte`` () =
-    Native.Tests.testDelegate_testByte (Byte.MaxValue)
+    GC.Collect (2)
+    Native.Tests.testExported_testByte (Byte.MaxValue)
     |> should equal Byte.MaxValue
-
+(*
 [<Test>]
 let ``with a test delegate, should pass and return the same value from testSByte`` () =
     Native.Tests.testDelegate_testSByte (SByte.MaxValue)

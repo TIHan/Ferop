@@ -24,13 +24,6 @@ and [<Struct>]
     val X : double
     val Y : double
 
-type YumBiscuit = delegate of int -> int
-
-module Wut =
-    let f (x: int) = x
-    let test () =
-        YumBiscuit (f)
-
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
@@ -65,7 +58,9 @@ module Tests =
     let testStruct3 (x: Struct3) : Struct3 = C """ return x; """
 
     [<Export>]
-    let testReverse_testByte (x: byte) : byte = testByte x
+    let exported_testByte (x: byte) : byte = x
+
+    let testExported_testByte (x: byte) : byte = C """ return Delegate_fs_Tests_exported_testByte (x); """
 (*
     let testDelegate_testByte (x: byte) : byte =
         C """
