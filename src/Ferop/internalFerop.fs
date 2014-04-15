@@ -47,7 +47,6 @@ let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
         let del = tb.DefineType (x.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, typ)
 
         let ctordel = del.DefineConstructor (MethodAttributes.Public, CallingConventions.Standard, [|typeof<obj>; typeof<nativeint>|])
-//        let ctordel = del.DefineConstructor (MethodAttributes.Public, CallingConventions.Standard, [|typeof<Type>;typeof<string>|])
         ctordel.SetImplementationFlags (ctordel.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
 
         let meth =
@@ -112,21 +111,14 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
         let ctor = tb.DefineTypeInitializer ()
         let il = ctor.GetILGenerator ()
 
-        let del = dels.[0]
-        let delMeth = delMeths.[0]
+        dels
+        |> List.iter2 (fun delMeth del ->
+            il.Emit (OpCodes.Ldnull)
+            il.Emit (OpCodes.Ldftn, modul.ExportedFunctions.[0])
+            il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
+            il.Emit (OpCodes.Call, delMeth :> MethodInfo)) delMeths
 
-        //il.Emit (OpCodes.Ldtoken, tb)
-        //il.Emit (OpCodes.Call, typeof<Type>.GetMethod ("GetTypeFromHandle", [|typeof<RuntimeTypeHandle>|]))
-        //il.Emit (OpCodes.Ldstr, delMeth.Name)
-        //il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<Type>;typeof<string>|]))
-
-        il.Emit (OpCodes.Ldnull)
-        il.Emit (OpCodes.Ldftn, modul.ExportedFunctions.[0])
-        il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
-        il.Emit (OpCodes.Call, delMeth)
-       // il.Emit (OpCodes.Pop)
         il.Emit (OpCodes.Ret)
-
 
 
         //-------------------------------------------------------------------------
