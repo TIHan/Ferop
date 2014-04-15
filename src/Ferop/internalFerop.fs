@@ -120,9 +120,9 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
             il.Emit (OpCodes.Ldnull)
             il.Emit (OpCodes.Ldftn, func)
             il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
-            il.Emit (OpCodes.Ldc_I4, int GCHandleType.Normal)
-            il.Emit (OpCodes.Call, typeof<GCHandle>.GetMethod ("Alloc", [|typeof<obj>;typeof<GCHandleType>|]))
-            //il.Emit (OpCodes.Call, delMeth :> MethodInfo)
+            il.Emit (OpCodes.Stsfld, field)
+            il.Emit (OpCodes.Ldsfld, field)
+            il.Emit (OpCodes.Call, delMeth :> MethodInfo)
             ) delMeths
 
         il.Emit (OpCodes.Ret)
