@@ -15,7 +15,8 @@ open Ferop.CTypedAST
 
 type FsModule = { 
     Name : string
-    Functions : MethodInfo list }
+    Functions : MethodInfo list
+    ExportedFunctions : MethodInfo list }
 
 let runtimeFields (typ: Type) = typ.GetRuntimeFields () |> List.ofSeq
 
@@ -106,6 +107,10 @@ let makeParameter env (info: ParameterInfo) = (lookupCType env info.ParameterTyp
 
 let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
+let makeParameterType env (info: ParameterInfo) = lookupCType env info.ParameterType
+
+let makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
+
 let rec makeCExpr = function
     | Call (_, _, exprList) -> makeCExpr exprList.[0]
 
@@ -126,6 +131,13 @@ let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let expr = methodExpr func |> makeCExpr
 
     CDecl.Function (returnType, name, parameters, expr)
+
+let makeCDeclFunctionPointer (env: CEnv) (func: MethodInfo) =
+    let returnType = makeReturnType env func.ReturnType
+    let name = sprintf "fs_%s_%s" env.Name func.Name
+    let parameterTypes = func.GetParameters () |> makeParameterTypes env
+
+    CDecl.FunctionPointer (returnType, name, parameterTypes)
 
 let rec makeCDeclStructFields env (typ: Type) =
     properties typ
@@ -164,6 +176,7 @@ let makeCDeclStructs (env: CEnv) modul =
 
 let makeCDeclFunctions env modul =
     let funcs = modul.Functions |> List.map (makeCDeclFunction env)
+    let funcPtrs = modul.ExportedFunctions |> List.map (makeCDeclFunctionPointer env)
     { env with Decls = env.Decls @ funcs }
 
 //-------------------------------------------------------------------------

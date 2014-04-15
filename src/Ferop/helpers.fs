@@ -49,6 +49,13 @@ module Type =
         | _ -> allNestedTypes typ |> List.forall check
 
 [<RequireQualifiedAccess>]
+module MethodInfo =
+    let hasAttribute (typ: Type) (meth: MethodInfo) =
+        meth.GetCustomAttributesData ()
+        |> Seq.map (fun x -> x.AttributeType)
+        |> Seq.exists ((=)typ)
+
+[<RequireQualifiedAccess>]
 module Assembly =
     let types (asm: Assembly) =
         asm.GetTypes ()

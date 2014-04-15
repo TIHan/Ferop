@@ -26,7 +26,7 @@ type Module = {
     FullName: string
     Attributes: CustomAttributeData list
     Functions: MethodInfo list
-    Delegates: Type list } with
+    ExportedFunctions: MethodInfo list } with
 
     member this.IncludeAttributes =
         this.Attributes
@@ -84,12 +84,10 @@ let makeModule (typ: Type) =
     let shortName = typ.Name
     let attrs = typ.CustomAttributes |> List.ofSeq
     let funcs = Type.moduleFunctions typ
-    let dels = 
-        typ.GetNestedTypes () 
-        |> Array.filter (fun x -> x.IsAssignableFrom (typeof<Delegate>))
-        |> List.ofArray
+    let normalFuncs = funcs |> List.filter (fun x -> not (MethodInfo.hasAttribute typeof<ExportAttribute> x))
+    let exportFuncs = funcs |> List.filter (MethodInfo.hasAttribute typeof<ExportAttribute>)
 
-    { Name = name; FullName = shortName; Attributes = attrs; Functions = funcs; Delegates = dels }
+    { Name = name; FullName = shortName; Attributes = attrs; Functions = normalFuncs; ExportedFunctions = exportFuncs }
 
 let makeHeaderIncludes (modul: Module) = modul.Includes
 
@@ -127,7 +125,8 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
 open Ferop.CConversion
 open Ferop.CGen
 
-let makeFsModule (modul: Module) = { Name = modul.Name; Functions = modul.Functions }
+let makeFsModule (modul: Module) = 
+    { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions }
 
 let makeCGen outputPath (modul: Module) =
     let env = makeCEnv <| makeFsModule modul

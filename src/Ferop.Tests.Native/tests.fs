@@ -24,6 +24,13 @@ and [<Struct>]
     val X : double
     val Y : double
 
+type YumBiscuit = delegate of int -> int
+
+module Wut =
+    let f (x: int) = x
+    let test () =
+        YumBiscuit (f)
+
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]

@@ -22,6 +22,10 @@ type MsvcIncludesWinAttribute (libs: string) =
 type IncludeAttribute (headerFile: string) =
     inherit System.Attribute ()
 
+[<System.AttributeUsageAttribute (System.AttributeTargets.Method)>]
+type ExportAttribute () =
+    inherit System.Attribute ()
+
 let private errorMsg = "This should not be called directly. Instead, call the generated version."
 
 let C (code: string) =
