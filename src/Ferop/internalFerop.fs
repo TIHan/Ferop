@@ -63,10 +63,10 @@ let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
         del.SetCustomAttribute (attributeBuilder)     
         del.CreateType ())
 
-let generateReversePInvokeMethods modul (tb: TypeBuilder) =
+let generateReversePInvokeMethods modul dels (tb: TypeBuilder) =
     let dllName = makeDllName modul
     modul.ExportedFunctions
-    |> List.map (fun func ->
+    |> List.map2 (fun del func ->
         let meth = 
             tb.DefinePInvokeMethod (
                 sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
@@ -75,7 +75,7 @@ let generateReversePInvokeMethods modul (tb: TypeBuilder) =
                 MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
                 CallingConventions.Standard,
                 typeof<Void>,
-                [|typeof<Delegate>|],
+                [|del|],
                 CallingConvention.Cdecl,
                 CharSet.Ansi)
 
@@ -84,7 +84,7 @@ let generateReversePInvokeMethods modul (tb: TypeBuilder) =
         let attributeConstructorInfo = attributeType.GetConstructor ([||])
         let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, [||])
         meth.SetCustomAttribute (attributeBuilder)
-        meth)
+        meth) dels
 
 let feropModules asm =
     Assembly.modules asm
@@ -106,15 +106,15 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
         //-------------------------------------------------------------------------
 
         let dels = generateReversePInvokeDelegates modul mb
-        let delMeths = generateReversePInvokeMethods modul tb
+        let delMeths = generateReversePInvokeMethods modul dels tb
 
         let ctor = tb.DefineTypeInitializer ()
         let il = ctor.GetILGenerator ()
 
         dels
-        |> List.iter2 (fun delMeth del ->
+        |> List.iteri2 (fun i delMeth del ->
             il.Emit (OpCodes.Ldnull)
-            il.Emit (OpCodes.Ldftn, modul.ExportedFunctions.[0])
+            il.Emit (OpCodes.Ldftn, modul.ExportedFunctions.[i])
             il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
             il.Emit (OpCodes.Call, delMeth :> MethodInfo)) delMeths
 

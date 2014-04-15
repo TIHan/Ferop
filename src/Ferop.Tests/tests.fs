@@ -4,8 +4,6 @@ open System
 open FsUnit
 open NUnit.Framework
 
-open System.Runtime.InteropServices
-
 open Ferop
 
 #if DEBUG
