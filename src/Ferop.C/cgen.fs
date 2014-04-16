@@ -7,17 +7,17 @@ type CGen = {
     Header : string
     Source : string }
 
-let generateHeaderCode (name : string) =
+let generateHeaderCode (name : string) header =
+    let name = name.ToUpper ()
     sprintf """
 #ifndef __%s_H__
 #define __%s_H__
 %s
 #endif
 """ 
-        (name.ToUpper ())
-        (name.ToUpper ())
+        name name header
 
-let generateMainHeaderCode name body =
+let generateMainHeaderCode name header =
     generateHeaderCode name <| sprintf
         @"
 #include <stdint.h>
@@ -35,12 +35,13 @@ let generateMainHeaderCode name body =
 #endif
 
 %s
-"           body
+"           header
 
-let generateCDeclFunctionPrototypeCode =
+let generateCDeclFunctionPrototypeCode returnType name parameterTypes =
     sprintf """
 FEROP_EXPORT %s FEROP_DECL %s (%s);
 """
+        returnType name parameterTypes
 
 let generateCDeclFunctionCode = 
     sprintf """
@@ -68,12 +69,13 @@ FEROP_EXPORT void FEROP_DECL ferop_set_%s (%s ptr)
 """
         name name name name name
 
-let generateCDeclStructCode =
+let generateCDeclStructCode fields name =
     sprintf """
 typedef struct {
 %s
 } %s;
 """
+        fields name
 
 let generateHeaderIncludeCode name = sprintf "#include \"%s.h\" \n" name
 
