@@ -7,7 +7,7 @@ type CGen = {
     Header : string
     Source : string }
 
-let generateHeaderf (name : string) =
+let generateHeaderCode (name : string) =
     sprintf """
 #ifndef __%s_H__
 #define __%s_H__
@@ -17,8 +17,8 @@ let generateHeaderf (name : string) =
         (name.ToUpper ())
         (name.ToUpper ())
 
-let generateMainHeaderf name body =
-    generateHeaderf name <| sprintf
+let generateMainHeaderCode name body =
+    generateHeaderCode name <| sprintf
         @"
 #include <stdint.h>
 
@@ -37,12 +37,12 @@ let generateMainHeaderf name body =
 %s
 "           body
 
-let generateCFunctionPrototypef =
+let generateCDeclFunctionPrototypeCode =
     sprintf """
 FEROP_EXPORT %s FEROP_DECL %s (%s);
 """
 
-let generateCFunctionf = 
+let generateCDeclFunctionCode = 
     sprintf """
 FEROP_EXPORT %s FEROP_DECL %s (%s)
 {
@@ -50,7 +50,7 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
 }
 """
 
-let generateCFunctionPointer returnType name parameters =
+let generateCDeclFunctionPointerCode returnType name parameters =
     sprintf """
 typedef %s (*%s)(%s);
 extern %s Delegate_%s;
@@ -58,7 +58,7 @@ FEROP_EXPORT void FEROP_DECL ferop_set_%s (%s);
 """
         returnType name parameters name name name name
 
-let genereateCFunctionPointerImpl name =
+let genereateCDeclFunctionPointerImplCode name =
     sprintf """
 %s Delegate_%s;
 FEROP_EXPORT void FEROP_DECL ferop_set_%s (%s ptr)
@@ -68,14 +68,14 @@ FEROP_EXPORT void FEROP_DECL ferop_set_%s (%s ptr)
 """
         name name name name name
 
-let generateCStructf =
+let generateCDeclStructCode =
     sprintf """
 typedef struct {
 %s
 } %s;
 """
 
-let generateHeaderInclude name = sprintf "#include \"%s.h\" \n" name
+let generateHeaderIncludeCode name = sprintf "#include \"%s.h\" \n" name
 
 let rec generateCType = function
     | Byte ->   "uint8_t"
@@ -133,16 +133,16 @@ let generateCDeclFunction {ReturnType=returnType; Name=name; Parameters=paramete
     let parameters' = generateParameters parameters
     let body = generateCExpr expr
 
-    generateCFunctionf returnType' name parameters' body
+    generateCDeclFunctionCode returnType' name parameters' body
 
 let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Name=name; ParameterTypes=parameterTypes} =
     let returnType' = generateReturnType returnType
     let parametersTypes' = generateParameterTypes parameterTypes
 
-    generateCFunctionPointer returnType' name parametersTypes'
+    generateCDeclFunctionPointerCode returnType' name parametersTypes'
 
 let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
-    generateCStructf (generateCFields fields) name
+    generateCDeclStructCode (generateCFields fields) name
 
 let generateCDecl = function
     | Function x ->         generateCDeclFunction x
@@ -150,7 +150,7 @@ let generateCDecl = function
     | Struct x ->           generateCDeclStruct x
 
 let generateCDeclFunctionPointerImpl {CDeclFunctionPointer.Name=name} =
-    genereateCFunctionPointerImpl name
+    genereateCDeclFunctionPointerImplCode name
 
 let generateCDeclFunctions = function
     | [] -> ""
@@ -171,11 +171,11 @@ let generateCDeclFunctionPointerImpls = function
 let generateHeader (env: CEnv) includes =
     let structs = generateCDeclStructs env.DeclStructs
     let funcPtrs = generateCDeclFunctionPointers env.DeclFunctionPointers
-    generateMainHeaderf env.Name <|
+    generateMainHeaderCode env.Name <|
         sprintf "%s\n%s\n%s" includes structs funcPtrs
 
 let generateSource (env: CEnv) =
-    (generateHeaderInclude env.Name) + 
+    (generateHeaderIncludeCode env.Name) + 
     generateCDeclFunctions env.DeclFunctions +
     generateCDeclFunctionPointerImpls env.DeclFunctionPointers
 
