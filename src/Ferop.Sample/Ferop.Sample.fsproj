@@ -55,5 +55,9 @@
       <Project>{2858E0A3-A638-45DA-9174-C98F0A422993}</Project>
       <Name>Ferop.Sample.Native</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Ferop.TypeProvider\Ferop.TypeProvider.fsproj">
+      <Project>{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}</Project>
+      <Name>Ferop.TypeProvider</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

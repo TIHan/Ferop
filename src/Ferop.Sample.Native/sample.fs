@@ -21,7 +21,7 @@ module App =
         C """
 SDL_Init (SDL_INIT_VIDEO);
 
-Application app;
+App_Application app;
 
 app.Window = 
     SDL_CreateWindow(
