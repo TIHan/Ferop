@@ -18,9 +18,13 @@ type CType =
     | Float
     | Double
     | Pointer of CType option
-    | Array of CType * size: int option
+    | Array of CArray
     | Struct of CStruct
     | Function of CFunction
+
+and CArray = {
+    Type: CType
+    Size: int option }
 
 and CStruct = { 
     Name: string
@@ -35,19 +39,37 @@ and CFunction = {
     Name: string 
     ParameterTypes: CType list }
 
+and CParameter = {
+    Type: CType
+    Name: string }
+
+and CDeclFunction = {
+    ReturnType: CType option
+    Name: string
+    Parameters: CParameter list
+    Expr: CExpr }
+
+and CDeclFunctionPointer = {
+    ReturnType: CType option
+    Name: string
+    ParameterTypes: CType list }
+
+and CDeclStruct = {
+    Name: string
+    Fields: CField list }
+
 and 
-    [<RequireQualifiedAccess>]
     CDecl =
-    | Function of returnType: CType option * name: string * parameters: (CType * string) list * CExpr
-    | FunctionPointer of returnType: CType option * name: string * parameterTypes: CType list
-    | Struct of name: string * fields: CField list
+    | Function of CDeclFunction
+    | FunctionPointer of CDeclFunctionPointer
+    | Struct of CDeclStruct
 
 let hasFieldType fieldTypeName = function
     | [] -> false
     | fields ->
 
     fields
-    |> List.exists (function | {Type = Struct x} -> x.Name = fieldTypeName | _ -> false)
+    |> List.exists (function | {CField.Type = CType.Struct x} -> x.Name = fieldTypeName | _ -> false)
 
 type CEnv = { 
     Name : string

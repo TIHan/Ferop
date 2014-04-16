@@ -55,14 +55,14 @@ let methodExpr meth =
 
 let makeCStructName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
 
-let makeCStruct = function 
-    | CDecl.Struct (name, fields) -> 
-        { Name = name; Fields = fields }
+let makeCStruct = function
+    | CDecl.Struct (struc) -> 
+        { CStruct.Name = struc.Name; Fields = struc.Fields }
     | _ -> failwith "Invalid struct"
 
 let tryLookupStruct env (typ: Type) = 
     env.Decls 
-    |> List.tryFind (function | CDecl.Struct (x,_) -> x = makeCStructName env typ | _ -> false)
+    |> List.tryFind (function | CDecl.Struct x -> x.Name = makeCStructName env typ | _ -> false)
     |> function
     | None -> None
     | Some x -> Some <| makeCStruct x
@@ -83,7 +83,7 @@ let rec tryLookupCType env = function
     | x when isTypeUnmanaged x ->
         match tryLookupStruct env x with
         | None -> None
-        | Some x -> Some <| Struct x
+        | Some x -> Some <| CType.Struct x
     | _ -> None
 
 and lookupCType env typ =
@@ -91,7 +91,7 @@ and lookupCType env typ =
     | None -> failwithf "%A not supported." typ.FullName
     | Some x -> x
 
-and makeCField typ name = { Type = typ; Name = name }
+and makeCField typ name = { CField.Type = typ; Name = name }
 
 and makeCFields env (typ: Type) =
     properties typ
@@ -103,7 +103,8 @@ let makeReturnType env = function
     | x when x = typeof<Void> -> None
     | x -> Some <| lookupCType env x
 
-let makeParameter env (info: ParameterInfo) = (lookupCType env info.ParameterType, info.Name)
+let makeParameter env (info: ParameterInfo) = 
+    { CParameter.Type = lookupCType env info.ParameterType; Name = info.Name }
 
 let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
@@ -130,14 +131,14 @@ let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let parameters = func.GetParameters () |> makeParameters env
     let expr = methodExpr func |> makeCExpr
 
-    CDecl.Function (returnType, name, parameters, expr)
+    { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
 
 let makeCDeclFunctionPointer (env: CEnv) (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
     let name = sprintf "fs_%s_%s" env.Name func.Name
     let parameterTypes = func.GetParameters () |> makeParameterTypes env
 
-    CDecl.FunctionPointer (returnType, name, parameterTypes)
+    { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
 
 let rec makeCDeclStructFields env (typ: Type) =
     properties typ
@@ -155,7 +156,7 @@ and makeCDeclStruct env (typ: Type) =
         let name = makeCStructName env typ
         let env', fields = makeCDeclStructFields env typ
 
-        { env' with Decls = CDecl.Struct (name, fields) :: env'.Decls }
+        { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
 
 let makeCDeclStructs (env: CEnv) modul =
     let env' =
@@ -175,8 +176,8 @@ let makeCDeclStructs (env: CEnv) modul =
             | x ->  List.rev x }
 
 let makeCDeclFunctions env modul =
-    let funcs = modul.Functions |> List.map (makeCDeclFunction env)
-    let funcPtrs = modul.ExportedFunctions |> List.map (makeCDeclFunctionPointer env)
+    let funcs = modul.Functions |> List.map (makeCDeclFunction env) |> List.map CDecl.Function
+    let funcPtrs = modul.ExportedFunctions |> List.map (makeCDeclFunctionPointer env) |> List.map CDecl.FunctionPointer
     { env with Decls = env.Decls @ funcs @ funcPtrs }
 
 //-------------------------------------------------------------------------

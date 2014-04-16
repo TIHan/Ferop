@@ -89,7 +89,7 @@ let rec generateCType = function
     | Float ->  "float"
     | Double -> "double"
     | Pointer None -> "void*"
-    | Struct ({ Name = x }) -> x
+    | CType.Struct {Name=name} -> name
     | x -> failwithf "%A generated type not found." x
 
 let generateCFields = function
@@ -98,7 +98,7 @@ let generateCFields = function
         
     fields
     |> List.map (function
-        | { Type = typ; Name = name } ->
+        | {CField.Type=typ; Name=name} ->
             let ctype = generateCType typ
             sprintf "%s %s;\n" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> x + y)
@@ -112,7 +112,7 @@ let generateParameters = function
     | parameters ->
 
     parameters
-    |> List.map (fun (typ, name: string) ->
+    |> List.map (fun {CParameter.Type=typ; Name=name} ->
             let ctype = generateCType typ
             sprintf "%s %s" ctype (name.Replace (" ", "_")))
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)
@@ -128,37 +128,25 @@ let generateParameterTypes = function
 let generateCExpr = function
     | Text x -> x
 
-let generateCDeclPrototype = function
-    | CDecl.Function (returnType, name, parameters, _) ->
-        let returnType' = generateReturnType returnType
-        let parameters' = generateParameters parameters
-
-        generateCFunctionPrototypef returnType' name parameters'
-    | _ -> ""
-
 let generateCDecl = function
-    | CDecl.Function (returnType, name, parameters, expr) ->
+    | Function {ReturnType=returnType; Name=name; Parameters=parameters; Expr=expr} ->
         let returnType' = generateReturnType returnType
         let parameters' = generateParameters parameters
         let body = generateCExpr expr
 
         generateCFunctionf returnType' name parameters' body
-    | CDecl.FunctionPointer (returnType, name, parameterTypes) ->
+    | FunctionPointer {ReturnType=returnType; Name=name; ParameterTypes=parameterTypes} ->
         let returnType' = generateReturnType returnType
         let parametersTypes' = generateParameterTypes parameterTypes
 
         generateCFunctionPointer returnType' name parametersTypes'
-    | CDecl.Struct (name, fields) -> 
+    | Struct {Name=name; Fields=fields} -> 
         generateCStructf (generateCFields fields) name
 
 let generateCDeclFunctionPointerImpl = function
-    | CDecl.FunctionPointer (_, name, _) ->
+    | CDecl.FunctionPointer {Name=name} ->
         genereateCFunctionPointerImpl name
     | _ -> ""
-
-let generateCDeclPrototypes = function
-    | [] -> ""
-    | decls -> List.map generateCDeclPrototype decls |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateCDeclFunctions = function
     | [] -> ""
@@ -176,12 +164,11 @@ let generateCDeclFunctionPointerImpls = function
     | [] -> ""
     | funcs -> List.map generateCDeclFunctionPointerImpl funcs |> List.reduce (fun x y -> x + "\n" + y)
 
-let generateHeader env includes =
-    let prototypes = generateCDeclPrototypes env.Decls
+let generateHeader (env: CEnv) includes =
     let structs = generateCDeclStructs env.DeclStructs
     let funcPtrs = generateCDeclFunctionPointers env.DeclFunctionPointers
     generateMainHeaderf env.Name <|
-        sprintf "%s\n%s\n%s\n%s" includes structs prototypes funcPtrs
+        sprintf "%s\n%s\n%s" includes structs funcPtrs
 
 let generateSource (env: CEnv) =
     (generateHeaderInclude env.Name) + 
