@@ -7,6 +7,10 @@ type CGen = {
     Header : string
     Source : string }
 
+type CGenContext =
+    | Header = 0
+    | Source = 1
+
 let generateHeaderCode (name : string) header =
     let name = name.ToUpper ()
     sprintf """
@@ -155,38 +159,27 @@ let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Na
 let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
     generateCDeclStructCode (generateCFields fields) name
 
-let generateCDecl = function
-    | Function x ->             generateCDeclFunction x
-    | FunctionPrototype x ->    generateCDeclFunctionPrototype x
-    | FunctionPointer x ->      generateCDeclFunctionPointer x
-    | Struct x ->               generateCDeclStruct x
+let generateCDecl context = function
+    | Function x when context = CGenContext.Source ->
+        generateCDeclFunction x
+    | FunctionPrototype x when context = CGenContext.Header ->
+        generateCDeclFunctionPrototype x
+    | FunctionPointer x when context = CGenContext.Header ->
+        generateCDeclFunctionPointer x
+    | Struct x when context = CGenContext.Header ->
+        generateCDeclStruct x
+    | _ -> ""
+
+let generateCDecls context = function
+    | [] -> ""
+    | decls ->
+
+    decls
+    |> List.map (generateCDecl context)
+    |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateCDeclFunctionPointerImpl {CDeclFunctionPointer.Name=name} =
     genereateCDeclFunctionPointerImplCode name
-
-let generateCDeclFunctions = function
-    | [] -> ""
-    | funcs -> 
-
-    funcs
-    |> List.map generateCDeclFunction
-    |> List.reduce (fun x y -> x + "\n" + y)
-
-let generateCDeclStructs = function
-    | [] -> ""
-    | structs -> 
-
-    structs
-    |> List.map generateCDeclStruct
-    |> List.reduce (fun x y -> x + "\n" + y)
-
-let generateCDeclFunctionPointers = function
-    | [] -> ""
-    | funcs -> 
-
-    funcs
-    |> List.map generateCDeclFunctionPointer
-    |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateCDeclFunctionPointerImpls = function
     | [] -> ""
@@ -196,16 +189,15 @@ let generateCDeclFunctionPointerImpls = function
     |> List.map generateCDeclFunctionPointerImpl
     |> List.reduce (fun x y -> x + "\n" + y)
 
-let generateHeader (env: CEnv) includes =
-    let structs = generateCDeclStructs env.DeclStructs
-    let funcPtrs = generateCDeclFunctionPointers env.DeclFunctionPointers
+let generateHeader env includes =
+    let decls = generateCDecls CGenContext.Header env.Decls
 
-    sprintf "%s\n%s\n%s" includes structs funcPtrs
+    sprintf "%s\n%s" includes decls
     |> generateMainHeaderCode env.Name
 
 let generateSource (env: CEnv) =
     (generateHeaderIncludeCode env.Name) + 
-    generateCDeclFunctions env.DeclFunctions +
+    generateCDecls CGenContext.Source env.Decls +
     generateCDeclFunctionPointerImpls env.DeclFunctionPointers
 
 let generate env includes =
