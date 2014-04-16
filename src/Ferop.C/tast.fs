@@ -77,14 +77,14 @@ type CEnv = {
 
     member this.DeclFunctions = 
         this.Decls
-        |> List.filter (function | CDecl.Function _ -> true | _ -> false)
+        |> List.choose (function | CDecl.Function x -> Some x | _ -> None)
 
     member this.DeclFunctionPointers =
         this.Decls
-        |> List.filter (function | CDecl.FunctionPointer _ -> true | _ -> false)
+        |> List.choose (function | CDecl.FunctionPointer x -> Some x | _ -> None)
 
     member this.DeclStructs = 
         this.Decls
-        |> List.filter (function | CDecl.Struct _ -> true | _ -> false)
+        |> List.choose (function | CDecl.Struct x -> Some x | _ -> None)
 
 let makeEmptyEnv name = { Name = name; Decls = List.empty }

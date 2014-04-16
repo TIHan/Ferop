@@ -128,37 +128,41 @@ let generateParameterTypes = function
 let generateCExpr = function
     | Text x -> x
 
+let generateCDeclFunction {ReturnType=returnType; Name=name; Parameters=parameters; Expr=expr} =
+    let returnType' = generateReturnType returnType
+    let parameters' = generateParameters parameters
+    let body = generateCExpr expr
+
+    generateCFunctionf returnType' name parameters' body
+
+let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Name=name; ParameterTypes=parameterTypes} =
+    let returnType' = generateReturnType returnType
+    let parametersTypes' = generateParameterTypes parameterTypes
+
+    generateCFunctionPointer returnType' name parametersTypes'
+
+let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
+    generateCStructf (generateCFields fields) name
+
 let generateCDecl = function
-    | Function {ReturnType=returnType; Name=name; Parameters=parameters; Expr=expr} ->
-        let returnType' = generateReturnType returnType
-        let parameters' = generateParameters parameters
-        let body = generateCExpr expr
+    | Function x ->         generateCDeclFunction x
+    | FunctionPointer x ->  generateCDeclFunctionPointer x
+    | Struct x ->           generateCDeclStruct x
 
-        generateCFunctionf returnType' name parameters' body
-    | FunctionPointer {ReturnType=returnType; Name=name; ParameterTypes=parameterTypes} ->
-        let returnType' = generateReturnType returnType
-        let parametersTypes' = generateParameterTypes parameterTypes
-
-        generateCFunctionPointer returnType' name parametersTypes'
-    | Struct {Name=name; Fields=fields} -> 
-        generateCStructf (generateCFields fields) name
-
-let generateCDeclFunctionPointerImpl = function
-    | CDecl.FunctionPointer {Name=name} ->
-        genereateCFunctionPointerImpl name
-    | _ -> ""
+let generateCDeclFunctionPointerImpl {CDeclFunctionPointer.Name=name} =
+    genereateCFunctionPointerImpl name
 
 let generateCDeclFunctions = function
     | [] -> ""
-    | funcs -> List.map generateCDecl funcs |> List.reduce (fun x y -> x + "\n" + y)
+    | funcs -> List.map generateCDeclFunction funcs |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateCDeclStructs = function
     | [] -> ""
-    | structs -> List.map generateCDecl structs |> List.reduce (fun x y -> x + "\n" + y)
+    | structs -> List.map generateCDeclStruct structs |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateCDeclFunctionPointers = function
     | [] -> ""
-    | funcs -> List.map generateCDecl funcs |> List.reduce (fun x y -> x + "\n" + y)
+    | funcs -> List.map generateCDeclFunctionPointer funcs |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateCDeclFunctionPointerImpls = function
     | [] -> ""
