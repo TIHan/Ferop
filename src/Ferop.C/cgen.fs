@@ -140,6 +140,12 @@ let generateCDeclFunction {ReturnType=returnType; Name=name; Parameters=paramete
 
     generateCDeclFunctionCode returnType' name parameters' body
 
+let generateCDeclFunctionPrototype {CDeclFunctionPrototype.ReturnType=returnType; Name=name; ParameterTypes=parameterTypes} =
+    let returnType' = generateReturnType returnType
+    let parametersTypes' = generateParameterTypes parameterTypes
+
+    generateCDeclFunctionPrototypeCode returnType' name parametersTypes'
+
 let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Name=name; ParameterTypes=parameterTypes} =
     let returnType' = generateReturnType returnType
     let parametersTypes' = generateParameterTypes parameterTypes
@@ -150,9 +156,10 @@ let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
     generateCDeclStructCode (generateCFields fields) name
 
 let generateCDecl = function
-    | Function x ->         generateCDeclFunction x
-    | FunctionPointer x ->  generateCDeclFunctionPointer x
-    | Struct x ->           generateCDeclStruct x
+    | Function x ->             generateCDeclFunction x
+    | FunctionPrototype x ->    generateCDeclFunctionPrototype x
+    | FunctionPointer x ->      generateCDeclFunctionPointer x
+    | Struct x ->               generateCDeclStruct x
 
 let generateCDeclFunctionPointerImpl {CDeclFunctionPointer.Name=name} =
     genereateCDeclFunctionPointerImplCode name

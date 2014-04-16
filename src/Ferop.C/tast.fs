@@ -49,6 +49,11 @@ and CDeclFunction = {
     Parameters: CParameter list
     Expr: CExpr }
 
+and CDeclFunctionPrototype = {
+    ReturnType: CType option
+    Name: string
+    ParameterTypes: CType list }
+
 and CDeclFunctionPointer = {
     ReturnType: CType option
     Name: string
@@ -61,6 +66,7 @@ and CDeclStruct = {
 and 
     CDecl =
     | Function of CDeclFunction
+    | FunctionPrototype of CDeclFunctionPrototype
     | FunctionPointer of CDeclFunctionPointer
     | Struct of CDeclStruct
 
