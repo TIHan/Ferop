@@ -76,26 +76,28 @@ let shouldQuit () = Native.App.shouldQuit ()
 
 let torad = 0.0174532925f
 
-let inline makeEndpoint degrees length (v: vec2) =
-    vec2 (v.X + length * cos (degrees * torad), v.Y + length * sin (degrees * torad))
+let lrad = 20.f * torad
+let rrad = -lrad
 
-let inline makeDrawLine degrees length (line: DrawLine) = DrawLine (line.Y, makeEndpoint degrees length line.Y)
+let inline makeEndpoint rads length (v: vec2) = vec2 (v.X + length * cos rads, v.Y + length * sin rads)
+
+let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEndpoint rads length line.Y)
 
 let makeLines degrees length (line: DrawLine) =
 
-    let rec makeLines degrees length (lines: DrawLine list) n cont =
-        match n with
+    let rec makeLines rads length (lines: DrawLine list) cont = function
         | 14 -> cont lines
-        | _ ->
-            let ldeg = degrees + 20.f
-            let rdeg = degrees - 20.f
+        | n ->
+            let ldeg = rads + lrad
+            let rdeg = rads + rrad
             let ll = makeDrawLine ldeg length lines.Head
             let rl = makeDrawLine rdeg length lines.Head
+            let n = n + 1
       
-            makeLines ldeg (length * 0.7f) (ll :: lines) (n + 1) (fun x ->
-                makeLines rdeg (length * 0.7f) (rl :: x) (n + 1) (fun y -> cont y))
+            makeLines ldeg (length * 0.7f) (ll :: lines) (fun x ->
+                makeLines rdeg (length * 0.7f) (rl :: x) cont n) n
 
-    makeLines degrees length [line] 0 (fun x -> x)
+    makeLines (degrees * torad) length [line] (fun x -> x) 0
         
 
 [<EntryPoint>]
@@ -105,6 +107,18 @@ let main args =
     let beginPoint = vec2 (0.f, -1.f)
     let endPoint = vec2 (0.f, -0.5f)
     let drawLine = DrawLine (beginPoint, endPoint)
+
+    let stopwatch = Stopwatch.StartNew ()
+    let drawLines = 
+        makeLines 90.f (0.4f) drawLine
+        |> Array.ofList
+    stopwatch.Stop ()
+
+    let stopwatch = Stopwatch.StartNew ()
+    let drawLines = 
+        makeLines 90.f (0.4f) drawLine
+        |> Array.ofList
+    stopwatch.Stop ()
 
     let stopwatch = Stopwatch.StartNew ()
     let drawLines = 
