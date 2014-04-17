@@ -60,49 +60,49 @@ module Tests =
     [<Export>]
     let exported_testByte (x: byte) : byte = x
 
-    let testExported_testByte (x: byte) : byte = C """ return Delegate_fs_Tests_exported_testByte (x); """
+    let testExported_testByte (x: byte) : byte = C """ return Tests_exported_testByte (x); """
 
     [<Export>]
     let exported_testSByte (x: sbyte) : sbyte = x
 
-    let testExported_testSByte (x: sbyte) : sbyte = C """ return Delegate_fs_Tests_exported_testSByte (x); """
+    let testExported_testSByte (x: sbyte) : sbyte = C """ return Tests_exported_testSByte (x); """
 
     [<Export>]
     let exported_testUInt16 (x: uint16) : uint16 = x
 
-    let testExported_testUInt16 (x: uint16) : uint16 = C """ return Delegate_fs_Tests_exported_testUInt16 (x); """
+    let testExported_testUInt16 (x: uint16) : uint16 = C """ return Tests_exported_testUInt16 (x); """
 
     [<Export>]
     let exported_testInt16 (x: int16) : int16 = x
 
-    let testExported_testInt16 (x: int16) : int16 = C """ return Delegate_fs_Tests_exported_testInt16 (x); """
+    let testExported_testInt16 (x: int16) : int16 = C """ return Tests_exported_testInt16 (x); """
 
     [<Export>]
     let exported_testUInt32 (x: uint32) : uint32 = x
 
-    let testExported_testUInt32 (x: uint32) : uint32 = C """ return Delegate_fs_Tests_exported_testUInt32 (x); """
+    let testExported_testUInt32 (x: uint32) : uint32 = C """ return Tests_exported_testUInt32 (x); """
 
     [<Export>]
     let exported_testInt32 (x: int) : int = x
 
-    let testExported_testInt32 (x: int) : int = C """ return Delegate_fs_Tests_exported_testInt32 (x); """
+    let testExported_testInt32 (x: int) : int = C """ return Tests_exported_testInt32 (x); """
 
     [<Export>]
     let exported_testUInt64 (x: uint64) : uint64 = x
 
-    let testExported_testUInt64 (x: uint64) : uint64 = C """ return Delegate_fs_Tests_exported_testUInt64 (x); """
+    let testExported_testUInt64 (x: uint64) : uint64 = C """ return Tests_exported_testUInt64 (x); """
 
     [<Export>]
     let exported_testInt64 (x: int64) : int64 = x
 
-    let testExported_testInt64 (x: int64) : int64 = C """ return Delegate_fs_Tests_exported_testInt64 (x); """
+    let testExported_testInt64 (x: int64) : int64 = C """ return Tests_exported_testInt64 (x); """
 
     [<Export>]
     let exported_testSingle (x: single) : single = x
 
-    let testExported_testSingle (x: single) : single = C """ return Delegate_fs_Tests_exported_testSingle (x); """
+    let testExported_testSingle (x: single) : single = C """ return Tests_exported_testSingle (x); """
 
     [<Export>]
     let exported_testDouble (x: double) : double = x
 
-    let testExported_testDouble (x: double) : double = C """ return Delegate_fs_Tests_exported_testDouble (x); """
+    let testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """

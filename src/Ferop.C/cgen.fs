@@ -57,18 +57,18 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
 
 let generateCDeclFunctionPointerCode returnType name parameters =
     sprintf """
-typedef %s (*%s)(%s);
-extern %s Delegate_%s;
-FEROP_EXPORT void FEROP_DECL ferop_set_%s (%s);
+typedef %s (*%sDelegate)(%s);
+extern %sDelegate %s;
+FEROP_EXPORT void FEROP_DECL ferop_set_%s (%sDelegate);
 """
         returnType name parameters name name name name
 
 let genereateCDeclFunctionPointerImplCode name =
     sprintf """
-%s Delegate_%s;
-FEROP_EXPORT void FEROP_DECL ferop_set_%s (%s ptr)
+%sDelegate %s;
+FEROP_EXPORT void FEROP_DECL ferop_set_%s (%sDelegate ptr)
 {
-    Delegate_%s = ptr;
+    %s = ptr;
 }
 """
         name name name name name
