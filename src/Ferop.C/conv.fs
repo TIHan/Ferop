@@ -84,6 +84,15 @@ let rec tryLookupCType env = function
         match tryLookupStruct env x with
         | None -> None
         | Some x -> Some <| CType.Struct x
+    | x when x.BaseType = typeof<MulticastDelegate> ->
+        let invokeMeth = x.GetMethod "Invoke"
+        let returnType = makeReturnType env invokeMeth.ReturnType
+        let name = x.Name
+        let parameterTypes = invokeMeth.GetParameters () |> makeParameterTypes env
+
+        { CFunction.ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
+        |> CType.Function
+        |> Some
     | _ -> None
 
 and lookupCType env typ =
@@ -99,18 +108,18 @@ and makeCFields env (typ: Type) =
         let ctype = lookupCType env x.PropertyType
         makeCField ctype x.Name)
 
-let makeReturnType env = function
+and makeReturnType env = function
     | x when x = typeof<Void> -> None
     | x -> Some <| lookupCType env x
 
-let makeParameter env (info: ParameterInfo) = 
+and makeParameter env (info: ParameterInfo) = 
     { CParameter.Type = lookupCType env info.ParameterType; Name = info.Name }
 
-let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
+and makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
-let makeParameterType env (info: ParameterInfo) = lookupCType env info.ParameterType
+and makeParameterType env (info: ParameterInfo) = lookupCType env info.ParameterType
 
-let makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
+and makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
 
 let rec makeCExpr = function
     | Call (_, _, exprList) -> makeCExpr exprList.[0]
@@ -135,7 +144,7 @@ let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
 
 let makeCDeclFunctionPointer (env: CEnv) (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
-    let name = sprintf "fs_%s_%s" env.Name func.Name
+    let name = sprintf "%s_%s" env.Name func.Name
     let parameterTypes = func.GetParameters () |> makeParameterTypes env
 
     { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }

@@ -57,21 +57,9 @@ FEROP_EXPORT %s FEROP_DECL %s (%s)
 
 let generateCDeclFunctionPointerCode returnType name parameters =
     sprintf """
-typedef %s (*%sDelegate)(%s);
-extern %sDelegate %s;
-FEROP_EXPORT void FEROP_DECL ferop_set_%s (%sDelegate);
+typedef %s (*%s)(%s);
 """
-        returnType name parameters name name name name
-
-let genereateCDeclFunctionPointerImplCode name =
-    sprintf """
-%sDelegate %s;
-FEROP_EXPORT void FEROP_DECL ferop_set_%s (%sDelegate ptr)
-{
-    %s = ptr;
-}
-"""
-        name name name name name
+        returnType name parameters
 
 let generateCDeclStructCode fields name =
     sprintf """
@@ -178,17 +166,6 @@ let generateCDecls context = function
     |> List.map (generateCDecl context)
     |> List.reduce (fun x y -> x + "\n" + y)
 
-let generateCDeclFunctionPointerImpl {CDeclFunctionPointer.Name=name} =
-    genereateCDeclFunctionPointerImplCode name
-
-let generateCDeclFunctionPointerImpls = function
-    | [] -> ""
-    | funcs -> 
-
-    funcs
-    |> List.map generateCDeclFunctionPointerImpl
-    |> List.reduce (fun x y -> x + "\n" + y)
-
 let generateHeader env includes =
     let decls = generateCDecls CGenContext.Header env.Decls
 
@@ -197,8 +174,7 @@ let generateHeader env includes =
 
 let generateSource (env: CEnv) =
     (generateHeaderIncludeCode env.Name) + 
-    generateCDecls CGenContext.Source env.Decls +
-    generateCDeclFunctionPointerImpls env.DeclFunctionPointers
+    generateCDecls CGenContext.Source env.Decls
 
 let generate env includes =
     { Header = generateHeader env includes; Source = generateSource env }

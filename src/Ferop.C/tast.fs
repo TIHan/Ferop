@@ -63,12 +63,17 @@ and CDeclStruct = {
     Name: string
     Fields: CField list }
 
+and CDeclExtern = {
+    Name: string
+    Type: CType }
+
 and 
     CDecl =
     | Function of CDeclFunction
     | FunctionPrototype of CDeclFunctionPrototype
     | FunctionPointer of CDeclFunctionPointer
     | Struct of CDeclStruct
+    | Extern of CDeclExtern
 
 let hasFieldType fieldTypeName = function
     | [] -> false
