@@ -130,7 +130,6 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
 
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
-
         compileModule outputPath modul
         tb.CreateType ())
     |> ignore

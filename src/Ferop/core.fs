@@ -125,7 +125,7 @@ open Ferop.CConversion
 open Ferop.CGen
 
 let makeFsModule (modul: Module) = 
-    { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions }
+    { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions  }
 
 let makeCGen outputPath (modul: Module) =
     let env = makeCEnv <| makeFsModule modul

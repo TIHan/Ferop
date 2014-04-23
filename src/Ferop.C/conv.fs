@@ -186,8 +186,7 @@ let makeCDeclStructs (env: CEnv) modul =
 
 let makeCDeclFunctions env modul =
     let funcs = modul.Functions |> List.map (makeCDeclFunction env) |> List.map CDecl.Function
-    let funcPtrs = modul.ExportedFunctions |> List.map (makeCDeclFunctionPointer env) |> List.map CDecl.FunctionPointer
-    { env with Decls = env.Decls @ funcs @ funcPtrs }
+    { env with Decls = env.Decls @ funcs }
 
 //-------------------------------------------------------------------------
 // CEnv

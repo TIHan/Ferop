@@ -69,6 +69,12 @@ typedef struct {
 """
         fields name
 
+let generateCDeclExternCode typ name =
+    sprintf """
+extern %s %s;
+"""
+        typ name
+
 let generateHeaderIncludeCode name = sprintf "#include \"%s.h\" \n" name
 
 let rec generateCType = function
@@ -147,6 +153,9 @@ let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Na
 let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
     generateCDeclStructCode (generateCFields fields) name
 
+let generateCDeclExtern {CDeclExtern.Type=typ; Name=name} =
+    generateCDeclExternCode (generateCType typ) name
+
 let generateCDecl context = function
     | Function x when context = CGenContext.Source ->
         generateCDeclFunction x
@@ -156,6 +165,8 @@ let generateCDecl context = function
         generateCDeclFunctionPointer x
     | Struct x when context = CGenContext.Header ->
         generateCDeclStruct x
+    | Extern x when context = CGenContext.Header ->
+        generateCDeclExtern x
     | _ -> ""
 
 let generateCDecls context = function
