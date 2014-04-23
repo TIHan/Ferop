@@ -53,19 +53,31 @@ let methodExpr meth =
     | None -> failwithf "Reflected definition for %s not found" meth.Name
     | Some expr -> expr
 
-let makeCStructName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
+let makeCTypeName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
 
 let makeCStruct = function
     | CDecl.Struct (struc) -> 
         { CStruct.Name = struc.Name; Fields = struc.Fields }
     | _ -> failwith "Invalid struct"
 
+let makeCFunction = function
+    | CDecl.FunctionPointer func ->
+        { CFunction.ReturnType = func.ReturnType; Name = func.Name; ParameterTypes = func.ParameterTypes }
+    | _ -> failwith "Invalid function"
+
 let tryLookupStruct env (typ: Type) = 
     env.Decls 
-    |> List.tryFind (function | CDecl.Struct x -> x.Name = makeCStructName env typ | _ -> false)
+    |> List.tryFind (function | CDecl.Struct x -> x.Name = makeCTypeName env typ | _ -> false)
     |> function
     | None -> None
     | Some x -> Some <| makeCStruct x
+
+let tryLookupFunction env name =
+    env.Decls
+    |> List.tryFind (function | CDecl.FunctionPointer x -> x.Name = makeCTypeName env name | _ -> false)
+    |> function
+    | None -> None
+    | Some x -> Some <| makeCFunction x
 
 let rec tryLookupCType env = function
     | x when x = typeof<byte> ->    Some Byte
@@ -86,13 +98,9 @@ let rec tryLookupCType env = function
         | Some x -> Some <| CType.Struct x
     | x when x.BaseType = typeof<MulticastDelegate> ->
         let invokeMeth = x.GetMethod "Invoke"
-        let returnType = makeReturnType env invokeMeth.ReturnType
-        let name = x.Name
-        let parameterTypes = invokeMeth.GetParameters () |> makeParameterTypes env
-
-        { CFunction.ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
-        |> CType.Function
-        |> Some
+        match tryLookupFunction env x with
+        | None -> None
+        | Some x -> Some <| CType.Function x
     | _ -> None
 
 and lookupCType env typ =
@@ -162,7 +170,7 @@ and makeCDeclStruct env (typ: Type) =
     match tryLookupCType env typ with
     | Some _ -> env
     | _ ->
-        let name = makeCStructName env typ
+        let name = makeCTypeName env typ
         let env', fields = makeCDeclStructFields env typ
 
         { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
