@@ -56,6 +56,10 @@ let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
                 x.ReturnType,
                 x.GetParameters () |> Array.map (fun x -> x.ParameterType))
 
+        x.GetParameters ()
+        |> Array.iteri (fun i x ->
+            meth.DefineParameter (i + 1, ParameterAttributes.None, x.Name) |> ignore)
+
         meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
         let attributeType = typeof<UnmanagedFunctionPointerAttribute>
         let attributeConstructorInfo = attributeType.GetConstructor ([|typeof<CallingConvention>|])
@@ -69,9 +73,9 @@ let generateReversePInvokeMethods modul dels (tb: TypeBuilder) =
     |> List.map2 (fun del func ->
         let meth = 
             tb.DefinePInvokeMethod (
-                sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
+                sprintf "ferop_set_%s_%s" func.DeclaringType.Name func.Name,
                 dllName,
-                sprintf "ferop_set_fs_%s_%s" func.DeclaringType.Name func.Name,
+                sprintf "ferop_set_%s_%s" func.DeclaringType.Name func.Name,
                 MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
                 CallingConventions.Standard,
                 typeof<Void>,
@@ -79,12 +83,14 @@ let generateReversePInvokeMethods modul dels (tb: TypeBuilder) =
                 CallingConvention.Cdecl,
                 CharSet.Ansi)
 
+        meth.DefineParameter (1, ParameterAttributes.None, "ptr")
+
         meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
         let attributeType = typeof<SuppressUnmanagedCodeSecurityAttribute>
         let attributeConstructorInfo = attributeType.GetConstructor ([||])
         let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, [||])
         meth.SetCustomAttribute (attributeBuilder)
-        meth) dels
+        meth :> MethodInfo) dels
 
 let feropModules asm =
     Assembly.modules asm
@@ -122,16 +128,15 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
             il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
             il.Emit (OpCodes.Stsfld, field)
             il.Emit (OpCodes.Ldsfld, field)
-            il.Emit (OpCodes.Call, delMeth :> MethodInfo)
-            ) delMeths
+            il.Emit (OpCodes.Call, delMeth :> MethodInfo)) delMeths
 
         il.Emit (OpCodes.Ret)
 
-
+        tb.CreateType () |> ignore
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
+        let modul = { modul with Functions = modul.Functions @ delMeths }
         compileModule outputPath modul
-        tb.CreateType ())
-    |> ignore
+        ()) |> ignore
 
     dasm

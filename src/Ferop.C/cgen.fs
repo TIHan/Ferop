@@ -90,6 +90,7 @@ let rec generateCType = function
     | Double -> "double"
     | Pointer None -> "void*"
     | CType.Struct {Name=name} -> name
+    | CType.Function {Name=name} -> name
     | x -> failwithf "%A generated type not found." x
 
 let generateCField {CField.Type=typ; Name=name} =

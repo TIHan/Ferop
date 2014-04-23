@@ -50,10 +50,12 @@ let rec isTypeUnmanaged (typ: Type) =
 
 let methodExpr meth =
     match Expr.TryGetReflectedDefinition meth with
-    | None -> failwithf "Reflected definition for %s not found" meth.Name
-    | Some expr -> expr
+    | None -> None
+    | Some expr -> Some expr
 
 let makeCTypeName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
+
+let makeCFunctionName (env: CEnv) (func: MethodInfo) = sprintf "%s_%s" env.Name func.Name
 
 let makeCStruct = function
     | CDecl.Struct (struc) -> 
@@ -72,9 +74,9 @@ let tryLookupStruct env (typ: Type) =
     | None -> None
     | Some x -> Some <| makeCStruct x
 
-let tryLookupFunction env name =
+let tryLookupFunction env (typ: Type) =
     env.Decls
-    |> List.tryFind (function | CDecl.FunctionPointer x -> x.Name = makeCTypeName env name | _ -> false)
+    |> List.tryFind (function | CDecl.FunctionPointer x -> x.Name = makeCTypeName env typ | _ -> false)
     |> function
     | None -> None
     | Some x -> Some <| makeCFunction x
@@ -121,6 +123,8 @@ and makeReturnType env = function
     | x -> Some <| lookupCType env x
 
 and makeParameter env (info: ParameterInfo) = 
+    if info.Name = null then
+        failwithf "No parameter name at position %i in method %s" info.Position info.Member.Name
     { CParameter.Type = lookupCType env info.ParameterType; Name = info.Name }
 
 and makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
@@ -144,15 +148,19 @@ let rec makeCExpr = function
 
 let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let returnType = makeReturnType env func.ReturnType
-    let name = sprintf "%s_%s" env.Name func.Name
+    let name = makeCFunctionName env func
     let parameters = func.GetParameters () |> makeParameters env
-    let expr = methodExpr func |> makeCExpr
+    let expr =
+        match methodExpr func with
+        | None -> Text ""
+        | Some x -> makeCExpr x
 
     { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
 
-let makeCDeclFunctionPointer (env: CEnv) (func: MethodInfo) =
+let makeCDeclFunctionPointer (env: CEnv) (typ: Type) =
+    let func = typ.GetMethod "Invoke"
     let returnType = makeReturnType env func.ReturnType
-    let name = sprintf "%s_%s" env.Name func.Name
+    let name = makeCTypeName env typ
     let parameterTypes = func.GetParameters () |> makeParameterTypes env
 
     { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
@@ -175,32 +183,54 @@ and makeCDeclStruct env (typ: Type) =
 
         { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
 
-let makeCDeclStructs (env: CEnv) modul =
-    let env' =
-        match modul.Functions with
-        | [] -> failwith "There are no functions."
-        | funcs ->
-            funcs
-            |> List.map (fun x -> x.GetParameters () |> List.ofArray)
-            |> List.reduce (fun x y -> x @ y)
-            |> List.map (fun x -> x.ParameterType)
-            |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
-            |> List.fold (fun env x -> makeCDeclStruct env x) env
-    { env' with 
-        Decls = 
-            match env'.Decls with
-            | [] -> []
-            | x ->  List.rev x }
+let makeCDeclStructs (env: CEnv) = function
+    | [] -> env
+    | funcs ->
+        let env' = funcs |> List.fold (fun env x -> makeCDeclStruct env x) env
+        { env' with 
+            Decls = 
+                match env'.Decls with
+                | [] -> []
+                | x ->  List.rev x }
 
-let makeCDeclFunctions env modul =
-    let funcs = modul.Functions |> List.map (makeCDeclFunction env) |> List.map CDecl.Function
-    { env with Decls = env.Decls @ funcs }
+let makeCDeclFunctions (env: CEnv) = function
+    | [] -> env
+    | funcs ->
+        let decls = funcs |> List.map (makeCDeclFunction env) |> List.map CDecl.Function
+        { env with Decls = env.Decls @ decls }
 
+let makeCDeclFunctionPointers (env: CEnv) = function
+    | [] -> env
+    | funcPtrs ->
+        let decls = funcPtrs |> List.map (makeCDeclFunctionPointer env) |> List.map CDecl.FunctionPointer
+        { env with Decls = env.Decls @ decls }
+  
+
+let makeCDecls (env: CEnv) modul =
+    let funcs = modul.Functions
+    let exportedFuncs = modul.ExportedFunctions
+    let dels =
+        funcs @ exportedFuncs
+        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+        |> List.reduce (fun x y -> x @ y)
+        |> List.map (fun x -> x.ParameterType)
+        |> List.filter (fun x -> x.BaseType = typeof<MulticastDelegate>)
+
+    let structs =
+        funcs @ exportedFuncs
+        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+        |> List.reduce (fun x y -> x @ y)
+        |> List.map (fun x -> x.ParameterType)
+        |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
+
+    let env' = makeCDeclStructs env structs
+    let env'' = makeCDeclFunctionPointers env' dels
+    let env''' = makeCDeclFunctions env'' funcs
+    env'''
 //-------------------------------------------------------------------------
 // CEnv
 //-------------------------------------------------------------------------
 
 let makeCEnv modul =
     let env = makeEmptyEnv modul.Name
-    let env' = makeCDeclStructs env modul
-    makeCDeclFunctions env' modul
+    makeCDecls env modul
