@@ -83,7 +83,7 @@ let generateReversePInvokeMethods modul dels (tb: TypeBuilder) =
                 CallingConvention.Cdecl,
                 CharSet.Ansi)
 
-        meth.DefineParameter (1, ParameterAttributes.None, "ptr")
+        meth.DefineParameter (1, ParameterAttributes.None, "ptr") |> ignore
 
         meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
         let attributeType = typeof<SuppressUnmanagedCodeSecurityAttribute>

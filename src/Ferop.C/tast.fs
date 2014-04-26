@@ -63,9 +63,13 @@ and CDeclStruct = {
     Name: string
     Fields: CField list }
 
+and CDeclVar = {
+    Type: CType
+    Name: string }
+
 and CDeclExtern = {
-    Name: string
-    Type: CType }
+    Type: CType
+    Name: string }
 
 and 
     CDecl =
@@ -73,6 +77,7 @@ and
     | FunctionPrototype of CDeclFunctionPrototype
     | FunctionPointer of CDeclFunctionPointer
     | Struct of CDeclStruct
+    | GlobalVar of CDeclVar
     | Extern of CDeclExtern
 
 let hasFieldType fieldTypeName = function

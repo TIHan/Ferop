@@ -69,6 +69,8 @@ typedef struct {
 """
         fields name
 
+let generateCDeclVarCode typ name = sprintf """%s %s;""" typ name
+
 let generateCDeclExternCode typ name =
     sprintf """
 extern %s %s;
@@ -154,6 +156,9 @@ let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Na
 let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
     generateCDeclStructCode (generateCFields fields) name
 
+let generateCDeclVar {CDeclVar.Name=name; Type=typ} =
+    generateCDeclVarCode (generateCType typ) name
+
 let generateCDeclExtern {CDeclExtern.Type=typ; Name=name} =
     generateCDeclExternCode (generateCType typ) name
 
@@ -166,6 +171,8 @@ let generateCDecl context = function
         generateCDeclFunctionPointer x
     | Struct x when context = CGenContext.Header ->
         generateCDeclStruct x
+    | GlobalVar x when context = CGenContext.Source ->
+        generateCDeclVar x
     | Extern x when context = CGenContext.Header ->
         generateCDeclExtern x
     | _ -> ""
@@ -176,6 +183,7 @@ let generateCDecls context = function
 
     decls
     |> List.map (generateCDecl context)
+    |> List.filter ((<>)"")
     |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateHeader env includes =

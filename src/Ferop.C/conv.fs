@@ -183,6 +183,13 @@ and makeCDeclStruct env (typ: Type) =
 
         { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
 
+let makeCDeclVar env typ =
+    let name = makeCTypeName env typ
+    let ctype = lookupCType env typ
+
+    // HACK: Removing "Delegate" from var name
+    { CDeclVar.Name = name.Replace("Delegate", ""); Type = ctype }
+
 let makeCDeclStructs (env: CEnv) = function
     | [] -> env
     | funcs ->
@@ -204,7 +211,12 @@ let makeCDeclFunctionPointers (env: CEnv) = function
     | funcPtrs ->
         let decls = funcPtrs |> List.map (makeCDeclFunctionPointer env) |> List.map CDecl.FunctionPointer
         { env with Decls = env.Decls @ decls }
-  
+
+let makeCDeclGlobalVars (env: CEnv) = function
+    | [] -> env
+    | types ->
+        let decls = types |> List.map (makeCDeclVar env) |> List.map GlobalVar
+        { env with Decls = env.Decls @ decls }
 
 let makeCDecls (env: CEnv) modul =
     let funcs = modul.Functions
@@ -225,8 +237,9 @@ let makeCDecls (env: CEnv) modul =
 
     let env' = makeCDeclStructs env structs
     let env'' = makeCDeclFunctionPointers env' dels
-    let env''' = makeCDeclFunctions env'' funcs
-    env'''
+    let env''' = makeCDeclGlobalVars env'' dels
+    let env'''' = makeCDeclFunctions env''' funcs
+    env''''
 //-------------------------------------------------------------------------
 // CEnv
 //-------------------------------------------------------------------------
