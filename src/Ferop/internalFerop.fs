@@ -135,8 +135,10 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
         tb.CreateType () |> ignore
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
-        let modul = { modul with Functions = modul.Functions @ delMeths }
-        compileModule outputPath modul
+        let modul' = 
+            { modul with 
+                Functions = modul.Functions @ (delMeths |> List.map (fun x -> tb.GetMethod (x.Name))) }
+        compileModule outputPath modul'
         ()) |> ignore
 
     dasm
