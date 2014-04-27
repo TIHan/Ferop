@@ -33,6 +33,8 @@ and [<Struct>]
 module Tests =
     let testByte (x: byte) : byte = C """ return x; """
 
+    let testTwoBytes (x: byte) (y: byte) : byte = C """ return x + y; """
+
     let testSByte (x: sbyte) : sbyte = C """ return x; """
 
     let testUInt16 (x: uint16) : uint16 = C """ return x; """
@@ -61,6 +63,11 @@ module Tests =
     let exported_testByte (x: byte) : byte = x
 
     let testExported_testByte (x: byte) : byte = C """ return Tests_exported_testByte (x); """
+
+    [<Export>]
+    let exported_testTwoBytes (x: byte) (y: byte) : byte = x + y
+
+    let testExported_testTwoBytes (x: byte) (y: byte) : byte = C """ return Tests_exported_testTwoBytes (x, y); """
 
     [<Export>]
     let exported_testSByte (x: sbyte) : sbyte = x

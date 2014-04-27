@@ -73,9 +73,9 @@ let generateReversePInvokeMethods modul dels (tb: TypeBuilder) =
     |> List.map2 (fun del func ->
         let meth = 
             tb.DefinePInvokeMethod (
-                sprintf "ferop_set_%s_%s" func.DeclaringType.Name func.Name,
+                sprintf "ferop_set_%s" func.Name,
                 dllName,
-                sprintf "ferop_set_%s_%s" func.DeclaringType.Name func.Name,
+                sprintf "%s_ferop_set_%s" func.DeclaringType.Name func.Name,
                 MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
                 CallingConventions.Standard,
                 typeof<Void>,

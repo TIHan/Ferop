@@ -142,6 +142,15 @@ let rec makeCExpr = function
 
     | x -> failwithf "Expression, %A, not supported." x
 
+let makeCExprFallback (func: MethodInfo) =
+    // HACK: Handling non-reflected methods that have delegates. This is used for exported F# functions to C.
+    match func.GetParameters () with
+    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> ->
+        let typ = x.ParameterType
+        let name = typ.Name.Replace ("Delegate", "")
+        Text <| sprintf "%s = ptr;" name
+    | _ -> failwithf "Function, %A, not supported." func.Name
+
 //-------------------------------------------------------------------------
 // CDecls
 //-------------------------------------------------------------------------
@@ -152,7 +161,7 @@ let makeCDeclFunction (env: CEnv) (func: MethodInfo) =
     let parameters = func.GetParameters () |> makeParameters env
     let expr =
         match methodExpr func with
-        | None -> Text ""
+        | None -> makeCExprFallback func
         | Some x -> makeCExpr x
 
     { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
@@ -183,12 +192,15 @@ and makeCDeclStruct env (typ: Type) =
 
         { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
 
-let makeCDeclVar env typ =
-    let name = makeCTypeName env typ
+let makeCDeclVar env name typ =
     let ctype = lookupCType env typ
 
-    // HACK: Removing "Delegate" from var name
-    { CDeclVar.Name = name.Replace("Delegate", ""); Type = ctype }
+    { CDeclVar.Name = name; Type = ctype }
+
+let makeCDeclExtern env name typ =
+    let ctype = lookupCType env typ
+
+    { CDeclExtern.Type = ctype; Name = name }
 
 let makeCDeclStructs (env: CEnv) = function
     | [] -> env
@@ -215,7 +227,19 @@ let makeCDeclFunctionPointers (env: CEnv) = function
 let makeCDeclGlobalVars (env: CEnv) = function
     | [] -> env
     | types ->
-        let decls = types |> List.map (makeCDeclVar env) |> List.map GlobalVar
+        let decls = 
+            types
+            |> List.map (fun (x: Type) -> makeCDeclVar env (x.Name.Replace ("Delegate", "")) x) 
+            |> List.map GlobalVar
+        { env with Decls = env.Decls @ decls }
+
+let makeCDeclExterns (env: CEnv) = function
+    | [] -> env
+    | types ->
+        let decls = 
+            types
+            |> List.map (fun (x: Type) -> makeCDeclExtern env (x.Name.Replace ("Delegate", "")) x) 
+            |> List.map CDecl.Extern
         { env with Decls = env.Decls @ decls }
 
 let makeCDecls (env: CEnv) modul =
@@ -239,7 +263,8 @@ let makeCDecls (env: CEnv) modul =
     let env'' = makeCDeclFunctionPointers env' dels
     let env''' = makeCDeclGlobalVars env'' dels
     let env'''' = makeCDeclFunctions env''' funcs
-    env''''
+    let env''''' = makeCDeclExterns env'''' dels
+    env'''''
 //-------------------------------------------------------------------------
 // CEnv
 //-------------------------------------------------------------------------
