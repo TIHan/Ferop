@@ -69,7 +69,7 @@ type Module = {
         args.Value :?> string
 
     member this.MsvcLibsWin =
-        let attr = this.MsvcIncludesWinAttribute
+        let attr = this.MsvcLibsWinAttribute
         let args = Seq.exactlyOne attr.ConstructorArguments
         args.Value :?> string
 

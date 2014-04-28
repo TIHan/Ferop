@@ -46,7 +46,7 @@ let compileToDynamicLibrary outputPath modul cgen = io {
     let dllName = makeDynamicLibraryPath outputPath modul
 
     do! writeBat outputPath
-    let args = makeArgs libs cFile  dllName
+    let args = makeArgs libs cFile dllName
     do! startMsvc outputPath args
 
 #if DEBUG
