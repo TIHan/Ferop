@@ -34,49 +34,56 @@ type Module = {
 
     member this.ClangFlagsOsxAttribute =
         this.Attributes
-        |> Seq.filter (fun x -> x.AttributeType = typeof<ClangFlagsOsxAttribute>)
-        |> Seq.exactlyOne
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangFlagsOsxAttribute>)
 
     member this.ClangLibsOsxAttribute =
         this.Attributes
-        |> Seq.filter (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
-        |> Seq.exactlyOne
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
 
     member this.MsvcLibsWinAttribute =
         this.Attributes
-        |> Seq.filter (fun x -> x.AttributeType = typeof<MsvcLibsWinAttribute>)
-        |> Seq.exactlyOne
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcLibsWinAttribute>)
 
     member this.MsvcIncludesWinAttribute =
         this.Attributes
-        |> Seq.filter (fun x -> x.AttributeType = typeof<MsvcIncludesWinAttribute>)
-        |> Seq.exactlyOne
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcIncludesWinAttribute>)
 
     member this.Includes =
-        this.IncludeAttributes
-        |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
-        |> Seq.map (fun x -> "#include " + (x.Value :?> string))
-        |> Seq.reduce (fun x y -> x + "\n" + y)
+        match Seq.isEmpty this.IncludeAttributes with
+        | true -> ""
+        | _ ->
+            this.IncludeAttributes
+            |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
+            |> Seq.map (fun x -> "#include " + (x.Value :?> string))
+            |> Seq.reduce (fun x y -> x + "\n" + y)
 
     member this.ClangFlagsOsx =
-        let attr = this.ClangFlagsOsxAttribute
-        let args = Seq.exactlyOne attr.ConstructorArguments
-        args.Value :?> string
+        match this.ClangFlagsOsxAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
 
     member this.ClangLibsOsx =
-        let attr = this.ClangLibsOsxAttribute
-        let args = Seq.exactlyOne attr.ConstructorArguments
-        args.Value :?> string
+        match this.ClangLibsOsxAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
 
     member this.MsvcLibsWin =
-        let attr = this.MsvcLibsWinAttribute
-        let args = Seq.exactlyOne attr.ConstructorArguments
-        args.Value :?> string
+        match this.MsvcLibsWinAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
 
     member this.MsvcIncludesWin =
-        let attr = this.MsvcIncludesWinAttribute
-        let args = Seq.exactlyOne attr.ConstructorArguments
-        args.Value :?> string
+        match this.MsvcIncludesWinAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
 
 let makeModule (typ: Type) =
     let name = typ.Name

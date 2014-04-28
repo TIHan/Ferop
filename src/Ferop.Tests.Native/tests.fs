@@ -113,3 +113,11 @@ module Tests =
     let exported_testDouble (x: double) : double = x
 
     let testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """
+
+[<Ferop>]
+[<ClangFlagsOsx ("")>]
+[<ClangLibsOsx ("")>]
+[<MsvcLibsWin ("")>]
+[<MsvcIncludesWin ("")>]
+module Tests2 =
+    let testByte (x: byte) : byte = C """ return x; """

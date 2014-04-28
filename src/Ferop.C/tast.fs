@@ -89,18 +89,6 @@ let hasFieldType fieldTypeName = function
 
 type CEnv = { 
     Name : string
-    Decls : CDecl list } with
-
-    member this.DeclFunctions = 
-        this.Decls
-        |> List.choose (function | CDecl.Function x -> Some x | _ -> None)
-
-    member this.DeclFunctionPointers =
-        this.Decls
-        |> List.choose (function | CDecl.FunctionPointer x -> Some x | _ -> None)
-
-    member this.DeclStructs = 
-        this.Decls
-        |> List.choose (function | CDecl.Struct x -> Some x | _ -> None)
+    Decls : CDecl list }
 
 let makeEmptyEnv name = { Name = name; Decls = List.empty }

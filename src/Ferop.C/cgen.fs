@@ -179,6 +179,7 @@ let generateCDecl context = function
 
 let generateCDecls context = function
     | [] -> ""
+    | [x] -> generateCDecl context x
     | decls ->
 
     decls
