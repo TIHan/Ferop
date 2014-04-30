@@ -20,6 +20,7 @@ type CType =
     | Pointer of CType option
     | Array of CArray
     | Struct of CStruct
+    | Enum of CEnum
     | Function of CFunction
 
 and CArray = {
@@ -33,6 +34,13 @@ and CStruct = {
 and CField = {
     Type: CType
     Name: string }
+
+and CEnum = {
+    Name: string }
+
+and CEnumConst = {
+    Name: string
+    Value: int }
 
 and CFunction = {
     ReturnType: CType option
@@ -63,6 +71,10 @@ and CDeclStruct = {
     Name: string
     Fields: CField list }
 
+and CDeclEnum = {
+    Name: string
+    Consts: CEnumConst list }
+
 and CDeclVar = {
     Type: CType
     Name: string }
@@ -77,6 +89,7 @@ and
     | FunctionPrototype of CDeclFunctionPrototype
     | FunctionPointer of CDeclFunctionPointer
     | Struct of CDeclStruct
+    | Enum of CDeclEnum
     | GlobalVar of CDeclVar
     | Extern of CDeclExtern
 

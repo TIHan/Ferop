@@ -69,6 +69,14 @@ typedef struct {
 """
         fields name
 
+let generateCDeclEnumCode consts name =
+    sprintf """
+typedef enum {
+%s
+} %s;
+"""
+        consts name
+
 let generateCDeclVarCode typ name = sprintf """%s %s;""" typ name
 
 let generateCDeclExternCode typ name =
@@ -93,6 +101,7 @@ let rec generateCType = function
     | Pointer None -> "void*"
     | CType.Struct {Name=name} -> name
     | CType.Function {Name=name} -> name
+    | CType.Enum {Name=name} -> name
     | x -> failwithf "%A generated type not found." x
 
 let generateCField {CField.Type=typ; Name=name} =
@@ -102,6 +111,9 @@ let generateCField {CField.Type=typ; Name=name} =
 let generateCParameter {CParameter.Type=typ; Name=name} =
     let ctype = generateCType typ
     sprintf "%s %s" ctype (name.Replace (" ", "_"))
+
+let generateCEnumConst {CEnumConst.Name=name; Value=value} =
+    sprintf "%s = %i," name value
 
 let generateCFields = function
     | [] -> ""
@@ -131,6 +143,14 @@ let generateParameterTypes = function
     |> List.map generateCType
     |> List.reduce (fun x y -> sprintf "%s, %s" x y)
 
+let generateCEnumConsts = function
+    | [] -> ""
+    | consts ->
+
+    consts
+    |> List.map generateCEnumConst
+    |> List.reduce (fun x y -> sprintf "%s\n%s" x y)
+
 let generateCExpr = function
     | Text x -> x
 
@@ -156,6 +176,9 @@ let generateCDeclFunctionPointer {CDeclFunctionPointer.ReturnType=returnType; Na
 let generateCDeclStruct {CDeclStruct.Name=name; Fields=fields} =
     generateCDeclStructCode (generateCFields fields) name
 
+let generateCDeclEnum {CDeclEnum.Name=name; Consts=consts} =
+    generateCDeclEnumCode (generateCEnumConsts consts) name
+
 let generateCDeclVar {CDeclVar.Name=name; Type=typ} =
     generateCDeclVarCode (generateCType typ) name
 
@@ -171,6 +194,8 @@ let generateCDecl context = function
         generateCDeclFunctionPointer x
     | Struct x when context = CGenContext.Header ->
         generateCDeclStruct x
+    | Enum x when context = CGenContext.Header ->
+        generateCDeclEnum x
     | GlobalVar x when context = CGenContext.Source ->
         generateCDeclVar x
     | Extern x when context = CGenContext.Header ->

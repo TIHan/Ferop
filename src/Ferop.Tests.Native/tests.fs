@@ -24,6 +24,14 @@ and [<Struct>]
     val X : double
     val Y : double
 
+type Enum1 =
+    | Sub1 = 0
+    | Sub2 = 1
+
+type Enum2 =
+    | Sub1 = 3
+    | Sub2 = 1
+
 [<Ferop>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
@@ -121,3 +129,13 @@ module Tests =
 [<MsvcIncludesWin ("")>]
 module Tests2 =
     let testByte (x: byte) : byte = C """ return x; """
+
+[<Ferop>]
+[<ClangFlagsOsx ("")>]
+[<ClangLibsOsx ("")>]
+[<MsvcLibsWin ("")>]
+[<MsvcIncludesWin ("")>]
+module Tests3 =
+    let testEnum1 (x: Enum1) : Enum1 = C """ return x; """
+
+    let testEnum2 (x: Enum2) : Enum2 = C """ return x; """

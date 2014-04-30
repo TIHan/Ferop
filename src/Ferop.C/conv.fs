@@ -58,9 +58,14 @@ let makeCTypeName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
 let makeCFunctionName (env: CEnv) (func: MethodInfo) = sprintf "%s_%s" env.Name func.Name
 
 let makeCStruct = function
-    | CDecl.Struct (struc) -> 
+    | CDecl.Struct struc -> 
         { CStruct.Name = struc.Name; Fields = struc.Fields }
     | _ -> failwith "Invalid struct"
+
+let makeCEnum = function
+    | CDecl.Enum enum ->
+        { CEnum.Name = enum.Name }
+    | _ -> failwith "Invalid enum"
 
 let makeCFunction = function
     | CDecl.FunctionPointer func ->
@@ -73,6 +78,13 @@ let tryLookupStruct env (typ: Type) =
     |> function
     | None -> None
     | Some x -> Some <| makeCStruct x
+
+let tryLookupEnum env (typ: Type) =
+    env.Decls
+    |> List.tryFind (function | CDecl.Enum x -> x.Name = makeCTypeName env typ | _ -> false)
+    |> function
+    | None -> None
+    | Some x -> Some <| makeCEnum x
 
 let tryLookupFunction env (typ: Type) =
     env.Decls
@@ -94,6 +106,10 @@ let rec tryLookupCType env = function
     | x when x = typeof<double> ->  Some Double
     | x when x = typeof<bool> ->    Some Int32
     | x when x = typeof<nativeint> -> Some <| Pointer None
+    | x when x.IsEnum ->
+        match tryLookupEnum env x with
+        | None -> None
+        | Some x -> Some <| CType.Enum x
     | x when isTypeUnmanaged x ->
         match tryLookupStruct env x with
         | None -> None
@@ -192,6 +208,26 @@ and makeCDeclStruct env (typ: Type) =
 
         { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
 
+let makeCDeclEnum env (typ: Type) =
+    match typ.GetEnumUnderlyingType () <> typeof<int> with
+    | true -> failwithf "Enum, %s, does not have an underlying type of int." typ.Name
+    | _ ->
+
+    let name = makeCTypeName env typ
+    let constNames = Enum.GetNames typ |> Array.map (fun x -> name + "_" + x)
+    let constValues = Enum.GetValues typ
+    let intValues = Array.zeroCreate<int> constNames.Length
+
+    for i = 0 to intValues.Length - 1 do
+        intValues.[i] <- (constValues.GetValue (i)) :?> int
+
+    let consts = 
+        Array.map2 (fun (x: string) (y: int) -> { CEnumConst.Name = x; Value = y }) 
+            constNames intValues
+        |> List.ofArray
+
+    { CDeclEnum.Name = name; Consts = consts }
+
 let makeCDeclVar env name typ =
     let ctype = lookupCType env typ
 
@@ -211,6 +247,12 @@ let makeCDeclStructs (env: CEnv) = function
                 match env'.Decls with
                 | [] -> []
                 | x ->  List.rev x }
+
+let makeCDeclEnums (env: CEnv) = function
+    | [] -> env
+    | enums ->
+        let decls = enums |> List.map (fun x -> makeCDeclEnum env x) |> List.map CDecl.Enum
+        { env with Decls = env.Decls @ decls }
 
 let makeCDeclFunctions (env: CEnv) = function
     | [] -> env
@@ -261,14 +303,22 @@ let makeCDecls (env: CEnv) modul =
         |> List.map (fun x -> x.GetParameters () |> List.ofArray)
         |> List.reduce (fun x y -> x @ y)
         |> List.map (fun x -> x.ParameterType)
-        |> List.filter (fun x -> not x.IsPrimitive && isTypeUnmanaged x)
+        |> List.filter (fun x -> not x.IsPrimitive && not x.IsEnum && isTypeUnmanaged x)
+
+    let enums =
+        funcs @ exportedFuncs
+        |> List.map (fun x -> x.GetParameters () |> List.ofArray)
+        |> List.reduce (fun x y -> x @ y)
+        |> List.map (fun x -> x.ParameterType)
+        |> List.filter (fun x -> x.IsEnum)
 
     let env' = makeCDeclStructs env structs
-    let env'' = makeCDeclFunctionPointers env' dels
-    let env''' = makeCDeclGlobalVars env'' dels
-    let env'''' = makeCDeclFunctions env''' funcs
-    let env''''' = makeCDeclExterns env'''' dels
-    env'''''
+    let env'' = makeCDeclEnums env' enums
+    let env''' = makeCDeclFunctionPointers env'' dels
+    let env'''' = makeCDeclGlobalVars env''' dels
+    let env''''' = makeCDeclFunctions env'''' funcs
+    let env'''''' = makeCDeclExterns env''''' dels
+    env''''''
 //-------------------------------------------------------------------------
 // CEnv
 //-------------------------------------------------------------------------
