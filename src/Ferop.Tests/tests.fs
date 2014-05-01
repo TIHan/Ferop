@@ -121,3 +121,12 @@ let ``with max value of double, should pass and return the same value from expor
     GC.Collect (2)
     Native.Tests.testExported_testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
+
+[<Test>]
+let ``with string, should pass string`` () =
+    Native.Tests4.testString ("hello")
+
+[<Test>]
+let ``with byte array, should pass byte array and return first element`` () =
+    Native.Tests4.testByteArray ([|255uy|])
+    |> should equal 255uy

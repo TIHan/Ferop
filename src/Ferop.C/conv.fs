@@ -106,6 +106,15 @@ let rec tryLookupCType env = function
     | x when x = typeof<double> ->  Some Double
     | x when x = typeof<bool> ->    Some Int32
     | x when x = typeof<nativeint> -> Some <| Pointer None
+    | x when x = typeof<string> -> Some <| Pointer (Some SByte)
+    | x when x.IsArray ->
+        match x.GetElementType () with
+        | x when not x.IsPrimitive || x = typeof<bool> -> None
+        | x ->
+
+        match tryLookupCType env x with
+        | None -> None
+        | Some x -> Some <| Pointer (Some x)
     | x when x.IsEnum ->
         match tryLookupEnum env x with
         | None -> None
@@ -136,6 +145,8 @@ and makeCFields env (typ: Type) =
 
 and makeReturnType env = function
     | x when x = typeof<Void> -> None
+    | x when x.IsArray -> failwith "Return type can't be an array."
+    | x when x = typeof<string> -> failwith "Return type can't be a string."
     | x -> Some <| lookupCType env x
 
 and makeParameter env (info: ParameterInfo) = 

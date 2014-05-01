@@ -99,6 +99,7 @@ let rec generateCType = function
     | Float ->  "float"
     | Double -> "double"
     | Pointer None -> "void*"
+    | Pointer (Some x) -> generateCType x + "*"
     | CType.Struct {Name=name} -> name
     | CType.Function {Name=name} -> name
     | CType.Enum {Name=name} -> name
@@ -204,13 +205,14 @@ let generateCDecl context = function
 
 let generateCDecls context = function
     | [] -> ""
-    | [x] -> generateCDecl context x
     | decls ->
 
-    decls
-    |> List.map (generateCDecl context)
-    |> List.filter ((<>)"")
-    |> List.reduce (fun x y -> x + "\n" + y)
+    match
+        decls
+        |> List.map (generateCDecl context)
+        |> List.filter ((<>)"") with
+    | [] -> ""
+    | decls -> decls |> List.reduce (fun x y -> x + "\n" + y)
 
 let generateHeader env includes =
     let decls = generateCDecls CGenContext.Header env.Decls

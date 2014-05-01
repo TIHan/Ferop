@@ -139,3 +139,13 @@ module Tests3 =
     let testEnum1 (x: Enum1) : Enum1 = C """ return x; """
 
     let testEnum2 (x: Enum2) : Enum2 = C """ return x; """
+
+[<Ferop>]
+[<ClangFlagsOsx ("")>]
+[<ClangLibsOsx ("")>]
+[<MsvcLibsWin ("")>]
+[<MsvcIncludesWin ("")>]
+module Tests4 =
+    let testString (x: string) : unit = C """ return; """
+
+    let testByteArray (x: byte[]) : unit = C """ return x[0]; """
