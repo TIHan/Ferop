@@ -148,4 +148,4 @@ module Tests3 =
 module Tests4 =
     let testString (x: string) : unit = C """ return; """
 
-    let testByteArray (x: byte[]) : unit = C """ return x[0]; """
+    let testByteArray (x: byte[]) : byte = C """ return x[0]; """

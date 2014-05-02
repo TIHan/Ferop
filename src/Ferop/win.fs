@@ -47,14 +47,7 @@ let compileToDynamicLibrary outputPath modul cgen = io {
 
     do! writeBat outputPath
     let args = makeArgs libs cFile dllName
-    do! startMsvc outputPath args
-
-#if DEBUG
-#else
-    File.Delete hFile
-    File.Delete cFile
-#endif
-    () }
+    do! startMsvc outputPath args }
 
 let compileModule outputPath modul =
     let cgen = makeCGen outputPath modul
