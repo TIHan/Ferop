@@ -313,7 +313,7 @@ let makeCDecls (env: CEnv) modul =
         funcs @ exportedFuncs
         |> List.map (fun x -> (x.GetParameters () |> Array.map (fun x -> x.ParameterType) |> List.ofArray) @ [x.ReturnType])
         |> List.reduce (fun x y -> x @ y)
-        |> List.filter (fun x -> not x.IsPrimitive && not x.IsEnum && isTypeUnmanaged x)
+        |> List.filter (fun x -> not (x = typeof<Void>) && not x.IsPrimitive && not x.IsEnum && isTypeUnmanaged x)
 
     let enums =
         funcs @ exportedFuncs
