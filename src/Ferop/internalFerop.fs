@@ -98,7 +98,7 @@ let feropModules asm =
         x.CustomAttributes
         |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
     
-let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembly) =
+let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileModule: bool) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName
     let mb = dasm.DefineDynamicModule dllName
 
@@ -138,7 +138,9 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (asm: Assembl
         let modul' = 
             { modul with 
                 Functions = modul.Functions @ (delMeths |> List.map (fun x -> tb.GetMethod (x.Name))) }
-        compileModule outputPath modul'
+
+        if canCompileModule then compileModule outputPath modul'
+
         ()) |> ignore
 
     dasm

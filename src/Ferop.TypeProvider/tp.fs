@@ -51,6 +51,7 @@ module internal TypeProvider =
 type FeropTypeProvider (cfg: TypeProviderConfig) as this =
     inherit TypeProviderForNamespaces ()
 
+    let entryAsm = Assembly.GetEntryAssembly ()
     let asm = Assembly.GetExecutingAssembly ()
     let ns = this.GetType().Namespace
     let pn = "FeropProvider"
@@ -81,6 +82,12 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         | None -> failwithf "Invalid assembly name %s. Pick from the list of referenced assemblies." fileName
         | Some masmFileName -> TypeProvider.loadAssemblyFile masmFileName
 
+    /// IsDesignTime
+    member internal this.IsDesignTime =
+        match entryAsm with
+        | null -> true
+        | _ -> not <| entryAsm.FullName.ToLower().Contains "fsc"
+
     /// GenerateTypes
     member internal this.GenerateTypes (typeName: string) (args: obj[]) =
         let refName = args.[0] :?> string
@@ -91,7 +98,7 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         let dllPath = Path.GetTempPath ()
         let refAsm = this.FindAssembly refName
 
-        let dasmLocation = Ferop.Compiler.Ferop.compile name outputPath dllPath refAsm
+        let dasmLocation = Ferop.Compiler.Ferop.compile name outputPath dllPath (not this.IsDesignTime) refAsm
         let dasm = Assembly.LoadFrom (dasmLocation)
 
         let def = ProvidedTypeDefinition (asm, ns, typeName, Some typeof<obj>, IsErased = false) 
