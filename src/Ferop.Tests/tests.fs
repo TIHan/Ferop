@@ -7,9 +7,9 @@ open NUnit.Framework
 open Ferop
 
 #if DEBUG
-type Native = FeropProvider<"Ferop.Tests.Native", "bin/Debug">
+type Native = FeropProvider<"Ferop.Tests.Native", "bin/Debug", Code.Platform.Auto>
 #else
-type Native = FeropProvider<"Ferop.Tests.Native", "bin/Release">
+type Native = FeropProvider<"Ferop.Tests.Native", "bin/Release", Code.Platform.Auto>
 #endif
 
 [<Test>]

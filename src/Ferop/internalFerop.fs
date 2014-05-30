@@ -12,33 +12,41 @@ open Ferop.Core
 open Ferop.Code
 open Ferop.Helpers
 
-let makeDllName modul = 
-    let os = Environment.OSVersion
+let rec makeDllName modul = function 
+    | Platform.Win -> sprintf "%s.dll" modul.Name
+    | Platform.Linux -> failwith "Linux not supported."
+    | Platform.Osx -> sprintf "lib%s.dylib" modul.Name
+    | Platform.AppleiOS -> "__Internal"
+    | _ ->
 
-    match os.Platform with
+    match Environment.OSVersion.Platform with
     | x when 
         x = PlatformID.Win32NT ||
         x = PlatformID.Win32S ||
-        x = PlatformID.WinCE -> sprintf "%s.dll" modul.Name
-    | x when x = PlatformID.Unix -> sprintf "lib%s.dylib" modul.Name
+        x = PlatformID.WinCE -> makeDllName modul Platform.Win
+    | x when x = PlatformID.Unix -> makeDllName modul Platform.Osx
     | _ -> failwith "OS not supported."
 
-let compileModule path modul =
-    let os = Environment.OSVersion
+let rec compileModule path modul = function
+    | Platform.Win -> Win.compileModule path modul
+    | Platform.Linux -> failwith "Linux not supported."
+    | Platform.Osx -> Osx.compileModule path modul
+    | Platform.AppleiOS -> iOS.compileModule path modul
+    | _ ->
 
-    match os.Platform with
+    match Environment.OSVersion.Platform with
     | x when 
         x = PlatformID.Win32NT ||
         x = PlatformID.Win32S ||
-        x = PlatformID.WinCE -> Win.compileModule path modul
-    | x when x = PlatformID.Unix -> Osx.compileModule path modul
+        x = PlatformID.WinCE -> compileModule path modul Platform.Win
+    | x when x = PlatformID.Unix -> compileModule path modul Platform.Osx
     | _ -> failwith "OS not supported."
 
 let createDynamicAssembly (dllPath: string) dllName =
     AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
 
-let generatePInvokeMethods modul tb = 
-    modul.Functions |> List.map (definePInvokeMethod tb (makeDllName modul))
+let generatePInvokeMethods modul platform tb = 
+    modul.Functions |> List.map (definePInvokeMethod tb (makeDllName modul platform))
     |> ignore
 
 let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
@@ -67,8 +75,8 @@ let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
         del.SetCustomAttribute (attributeBuilder)     
         del.CreateType ())
 
-let generateReversePInvokeMethods modul dels (tb: TypeBuilder) =
-    let dllName = makeDllName modul
+let generateReversePInvokeMethods modul dels platform (tb: TypeBuilder) =
+    let dllName = makeDllName modul platform
     modul.ExportedFunctions
     |> List.map2 (fun del func ->
         let meth = 
@@ -98,7 +106,7 @@ let feropModules asm =
         x.CustomAttributes
         |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
     
-let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileModule: bool) (asm: Assembly) =
+let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileModule: bool) (platform: Platform) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName
     let mb = dasm.DefineDynamicModule dllName
 
@@ -106,13 +114,13 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileMo
     |> List.map (fun x ->
         let modul = makeModule x
         let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-        generatePInvokeMethods modul tb
+        generatePInvokeMethods modul platform tb
 
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
 
         let dels = generateReversePInvokeDelegates modul mb
-        let delMeths = generateReversePInvokeMethods modul dels tb
+        let delMeths = generateReversePInvokeMethods modul dels platform tb
 
         let ctor = tb.DefineTypeInitializer ()
         let il = ctor.GetILGenerator ()
@@ -139,7 +147,7 @@ let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileMo
             { modul with 
                 Functions = modul.Functions @ (delMeths |> List.map (fun x -> tb.GetMethod (x.Name))) }
 
-        if canCompileModule then compileModule outputPath modul'
+        if canCompileModule then compileModule outputPath modul' platform
 
         ()) |> ignore
 

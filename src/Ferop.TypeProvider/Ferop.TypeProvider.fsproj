@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Ferop.TypeProvider</RootNamespace>

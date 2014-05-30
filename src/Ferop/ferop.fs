@@ -2,6 +2,13 @@
 
 type FeropAttribute = ReflectedDefinitionAttribute
 
+type Platform =
+    | Auto = 0
+    | Win = 1
+    | Linux = 2
+    | Osx = 3
+    | AppleiOS = 4
+
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
 type ClangFlagsOsxAttribute (flags: string) =
     inherit System.Attribute ()

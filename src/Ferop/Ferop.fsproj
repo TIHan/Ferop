@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{90A45EB2-1122-4BFF-A921-04D926400AC0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Ferop</RootNamespace>
@@ -46,6 +44,7 @@
     <Compile Include="core.fs" />
     <Compile Include="win.fs" />
     <Compile Include="osx.fs" />
+    <Compile Include="ios.fs" />
     <Compile Include="internalFerop.fs" />
     <Compile Include="compiler.fs" />
   </ItemGroup>
