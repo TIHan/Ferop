@@ -9,10 +9,12 @@ open System.Threading
 
 open Microsoft.FSharp.NativeInterop
 
+open Ferop.Code
+
 #if DEBUG
-type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Debug">
+type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Debug", Platform.Auto>
 #else
-type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Release">
+type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Release", Platform.Auto>
 #endif
 
 #nowarn "9"

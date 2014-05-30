@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{24CEAB4B-C244-49D6-9DA6-958795993A67}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -58,6 +58,10 @@
     <ProjectReference Include="..\Ferop.TypeProvider\Ferop.TypeProvider.fsproj">
       <Project>{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}</Project>
       <Name>Ferop.TypeProvider</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Ferop\Ferop.fsproj">
+      <Project>{90A45EB2-1122-4BFF-A921-04D926400AC0}</Project>
+      <Name>Ferop</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

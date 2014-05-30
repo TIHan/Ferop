@@ -71,3 +71,4 @@ lib/FQuake3.Utils/src/FQuake3.Viewer/libFQ3Viewer.dylib
 *.beam
 
 *.obj
+*.DS_Store

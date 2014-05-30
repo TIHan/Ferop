@@ -11,10 +11,6 @@ Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Tests", "src\Ferop.Te
 EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Tests.Native", "src\Ferop.Tests.Native\Ferop.Tests.Native.fsproj", "{6678562D-A620-48F4-A3E3-06FAE7FB50B1}"
 EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Tests.iOS.Native", "src\Ferop.Tests.iOS.Native\Ferop.Tests.iOS.Native.fsproj", "{D44685A4-7189-48E5-AD4D-1DB27723F643}"
-EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.Tests.iOS", "src\Ferop.Tests.iOS\Ferop.Tests.iOS.fsproj", "{A0C432AF-75DB-4C88-99D5-637319F95FDC}"
-EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.C", "src\Ferop.C\Ferop.C.fsproj", "{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}"
 EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Ferop.TypeProvider", "src\Ferop.TypeProvider\Ferop.TypeProvider.fsproj", "{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}"
@@ -129,30 +125,6 @@ Global
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.ActiveCfg = Release|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.Build.0 = Release|Any CPU
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Ad-Hoc|iPhone.ActiveCfg = Ad-Hoc|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Ad-Hoc|iPhone.Build.0 = Ad-Hoc|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.AppStore|iPhone.ActiveCfg = AppStore|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.AppStore|iPhone.Build.0 = AppStore|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|Any CPU.ActiveCfg = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|Any CPU.Build.0 = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|iPhone.ActiveCfg = Debug|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|iPhone.Build.0 = Debug|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|Mixed Platforms.ActiveCfg = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|Mixed Platforms.Build.0 = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|x86.ActiveCfg = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Debug|x86.Build.0 = Debug|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|Any CPU.ActiveCfg = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|Any CPU.Build.0 = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|iPhone.ActiveCfg = Release|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|iPhone.Build.0 = Release|iPhone
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|Mixed Platforms.ActiveCfg = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|Mixed Platforms.Build.0 = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|x86.ActiveCfg = Release|iPhoneSimulator
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC}.Release|x86.Build.0 = Release|iPhoneSimulator
 		{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}.Ad-Hoc|iPhone.ActiveCfg = Debug|Any CPU
 		{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}.Ad-Hoc|iPhone.Build.0 = Debug|Any CPU
 		{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}.AppStore|iPhone.ActiveCfg = Debug|Any CPU
@@ -177,36 +149,10 @@ Global
 		{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}.Release|x86.ActiveCfg = Release|Any CPU
 		{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}.Release|x86.Build.0 = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Ad-Hoc|iPhone.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Ad-Hoc|iPhone.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.AppStore|iPhone.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.AppStore|iPhone.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|iPhone.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|iPhone.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Debug|x86.Build.0 = Debug|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|iPhone.ActiveCfg = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|iPhone.Build.0 = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|x86.ActiveCfg = Release|Any CPU
-		{D44685A4-7189-48E5-AD4D-1DB27723F643}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
-		{D44685A4-7189-48E5-AD4D-1DB27723F643} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
-		{A0C432AF-75DB-4C88-99D5-637319F95FDC} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = src\Ferop\Ferop.fsproj
