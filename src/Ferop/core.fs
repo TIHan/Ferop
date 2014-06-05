@@ -126,6 +126,19 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
     let attributeConstructorInfo = attributeType.GetConstructor([||])
     let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
     meth.SetCustomAttribute(attributeBuilder);
+
+    func.GetParameters ()
+    |> Array.iteri (fun i x ->
+        let pb = meth.DefineParameter (x.Position, x.Attributes, x.Name)
+        x.CustomAttributes
+        |> Seq.iter (fun x -> 
+            let at = x.AttributeType
+            let aci = x.Constructor
+            let cargs = x.ConstructorArguments
+            let ab = CustomAttributeBuilder (aci, cargs |> Seq.map (fun y -> y.Value) |> Array.ofSeq)
+            pb.SetCustomAttribute ab)
+    )
+
     meth
 
 open Ferop.CConversion
