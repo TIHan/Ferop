@@ -146,6 +146,6 @@ module Tests3 =
 [<MsvcLibsWin ("")>]
 [<MsvcIncludesWin ("")>]
 module Tests4 =
-    let testString ([<MarshalAs (UnmanagedType.LPStr)>] x: string) : unit = C """ return; """
+    let testString (x: string) : unit = C """ return; """
 
     let testByteArray (x: byte[]) : byte = C """ return x[0]; """

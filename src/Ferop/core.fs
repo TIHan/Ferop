@@ -127,6 +127,7 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
     let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
     meth.SetCustomAttribute(attributeBuilder);
 
+#if COPY_PARAMETER_ATTRIBUTES
     func.GetParameters ()
     |> Array.iteri (fun i x ->
         let pb = meth.DefineParameter (x.Position, x.Attributes, x.Name)
@@ -136,8 +137,8 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
             let aci = x.Constructor
             let cargs = x.ConstructorArguments
             let ab = CustomAttributeBuilder (aci, cargs |> Seq.map (fun y -> y.Value) |> Array.ofSeq)
-            pb.SetCustomAttribute ab)
-    )
+            pb.SetCustomAttribute ab))
+#endif
 
     meth
 
