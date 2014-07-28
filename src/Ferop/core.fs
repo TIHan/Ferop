@@ -16,7 +16,6 @@ open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.ExprShape
 
-open Ferop.Helpers
 open Ferop.Code
 
 open FSharp.Control.IO
@@ -85,14 +84,29 @@ type Module = {
             let args = Seq.exactlyOne attr.ConstructorArguments
             args.Value :?> string
 
+let staticMethods (t: Type) =
+    t.GetMethods ()
+    |> Array.filter (fun x -> 
+    x.Name <> "GetType" && 
+    x.Name <> "GetHashCode" && 
+    x.Name <> "Equals" && 
+    x.Name <> "ToString")
+    |> Array.filter (fun x -> x.IsStatic)
+    |> List.ofArray
+
+let methodHasAttribute (typ: Type) (meth: MethodInfo) =
+    meth.GetCustomAttributesData ()
+    |> Seq.map (fun x -> x.AttributeType)
+    |> Seq.exists ((=)typ)
+
 let makeModule (typ: Type) =
     let name = typ.Name
     let fullName = typ.FullName
     let shortName = typ.Name
     let attrs = typ.CustomAttributes |> List.ofSeq
-    let funcs = Type.moduleFunctions typ
-    let normalFuncs = funcs |> List.filter (fun x -> not (MethodInfo.hasAttribute typeof<ExportAttribute> x))
-    let exportFuncs = funcs |> List.filter (MethodInfo.hasAttribute typeof<ExportAttribute>)
+    let funcs = staticMethods typ
+    let normalFuncs = funcs |> List.filter (fun x -> not (methodHasAttribute typeof<ExportAttribute> x))
+    let exportFuncs = funcs |> List.filter (methodHasAttribute typeof<ExportAttribute>)
 
     { Name = name; FullName = shortName; Attributes = attrs; Functions = normalFuncs; ExportedFunctions = exportFuncs }
 

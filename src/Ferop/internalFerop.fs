@@ -10,7 +10,6 @@ open Microsoft.FSharp.Reflection
 
 open Ferop.Core
 open Ferop.Code
-open Ferop.Helpers
 
 let rec makeDllName modul = function 
     | Platform.Win -> sprintf "%s.dll" modul.Name
@@ -100,17 +99,19 @@ let generateReversePInvokeMethods modul dels platform (tb: TypeBuilder) =
         meth.SetCustomAttribute (attributeBuilder)
         meth :> MethodInfo) dels
 
-let feropModules asm =
-    Assembly.modules asm
-    |> List.filter (fun x ->
+let feropClasses (asm: Assembly) =
+    asm.GetTypes ()
+    |> Array.filter (fun x ->x.IsClass)
+    |> Array.filter (fun x ->
         x.CustomAttributes
-        |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
+        |> Seq.exists (fun x -> x.AttributeType = typeof<ReflectedDefinitionAttribute>))
+    |> List.ofArray
     
 let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileModule: bool) (platform: Platform) (asm: Assembly) =
     let dasm = createDynamicAssembly dllPath dllName
     let mb = dasm.DefineDynamicModule dllName
 
-    feropModules asm
+    feropClasses asm
     |> List.map (fun x ->
         let modul = makeModule x
         let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)

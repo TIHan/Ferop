@@ -1,7 +1,5 @@
 ﻿module Ferop.Code
 
-type FeropAttribute = ReflectedDefinitionAttribute
-
 type Platform =
     | Auto = 0
     | Win = 1

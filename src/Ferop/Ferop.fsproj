@@ -8,6 +8,8 @@
     <RootNamespace>Ferop</RootNamespace>
     <AssemblyName>Ferop</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,7 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ferop.fs" />
-    <Compile Include="helpers.fs" />
     <Compile Include="io.fs" />
     <Compile Include="core.fs" />
     <Compile Include="win.fs" />

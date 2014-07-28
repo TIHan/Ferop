@@ -8,7 +8,6 @@ open System.Reflection
 
 open Ferop.Code
 open Ferop.Core
-open Ferop.Helpers
 
 open FSharp.Control.IO
 
