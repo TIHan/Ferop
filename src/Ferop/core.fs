@@ -39,13 +39,9 @@ type Module = {
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
 
-    member this.MsvcLibsWinAttribute =
+    member this.MsvcOptionsWinAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcLibsWinAttribute>)
-
-    member this.MsvcIncludesWinAttribute =
-        this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcIncludesWinAttribute>)
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcOptionsWinAttribute>)
 
     member this.Includes =
         match Seq.isEmpty this.IncludeAttributes with
@@ -70,15 +66,8 @@ type Module = {
             let args = Seq.exactlyOne attr.ConstructorArguments
             args.Value :?> string
 
-    member this.MsvcLibsWin =
-        match this.MsvcLibsWinAttribute with
-        | None -> ""
-        | Some attr ->
-            let args = Seq.exactlyOne attr.ConstructorArguments
-            args.Value :?> string
-
-    member this.MsvcIncludesWin =
-        match this.MsvcIncludesWinAttribute with
+    member this.MsvcOptionsWin =
+        match this.MsvcOptionsWinAttribute with
         | None -> ""
         | Some attr ->
             let args = Seq.exactlyOne attr.ConstructorArguments

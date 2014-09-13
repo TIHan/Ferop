@@ -16,11 +16,7 @@ type ClangLibsOsxAttribute (libs: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
-type MsvcLibsWinAttribute (libs: string) =
-    inherit System.Attribute ()
-
-[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
-type MsvcIncludesWinAttribute (libs: string) =
+type MsvcOptionsWinAttribute (libs: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class, AllowMultiple = true)>]

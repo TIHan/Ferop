@@ -88,19 +88,38 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 14 -> cont lines
+        | 16 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
             let ll = makeDrawLine ldeg length lines.Head
             let rl = makeDrawLine rdeg length lines.Head
             let n = n + 1
+            let length = length * 0.7f
       
-            makeLines ldeg (length * 0.7f) (ll :: lines) (fun x ->
-                makeLines rdeg (length * 0.7f) (rl :: x) cont n) n
+            makeLines ldeg length (ll :: lines) (fun x ->
+                makeLines rdeg length (rl :: x) cont n) n
 
-    makeLines (degrees * torad) length [line] (fun x -> x) 0
-        
+    let rec makeLinesParallel rads length (lines: DrawLine list) cont = function
+        | n ->
+            let ldeg = rads + lrad
+            let rdeg = rads + rrad
+            let ll = makeDrawLine ldeg length lines.Head
+            let rl = makeDrawLine rdeg length lines.Head
+            let n = n + 1
+            let length = length * 0.7f
+
+            let f1 = (makeLines ldeg length (ll :: lines) cont)
+            let f2 = (makeLines rdeg length (rl :: lines) cont)
+
+            let computations = [| f1; f2 |]
+
+            computations
+            |> Array.Parallel.map (fun f -> f n)
+            |> Array.reduce (fun x y -> x @ y)
+
+    //makeLines (degrees * torad) length [line] (fun x -> x) 0
+    makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0  
 
 [<EntryPoint>]
 let main args =
@@ -110,37 +129,21 @@ let main args =
     let endPoint = vec2 (0.f, -0.5f)
     let drawLine = DrawLine (beginPoint, endPoint)
 
-    let stopwatch = Stopwatch.StartNew ()
-    let drawLines = 
-        makeLines 90.f (0.4f) drawLine
-        |> Array.ofList
-    stopwatch.Stop ()
-
-    let stopwatch = Stopwatch.StartNew ()
-    let drawLines = 
-        makeLines 90.f (0.4f) drawLine
-        |> Array.ofList
-    stopwatch.Stop ()
-
-    let stopwatch = Stopwatch.StartNew ()
-    let drawLines = 
-        makeLines 90.f (0.4f) drawLine
-        |> Array.ofList
-    stopwatch.Stop ()
-
-    let stopwatch = Stopwatch.StartNew ()
-    let drawLines = 
-        makeLines 90.f (0.4f) drawLine
-        |> Array.ofList
-    stopwatch.Stop ()
-        
-    printfn "%A" stopwatch.ElapsedMilliseconds
-
-    let vbo = makeVbo drawLines
+    let vbo = makeVbo [||]
 
     loadShaders ()
 
     while not <| shouldQuit () do
+
+        let stopwatch = Stopwatch.StartNew ()
+        let drawLines = 
+            makeLines 90.f (0.4f) drawLine
+            |> Array.ofList
+        GC.Collect (2)
+        stopwatch.Stop ()
+
+        printfn "%A" stopwatch.ElapsedMilliseconds
+
         clear ()
         drawVbo drawLines vbo
         draw app

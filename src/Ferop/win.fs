@@ -18,7 +18,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\cl.exe" %*
 
 let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "%s.dll" modul.Name)
 
-let makeArgs cFile libs dllName = sprintf """%s %s /link /DLL /OUT:%s""" cFile libs dllName
+let makeArgs cFile options dllName = sprintf """%s %s /link /DLL /OUT:%s""" cFile options dllName
 
 let makeBatPath path = Path.Combine (path, "msvc.bat")
 
@@ -41,11 +41,11 @@ let startMsvc outputPath args = io {
 
 let compileToDynamicLibrary outputPath modul cgen = io {
     let! hFile, cFile = writeCGen outputPath modul cgen
-    let libs = modul.MsvcLibsWin
+    let options = modul.MsvcOptionsWin
     let dllName = makeDynamicLibraryPath outputPath modul
 
     do! writeBat outputPath
-    let args = makeArgs libs cFile dllName
+    let args = makeArgs options cFile dllName
     do! startMsvc outputPath args }
 
 let compileModule outputPath modul =

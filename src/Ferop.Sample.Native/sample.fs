@@ -13,9 +13,11 @@ type Application =
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES")>]
 [<ClangLibsOsx ("-framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
+[<MsvcOptionsWin (""" /I ..\..\include ..\..\lib\win\x86\SDL2.lib ..\..\lib\win\x86\SDL2main.lib ..\..\lib\win\x86\glew32.lib opengl32.lib """)>]
 [<Include ("<stdio.h>")>]
 [<Include ("<SDL2/SDL.h>")>]
-[<Include ("<SDL2/SDL_opengl.h>")>]
+[<Include ("<GL/glew.h>")>]
+[<Include ("<GL/wglew.h>")>]
 module App =
     let init () : Application =
         C """
@@ -36,6 +38,10 @@ SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 2);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 app.GLContext = SDL_GL_CreateContext ((SDL_Window*)app.Window);
+
+glewExperimental = GL_TRUE;
+glewInit ();
+
 return app;
         """
 

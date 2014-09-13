@@ -35,8 +35,7 @@ type Enum2 =
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
-[<MsvcLibsWin ("")>]
-[<MsvcIncludesWin ("")>]
+[<MsvcOptionsWin ("")>]
 [<Include ("<stdio.h>")>]
 type Tests =
     static member testByte (x: byte) : byte = C """ return x; """
@@ -125,16 +124,14 @@ type Tests =
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
-[<MsvcLibsWin ("")>]
-[<MsvcIncludesWin ("")>]
+[<MsvcOptionsWin ("")>]
 module Tests2 =
     let testByte (x: byte) : byte = C """ return x; """
 
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
-[<MsvcLibsWin ("")>]
-[<MsvcIncludesWin ("")>]
+[<MsvcOptionsWin ("")>]
 module Tests3 =
     let testEnum1 (x: Enum1) : Enum1 = C """ return x; """
 
@@ -143,8 +140,7 @@ module Tests3 =
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("")>]
 [<ClangLibsOsx ("")>]
-[<MsvcLibsWin ("")>]
-[<MsvcIncludesWin ("")>]
+[<MsvcOptionsWin ("")>]
 module Tests4 =
     let testString (x: string) : unit = C """ return; """
 
