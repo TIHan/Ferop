@@ -21,8 +21,10 @@ and [<Struct>]
 
 and [<Struct>]
     Struct3 =
-    val X : double
-    val Y : double
+        val X : double
+        val Y : double
+
+        new (x, y) = { X = x; Y = y }
 
 type Enum1 =
     | Sub1 = 0
@@ -65,6 +67,8 @@ type Tests =
     static member testStruct2 (x: Struct2) : Struct2 = C """ return x; """
 
     static member testStruct3 (x: Struct3) : Struct3 = C """ return x; """
+
+    static member testStruct3Value (x: Struct3) : float = C """ return x.Y; """
 
     [<Export>]
     static member exported_testByte (x: byte) : byte = x

@@ -22,6 +22,7 @@ let runtimeFields (typ: Type) =
     typ.GetRuntimeFields () 
     |> Seq.filter (fun x -> not x.IsStatic)
     |> List.ofSeq
+    |> List.rev
 
 let allNestedRuntimeFieldTypes (typ: Type) =
     let f (x: Type) : Type list =

@@ -6,6 +6,8 @@ open NUnit.Framework
 
 open Ferop
 
+open Ferop.Tests
+
 #if DEBUG
 type Native = FeropProvider<"Ferop.Tests.Native", "bin/Debug", Code.Platform.Auto>
 #else
@@ -121,6 +123,11 @@ let ``with max value of double, should pass and return the same value from expor
     GC.Collect (2)
     Native.Tests.testExported_testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
+
+[<Test>]
+let ``with a Y value of Struct3, should pass Struct3 and return the correct Y value`` () =
+    Native.Tests.testStruct3Value (Struct3 (5., 53.))
+    |> should equal 53.
 
 [<Test>]
 let ``with string, should pass string`` () =
