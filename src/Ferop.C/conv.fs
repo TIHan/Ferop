@@ -18,9 +18,10 @@ type FsModule = {
     Functions : MethodInfo list
     ExportedFunctions : MethodInfo list }
 
-let runtimeFields (typ: Type) = typ.GetRuntimeFields () |> List.ofSeq
-
-let properties (typ: Type) = typ.GetProperties () |> List.ofSeq
+let runtimeFields (typ: Type) = 
+    typ.GetRuntimeFields () 
+    |> Seq.filter (fun x -> not x.IsStatic)
+    |> List.ofSeq
 
 let allNestedRuntimeFieldTypes (typ: Type) =
     let f (x: Type) : Type list =
@@ -134,9 +135,9 @@ and lookupCType env typ =
 and makeCField typ name = { CField.Type = typ; Name = name }
 
 and makeCFields env (typ: Type) =
-    properties typ
+    runtimeFields typ
     |> List.map (fun x ->
-        let ctype = lookupCType env x.PropertyType
+        let ctype = lookupCType env x.FieldType
         makeCField ctype x.Name)
 
 and makeReturnType env = function
@@ -198,13 +199,15 @@ let makeCDeclFunctionPointer (env: CEnv) (typ: Type) =
     { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
 
 let rec makeCDeclStructFields env (typ: Type) =
-    properties typ
-    |> List.fold (fun (env, fields) x -> 
-        match tryLookupCType env x.PropertyType with
+    runtimeFields typ
+    |> List.fold (fun (env, fields) x ->
+        let name = x.Name.Replace ("@", "") 
+
+        match tryLookupCType env x.FieldType with
         | None -> 
-            let env = makeCDeclStruct env x.PropertyType
-            env, makeCField (lookupCType env x.PropertyType) x.Name :: fields
-        | Some ctype -> env, makeCField ctype x.Name :: fields) (env, [])
+            let env = makeCDeclStruct env x.FieldType
+            env, makeCField (lookupCType env x.FieldType) name :: fields
+        | Some ctype -> env, makeCField ctype name :: fields) (env, [])
             
 and makeCDeclStruct env (typ: Type) =
     match tryLookupCType env typ with
