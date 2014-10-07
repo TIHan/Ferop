@@ -11,10 +11,17 @@ open Ferop.Core
 
 open FSharp.Control.IO
 
+// TODO: Try to find a good solution to handle different VS versions.
+let vc12bin = 
+    let dir = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86)
+    Path.Combine (dir, "Microsoft Visual Studio 12.0\\VC\\bin")
+
+let vcvars32 = Path.Combine (vc12bin, "vcvars32.bat")
+let cl = Path.Combine (vc12bin, "cl.exe")
 let bat =
-    """call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\vcvars32.bat"
-call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\cl.exe" %*
-"""
+    sprintf
+        """call "%s"
+call "%s" %%*""" vcvars32 cl
 
 let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "%s.dll" modul.Name)
 
