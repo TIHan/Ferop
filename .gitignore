@@ -17,15 +17,10 @@
 # MSVC
 Debug
 Release
-ipch
-x64
 *.sdf
 *.user
 *.suo
 *.opensdf
-
-# Executable
-te-test
 
 # Resharper
 _ReSharper*
@@ -44,31 +39,11 @@ packages
 # NUnit
 TestResults
 
-# Mono
-lib/Mono
-
 # Exclusions
 !lib/
 
 # Xamarin Studio
 *.userprefs
-
-# Quake Specific
-Debug_TA
-Debug TA
-DebugAxp
-Release_TA
-Release TA
-ReleaseAxp
-q3_ui___Win32_Debug
-build/
-winquake.res
-
-# FQuake3 Specific
-lib/FQuake3.Utils/src/FQuake3.Viewer/libFQ3Viewer.dylib
-
-# Erlang
-*.beam
 
 *.obj
 *.DS_Store
