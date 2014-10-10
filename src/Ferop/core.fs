@@ -43,6 +43,10 @@ type Module = {
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcOptionsWinAttribute>)
 
+    member this.IsMsvc64bit =
+        this.Attributes
+        |> Seq.exists (fun x -> x.AttributeType = typeof<Msvc64bitAttribute>)
+
     member this.Includes =
         match Seq.isEmpty this.IncludeAttributes with
         | true -> ""

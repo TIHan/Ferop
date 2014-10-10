@@ -19,6 +19,10 @@ type ClangLibsOsxAttribute (libs: string) =
 type MsvcOptionsWinAttribute (libs: string) =
     inherit System.Attribute ()
 
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type Msvc64bitAttribute () =
+    inherit System.Attribute ()
+
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class, AllowMultiple = true)>]
 type IncludeAttribute (headerFile: string) =
     inherit System.Attribute ()

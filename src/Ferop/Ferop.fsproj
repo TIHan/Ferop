@@ -46,7 +46,7 @@
     <Compile Include="win.fs" />
     <Compile Include="osx.fs" />
     <Compile Include="ios.fs" />
-    <Compile Include="internalFerop.fs" />
+    <Compile Include="internal.fs" />
     <Compile Include="compiler.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
