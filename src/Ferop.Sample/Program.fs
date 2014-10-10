@@ -58,7 +58,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 16 -> cont lines
+        | 11 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
