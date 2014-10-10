@@ -10,6 +10,7 @@ open System.Threading
 open Microsoft.FSharp.NativeInterop
 
 open Ferop.Code
+open Ferop.Sample
 
 #if DEBUG
 type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Debug", Platform.Auto>
@@ -20,20 +21,6 @@ type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Release", Platform
 #nowarn "9"
 #nowarn "51"
 
-[<Struct>]
-type vec2 =
-    val X : single
-    val Y : single
-
-    new (x, y) = { X = x; Y = y }
-
-[<Struct>]
-type DrawLine =
-    val X : vec2
-    val Y : vec2
-
-    new (x, y) = { X = x; Y = y }
-
 let clear () = Native.App.clear ()
 
 let draw app = Native.App.draw app
@@ -42,31 +29,14 @@ let loadShaders () =
     let mutable vertexFile = ([|0uy|]) |> Array.append (File.ReadAllBytes ("v.vertex"))
     let mutable fragmentFile = ([|0uy|]) |> Array.append (File.ReadAllBytes ("f.fragment"))
 
-    // Fixed
-    let vh = GCHandle.Alloc (vertexFile, GCHandleType.Pinned)
-    let vp = vh.AddrOfPinnedObject ()
-
-    let fh = GCHandle.Alloc (fragmentFile, GCHandleType.Pinned)
-    let fp = fh.AddrOfPinnedObject ()
-
-    Native.App.loadShaders (vp, fp)
-
-    vh.Free ()
-    fh.Free ()
-    // End Fixed
+    Native.App.loadShaders (vertexFile, fragmentFile)
 
 let makeVbo (drawLines: DrawLine []) = 
-    let h = GCHandle.Alloc (drawLines, GCHandleType.Pinned)
-    let p = h.AddrOfPinnedObject ()
-    let vbo = Native.App.generateVbo (drawLines.Length * sizeof<DrawLine>, p)
-    h.Free ()
+    let vbo = Native.App.generateVbo (drawLines.Length * sizeof<DrawLine>, drawLines)
     vbo
 
 let drawVbo (drawLines: DrawLine []) vbo =
-    let h = GCHandle.Alloc (drawLines, GCHandleType.Pinned)
-    let p = h.AddrOfPinnedObject ()
-    Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, p, vbo)
-    h.Free ()
+    Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, drawLines, vbo)
 
 let init () = Native.App.init ()
 
@@ -133,7 +103,7 @@ let main args =
 
     loadShaders ()
 
-    while not <| shouldQuit () do
+    while not <| ((shouldQuit ()) = 1) do
 
         let stopwatch = Stopwatch.StartNew ()
         let drawLines = 

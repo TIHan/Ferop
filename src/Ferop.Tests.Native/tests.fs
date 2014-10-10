@@ -5,6 +5,49 @@ open System.Runtime.InteropServices
 
 #nowarn "9"
 
+type [<Struct>] RecursiveStruct50 =
+    val X : int
+
+type [<Struct>] RecursiveStruct49 =
+    val X : int
+    val Y : RecursiveStruct50
+
+type [<Struct>] RecursiveStruct48 =
+    val X : int
+    val Y : RecursiveStruct49
+
+type [<Struct>] RecursiveStruct47 =
+    val X : int
+    val Y : RecursiveStruct48
+
+type [<Struct>] RecursiveStruct46 =
+    val X : int
+    val Y : RecursiveStruct47
+
+type [<Struct>] RecursiveStruct45 =
+    val X : int
+    val Y : RecursiveStruct46
+
+type [<Struct>] RecursiveStruct44 =
+    val X : int
+    val Y : RecursiveStruct45
+
+type [<Struct>] RecursiveStruct43 =
+    val X : int
+    val Y : RecursiveStruct44
+
+type [<Struct>] RecursiveStruct42 =
+    val X : int
+    val Y : RecursiveStruct43
+
+type [<Struct>] RecursiveStruct41 =
+    val X : int
+    val Y : RecursiveStruct42
+
+type [<Struct>] RecursiveStruct40 =
+    val X : int
+    val Y : RecursiveStruct41
+
 [<Struct>]
 type Struct2 =
     val X : Struct3
@@ -146,6 +189,11 @@ module Tests3 =
 [<ClangLibsOsx ("")>]
 [<MsvcOptionsWin ("")>]
 module Tests4 =
-    let testString (x: string) : unit = C """ return; """
+    [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
+    type TestDelegate = delegate of int -> int
 
     let testByteArray (x: byte[]) : byte = C """ return x[0]; """
+
+    let testDelegate (f: TestDelegate) : int = C """ return f (1234); """
+
+    let testRecursiveStruct (x: RecursiveStruct40) : unit = C """ """

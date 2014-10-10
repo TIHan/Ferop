@@ -10,6 +10,20 @@ type Application =
     val Window : nativeint
     val GLContext : nativeint
 
+[<Struct>]
+type vec2 =
+    val X : single
+    val Y : single
+
+    new (x, y) = { X = x; Y = y }
+
+[<Struct>]
+type DrawLine =
+    val X : vec2
+    val Y : vec2
+
+    new (x, y) = { X = x; Y = y }
+
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES")>]
 [<ClangLibsOsx ("-framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
@@ -57,14 +71,14 @@ return 0;
 
     let draw (app: Application) : unit = C """ SDL_GL_SwapWindow (app.Window); """
 
-    let shouldQuit () : bool =
+    let shouldQuit () : int =
         C """
 SDL_Event e;
 SDL_PollEvent (&e);
 return e.type == SDL_QUIT;
         """
 
-    let generateVbo (size: int) (data: nativeint) : int =
+    let generateVbo (size: int) (data: DrawLine[]) : int =
         C """
 GLuint vbo;
 glGenBuffers (1, &vbo);
@@ -75,14 +89,14 @@ glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 return vbo;
         """
 
-    let drawVbo (size: int) (data: nativeint) (vbo: int) : unit =
+    let drawVbo (size: int) (data: DrawLine[]) (vbo: int) : unit =
         C """
 glBindBuffer (GL_ARRAY_BUFFER, vbo);
 glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 glDrawArrays (GL_LINES, 0, size);
         """
 
-    let loadShaders (vertexSource: nativeint) (fragmentSource: nativeint) : unit =
+    let loadShaders (vertexSource: byte[]) (fragmentSource: byte[]) : unit =
         C """
 GLuint vertexShader = glCreateShader (GL_VERTEX_SHADER);
 glShaderSource (vertexShader, 1, &vertexSource, NULL);    

@@ -130,10 +130,11 @@ let ``with a Y value of Struct3, should pass Struct3 and return the correct Y va
     |> should equal 53.
 
 [<Test>]
-let ``with string, should pass string`` () =
-    Native.Tests4.testString ("hello")
-
-[<Test>]
 let ``with byte array, should pass byte array and return first element`` () =
     Native.Tests4.testByteArray ([|255uy|])
     |> should equal 255uy
+
+[<Test>]
+let ``with a delegate type, should pass a delegate and return the result`` () =
+    Native.Tests4.testDelegate (fun x -> x)
+    |> should equal 1234

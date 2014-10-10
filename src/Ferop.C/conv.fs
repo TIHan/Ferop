@@ -42,10 +42,10 @@ let allNestedRuntimeFieldTypes (typ: Type) =
                 
     fr [] (f typ)  
 
-let rec isTypeUnmanaged (typ: Type) =
+let rec isTypeBlittable (typ: Type) =
     let check (x: Type) = 
         (x.IsValueType && not x.IsGenericType) ||
-        (x.IsPointer && (x.GenericTypeArguments |> Array.forall (isTypeUnmanaged)))
+        (x.IsPointer && (x.GenericTypeArguments |> Array.forall (isTypeBlittable)))
     match check typ with
     | false -> false
     | _ -> allNestedRuntimeFieldTypes typ |> List.forall check
@@ -106,9 +106,8 @@ let rec tryLookupCType env = function
     | x when x = typeof<int64> ->   Some Int64
     | x when x = typeof<single> ->  Some Float
     | x when x = typeof<double> ->  Some Double
-    | x when x = typeof<bool> ->    Some Int32
-    | x when x = typeof<nativeint> -> Some <| Pointer None
-    | x when x = typeof<string> -> Some <| Pointer (Some SByte)
+    | x when x = typeof<unativeint> -> Some <| Pointer None
+    | x when x = typeof<nativeint> ->  Some <| Pointer None
     | x when x.IsArray ->
         match tryLookupCType env (x.GetElementType ()) with
         | None -> None
@@ -117,46 +116,44 @@ let rec tryLookupCType env = function
         match tryLookupEnum env x with
         | None -> None
         | Some x -> Some <| CType.Enum x
-    | x when isTypeUnmanaged x ->
+    | x when isTypeBlittable x ->
         match tryLookupStruct env x with
         | None -> None
         | Some x -> Some <| CType.Struct x
     | x when x.BaseType = typeof<MulticastDelegate> ->
-        let invokeMeth = x.GetMethod "Invoke"
+        x.GetMethod "Invoke" |> ignore // make sure there is a method named "Invoke"
         match tryLookupFunction env x with
         | None -> None
         | Some x -> Some <| CType.Function x
     | _ -> None
 
-and lookupCType env typ =
+let lookupCType env typ =
     match tryLookupCType env typ with
-    | None -> failwithf "%A not supported." typ.FullName
+    | None -> failwithf "%A is not supported. Only blittable types are allowed." typ.FullName
     | Some x -> x
 
-and makeCField typ name = { CField.Type = typ; Name = name }
+let makeCField typ name = { CField.Type = typ; Name = name }
 
-and makeCFields env (typ: Type) =
+let makeCFields env (typ: Type) =
     runtimeFields typ
     |> List.map (fun x ->
         let ctype = lookupCType env x.FieldType
         makeCField ctype x.Name)
 
-and makeReturnType env = function
+let makeReturnType env = function
     | x when x = typeof<Void> -> None
-    | x when x.IsArray -> failwith "Return type can't be an array."
-    | x when x = typeof<string> -> failwith "Return type can't be a string."
     | x -> Some <| lookupCType env x
 
-and makeParameter env (info: ParameterInfo) = 
+let makeParameter env (info: ParameterInfo) = 
     if info.Name = null then
         failwithf "No parameter name at position %i in method %s" info.Position info.Member.Name
     { CParameter.Type = lookupCType env info.ParameterType; Name = info.Name }
 
-and makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
+let makeParameters env infos = infos |> List.ofArray |> List.map (makeParameter env)
 
-and makeParameterType env (info: ParameterInfo) = lookupCType env info.ParameterType
+let makeParameterType env (info: ParameterInfo) = lookupCType env info.ParameterType
 
-and makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
+let makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
 
 let rec makeCExpr = function
     | Call (_, _, exprList) -> makeCExpr exprList.[0]
@@ -313,7 +310,8 @@ let makeCDecls (env: CEnv) modul =
         funcs @ exportedFuncs
         |> List.map (fun x -> (x.GetParameters () |> Array.map (fun x -> x.ParameterType) |> List.ofArray) @ [x.ReturnType])
         |> List.reduce (fun x y -> x @ y)
-        |> List.filter (fun x -> not (x = typeof<Void>) && not x.IsPrimitive && not x.IsEnum && isTypeUnmanaged x)
+        |> List.map (fun x -> if x.IsArray then x.GetElementType () else x)
+        |> List.filter (fun x -> not (x = typeof<Void>) && not x.IsPrimitive && not x.IsEnum && isTypeBlittable x)
 
     let enums =
         funcs @ exportedFuncs
