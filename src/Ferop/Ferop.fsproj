@@ -49,7 +49,6 @@
     <Compile Include="win.fs" />
     <Compile Include="osx.fs" />
     <Compile Include="ios.fs" />
-    <Compile Include="internal.fs" />
     <Compile Include="compiler.fsi" />
     <Compile Include="compiler.fs" />
   </ItemGroup>
