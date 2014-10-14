@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 
-module Ferop.TypeProvider
+module FSharp.NativeInterop.Ferop.TypeProvider
 
 open System
 open System.IO
@@ -36,6 +36,9 @@ open Microsoft.FSharp.Quotations.ExprShape
 
 open ProviderImplementation
 open ProviderImplementation.ProvidedTypes
+
+open FSharp.NativeInterop.Ferop
+open FSharp.NativeInterop.FeropCompiler
 
 [<RequireQualifiedAccess>]
 module internal TypeProviderConfig =
@@ -54,13 +57,13 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
     let entryAsm = Assembly.GetEntryAssembly ()
     let asm = Assembly.GetExecutingAssembly ()
     let ns = this.GetType().Namespace
-    let pn = "FeropProvider"
+    let pn = "CProvider"
 
     let tempAsm = ProvidedAssembly (Path.ChangeExtension (Path.GetTempFileName (), ".dll")) 
     let parameters = [
         ProvidedStaticParameter ("refName", typeof<string>)
         ProvidedStaticParameter ("relativeDir", typeof<string>)
-        ProvidedStaticParameter ("platform", typeof<Ferop.Code.Platform>)]
+        ProvidedStaticParameter ("platform", typeof<Platform>)]
 
     do
         let def = ProvidedTypeDefinition (asm, ns, pn, Some typeof<obj>, IsErased = false) 
@@ -93,14 +96,14 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
     member internal this.GenerateTypes (typeName: string) (args: obj[]) =
         let refName = args.[0] :?> string
         let relativeDir = args.[1] :?> string
-        let platform = args.[2] :?> Ferop.Code.Platform
+        let platform = args.[2] :?> Platform
 
         let name = Path.GetTempFileName ()
         let outputPath = Path.Combine (cfg.ResolutionFolder, relativeDir)
         let dllPath = Path.GetTempPath ()
         let refAsm = this.FindAssembly refName
 
-        let dasmLocation = Ferop.Compiler.Ferop.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
+        let dasmLocation = Ferop.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
         let dasm = Assembly.LoadFrom (dasmLocation)
 
         let def = ProvidedTypeDefinition (asm, ns, typeName, Some typeof<obj>, IsErased = false) 

@@ -1,7 +1,6 @@
-﻿module Ferop.CGen
+﻿module internal FSharp.NativeInterop.FeropInternal.CGen
 
-open Ferop.CConversion
-open Ferop.CTypedAST
+open CTypedAST
 
 type CGen = {
     Header : string

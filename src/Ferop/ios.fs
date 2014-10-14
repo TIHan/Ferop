@@ -1,12 +1,10 @@
 ﻿[<RequireQualifiedAccess>]
-module internal Ferop.iOS
+module internal FSharp.NativeInterop.FeropInternal.iOS
 
-open System
 open System.IO
 open System.Diagnostics
 
-open Ferop.Code
-open Ferop.Core
+open Core
 
 open FSharp.Control.IO
 
@@ -53,7 +51,7 @@ let startAr args = io {
     checkProcessError p }
 
 let compileC outputPath modul cgen = io {
-    let! hFile, cFile = writeCGen outputPath modul cgen
+    let! _, cFile = writeCGen outputPath modul cgen
     let oFile = makeOFilePath outputPath modul
     let flags = modul.ClangFlagsOsx
 

@@ -40,6 +40,9 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="tast.fs" />
+    <Compile Include="conv.fs" />
+    <Compile Include="cgen.fs" />
     <Compile Include="ferop.fs" />
     <Compile Include="io.fs" />
     <Compile Include="core.fs" />
@@ -47,13 +50,8 @@
     <Compile Include="osx.fs" />
     <Compile Include="ios.fs" />
     <Compile Include="internal.fs" />
+    <Compile Include="compiler.fsi" />
     <Compile Include="compiler.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\Ferop.C\Ferop.C.fsproj">
-      <Project>{C60674AF-73FA-42A5-9B11-0A1FA7DC1327}</Project>
-      <Name>Ferop.C</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

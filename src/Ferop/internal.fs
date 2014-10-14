@@ -1,4 +1,4 @@
-﻿module internal Ferop.Internal
+﻿module internal FSharp.NativeInterop.FeropInternal.Internal
 
 open System
 open System.Security
@@ -6,10 +6,8 @@ open System.Reflection
 open System.Reflection.Emit
 open System.Runtime.InteropServices
 
-open Microsoft.FSharp.Reflection
-
-open Ferop.Core
-open Ferop.Code
+open FSharp.NativeInterop.Ferop
+open Core
 
 let rec makeDllName modul = function 
     | Platform.Win -> sprintf "%s.dll" modul.Name

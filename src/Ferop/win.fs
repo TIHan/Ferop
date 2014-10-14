@@ -1,13 +1,11 @@
 ﻿[<RequireQualifiedAccess>]
-module internal Ferop.Win
+module internal FSharp.NativeInterop.FeropInternal.Win
 
-open System
 open System.IO
 open System.Diagnostics
 open Microsoft.Win32
 
-open Ferop.Core
-
+open Core
 open FSharp.Control.IO
 
 let registryKeyPath = "SOFTWARE\\Microsoft\\VisualStudio\\SxS\\Vs7"
@@ -58,7 +56,7 @@ let startMsvc outputPath args = io {
     checkProcessError p }
 
 let compileToDynamicLibrary outputPath modul cgen = io {
-    let! hFile, cFile = writeCGen outputPath modul cgen
+    let! _, cFile = writeCGen outputPath modul cgen
     let options = modul.MsvcOptionsWin
     let dllName = makeDynamicLibraryPath outputPath modul
 

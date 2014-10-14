@@ -1,4 +1,4 @@
-module Ferop.CTypedAST
+module internal FSharp.NativeInterop.FeropInternal.CTypedAST
 
 // This is a micro micro micro typed ast. Only handles types and function declarations.
 

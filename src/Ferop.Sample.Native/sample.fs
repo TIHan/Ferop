@@ -1,6 +1,6 @@
 ﻿namespace Ferop.Sample
 
-open Ferop.Code
+open FSharp.NativeInterop.Ferop
 open System.Runtime.InteropServices
 
 #nowarn "9"

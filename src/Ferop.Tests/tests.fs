@@ -4,14 +4,14 @@ open System
 open FsUnit
 open NUnit.Framework
 
-open Ferop
+open FSharp.NativeInterop.Ferop
 
 open Ferop.Tests
 
 #if DEBUG
-type Native = FeropProvider<"Ferop.Tests.Native", "bin/Debug", Code.Platform.Auto>
+type Native = CProvider<"Ferop.Tests.Native", "bin/Debug", Platform.Auto>
 #else
-type Native = FeropProvider<"Ferop.Tests.Native", "bin/Release", Code.Platform.Auto>
+type Native = CProvider<"Ferop.Tests.Native", "bin/Release", Platform.Auto>
 #endif
 
 [<Test>]

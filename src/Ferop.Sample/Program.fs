@@ -9,13 +9,13 @@ open System.Threading
 
 open Microsoft.FSharp.NativeInterop
 
-open Ferop.Code
+open FSharp.NativeInterop.Ferop
 open Ferop.Sample
 
 #if DEBUG
-type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Debug", Platform.Auto>
+type Native = CProvider<"Ferop.Sample.Native", "bin/Debug", Platform.Auto>
 #else
-type Native = Ferop.FeropProvider<"Ferop.Sample.Native", "bin/Release", Platform.Auto>
+type Native = CProvider<"Ferop.Sample.Native", "bin/Release", Platform.Auto>
 #endif
 
 #nowarn "9"

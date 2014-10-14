@@ -1,4 +1,4 @@
-﻿module internal Ferop.Core
+﻿module internal FSharp.NativeInterop.FeropInternal.Core
 
 open System
 open System.IO
@@ -8,16 +8,7 @@ open System.Diagnostics
 open System.Security
 open System.Runtime.InteropServices
 
-open Microsoft.FSharp.Reflection
-open Microsoft.FSharp.Core.CompilerServices
-open Microsoft.FSharp.Reflection
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
-open Microsoft.FSharp.Quotations.ExprShape
-
-open Ferop.Code
-
+open FSharp.NativeInterop.Ferop
 open FSharp.Control.IO
 
 type Module = {
@@ -150,8 +141,8 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
 
     meth
 
-open Ferop.CConversion
-open Ferop.CGen
+open CConversion
+open CGen
 
 let makeFsModule (modul: Module) = 
     { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions; IsCpp = modul.IsCpp }

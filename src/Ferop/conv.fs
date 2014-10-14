@@ -1,4 +1,4 @@
-﻿module Ferop.CConversion
+﻿module internal FSharp.NativeInterop.FeropInternal.CConversion
 
 open System
 open System.Reflection
@@ -11,7 +11,7 @@ open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.ExprShape
  
-open Ferop.CTypedAST
+open CTypedAST
 
 type FsModule = { 
     Name: string
