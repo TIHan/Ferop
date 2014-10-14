@@ -27,8 +27,8 @@ type Msvc64bitAttribute () =
 type CppAttribute () =
     inherit System.Attribute ()
 
-[<System.AttributeUsageAttribute (System.AttributeTargets.Class, AllowMultiple = true)>]
-type IncludeAttribute (headerFile: string) =
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type HeaderAttribute (header: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Method)>]

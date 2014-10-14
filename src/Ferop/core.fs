@@ -27,10 +27,6 @@ type Module = {
     Functions: MethodInfo list
     ExportedFunctions: MethodInfo list } with
 
-    member this.IncludeAttributes =
-        this.Attributes
-        |> Seq.filter (fun x -> x.AttributeType = typeof<IncludeAttribute>)
-
     member this.ClangFlagsOsxAttribute =
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangFlagsOsxAttribute>)
@@ -51,14 +47,15 @@ type Module = {
         this.Attributes
         |> Seq.exists (fun x -> x.AttributeType = typeof<CppAttribute>)
 
-    member this.Includes =
-        match Seq.isEmpty this.IncludeAttributes with
-        | true -> ""
-        | _ ->
-            this.IncludeAttributes
-            |> Seq.map (fun x -> Seq.exactlyOne x.ConstructorArguments)
-            |> Seq.map (fun x -> "#include " + (x.Value :?> string))
-            |> Seq.reduce (fun x y -> x + "\n" + y)
+    member this.Header =
+        match
+            this.Attributes
+            |> Seq.tryFind (fun x -> x.AttributeType = typeof<HeaderAttribute>)
+            with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
 
     member this.ClangFlagsOsx =
         match this.ClangFlagsOsxAttribute with
@@ -106,8 +103,6 @@ let makeModule (typ: Type) =
     let exportFuncs = funcs |> List.filter (methodHasAttribute typeof<ExportAttribute>)
 
     { Name = name; FullName = shortName; Attributes = attrs; Functions = normalFuncs; ExportedFunctions = exportFuncs }
-
-let makeHeaderIncludes (modul: Module) = modul.Includes
 
 let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
 
@@ -161,9 +156,9 @@ open Ferop.CGen
 let makeFsModule (modul: Module) = 
     { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions; IsCpp = modul.IsCpp }
 
-let makeCGen outputPath (modul: Module) =
+let makeCGen (modul: Module) =
     let env = makeCEnv <| makeFsModule modul
-    generate env modul.Includes
+    generate env modul.Header
 
 let writeCGen outputPath modul cgen = io {
     let hFile = makeHFilePath outputPath modul

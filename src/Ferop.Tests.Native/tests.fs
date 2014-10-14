@@ -78,7 +78,9 @@ type Enum2 =
     | Sub2 = 1
 
 [<ReflectedDefinition>]
-[<Include ("<stdio.h>")>]
+[<Header ("""
+#include <stdio.h>
+""")>]
 type Tests =
     static member testByte (x: byte) : byte = C """ return x; """
 
@@ -188,6 +190,8 @@ module Tests4 =
 
 [<ReflectedDefinition>]
 [<Cpp>]
-[<Include ("<iostream>")>]
+[<Header ("""
+#include <iostream>
+""")>]
 module TestsCpp =
     let testCppHelloWorld () : unit = C """std::cout << "Hello World!\n";"""

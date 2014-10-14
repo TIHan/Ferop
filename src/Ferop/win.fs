@@ -67,7 +67,7 @@ let compileToDynamicLibrary outputPath modul cgen = io {
     do! startMsvc outputPath args }
 
 let compileModule outputPath modul =
-    let cgen = makeCGen outputPath modul
+    let cgen = makeCGen modul
 
     io {
         do! compileToDynamicLibrary outputPath modul cgen }

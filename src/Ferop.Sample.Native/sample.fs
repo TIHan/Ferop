@@ -33,10 +33,12 @@ type DrawLine =
 #else
 [<MsvcOptionsWin (""" /I ..\..\include ..\..\lib\win\x86\SDL2.lib ..\..\lib\win\x86\SDL2main.lib ..\..\lib\win\x86\glew32.lib opengl32.lib """)>]
 #endif
-[<Include ("<stdio.h>")>]
-[<Include ("<SDL2/SDL.h>")>]
-[<Include ("<GL/glew.h>")>]
-[<Include ("<GL/wglew.h>")>]
+[<Header ("""
+#include <stdio.h>
+#include <SDL2/SDL.h>
+#include <GL/glew.h>
+#include <GL/wglew.h>
+""")>]
 module App =
     let init () : Application =
         C """

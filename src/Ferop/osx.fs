@@ -91,7 +91,7 @@ let cleanObjectFiles outputPath = io {
         |> List.iter (fun x -> File.Delete x) }
 
 let compileModule outputPath modul =
-    let cgen = makeCGen outputPath modul
+    let cgen = makeCGen modul
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 
