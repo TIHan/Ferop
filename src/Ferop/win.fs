@@ -4,17 +4,20 @@ module internal Ferop.Win
 open System
 open System.IO
 open System.Diagnostics
+open Microsoft.Win32
 
 open Ferop.Core
 
 open FSharp.Control.IO
 
-let programFilesX86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86)
+let registryKeyPath = "SOFTWARE\\Microsoft\\VisualStudio\\SxS\\Vs7"
+let registryKey = Registry.LocalMachine.OpenSubKey (registryKeyPath)
+let vs = registryKey.GetValue ("12.0") :?> string
 
 // TODO: Try to find a good solution to handle different VS versions.
-let vc12bin = Path.Combine (programFilesX86, "Microsoft Visual Studio 12.0\\VC\\bin")
+let vc12bin = Path.Combine (vs, "VC\\bin")
 
-let vc12bin64bit = Path.Combine (programFilesX86, "Microsoft Visual Studio 12.0\\VC\\bin\\amd64")
+let vc12bin64bit = Path.Combine (vs, "VC\\bin\\amd64")
 
 let vcvars32 = Path.Combine (vc12bin, "vcvars32.bat")
 let vcvars64 = Path.Combine (vc12bin64bit, "vcvars64.bat")
