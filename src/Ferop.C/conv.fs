@@ -14,9 +14,10 @@ open Microsoft.FSharp.Quotations.ExprShape
 open Ferop.CTypedAST
 
 type FsModule = { 
-    Name : string
-    Functions : MethodInfo list
-    ExportedFunctions : MethodInfo list }
+    Name: string
+    Functions: MethodInfo list
+    ExportedFunctions: MethodInfo list
+    IsCpp: bool }
 
 let runtimeFields (typ: Type) = 
     typ.GetRuntimeFields () 
@@ -333,4 +334,4 @@ let makeCDecls (env: CEnv) modul =
 
 let makeCEnv modul =
     let env = makeEmptyEnv modul.Name
-    makeCDecls env modul
+    makeCDecls { env with IsCpp = modul.IsCpp } modul

@@ -78,9 +78,6 @@ type Enum2 =
     | Sub2 = 1
 
 [<ReflectedDefinition>]
-[<ClangFlagsOsx ("")>]
-[<ClangLibsOsx ("")>]
-[<MsvcOptionsWin ("")>]
 [<Include ("<stdio.h>")>]
 type Tests =
     static member testByte (x: byte) : byte = C """ return x; """
@@ -169,25 +166,16 @@ type Tests =
     static member testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """
 
 [<ReflectedDefinition>]
-[<ClangFlagsOsx ("")>]
-[<ClangLibsOsx ("")>]
-[<MsvcOptionsWin ("")>]
 module Tests2 =
     let testByte (x: byte) : byte = C """ return x; """
 
 [<ReflectedDefinition>]
-[<ClangFlagsOsx ("")>]
-[<ClangLibsOsx ("")>]
-[<MsvcOptionsWin ("")>]
 module Tests3 =
     let testEnum1 (x: Enum1) : Enum1 = C """ return x; """
 
     let testEnum2 (x: Enum2) : Enum2 = C """ return x; """
 
 [<ReflectedDefinition>]
-[<ClangFlagsOsx ("")>]
-[<ClangLibsOsx ("")>]
-[<MsvcOptionsWin ("")>]
 module Tests4 =
     [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
     type TestDelegate = delegate of int -> int
@@ -197,3 +185,9 @@ module Tests4 =
     let testDelegate (f: TestDelegate) : int = C """ return f (1234); """
 
     let testRecursiveStruct (x: RecursiveStruct40) : unit = C """ """
+
+[<ReflectedDefinition>]
+[<Cpp>]
+[<Include ("<iostream>")>]
+module TestsCpp =
+    let testCppHelloWorld () : unit = C """std::cout << "Hello World!\n";"""

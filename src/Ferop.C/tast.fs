@@ -101,7 +101,8 @@ let hasFieldType fieldTypeName = function
     |> List.exists (function | {CField.Type = CType.Struct x} -> x.Name = fieldTypeName | _ -> false)
 
 type CEnv = { 
-    Name : string
-    Decls : CDecl list }
+    Name: string
+    Decls: CDecl list
+    IsCpp: bool }
 
-let makeEmptyEnv name = { Name = name; Decls = List.empty }
+let makeEmptyEnv name = { Name = name; Decls = List.empty; IsCpp = false }

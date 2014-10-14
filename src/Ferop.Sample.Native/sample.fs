@@ -67,14 +67,14 @@ return app;
     let exit (app: Application) : int =
         C """
 SDL_GL_DeleteContext (app.GLContext);
-SDL_DestroyWindow (app.Window);
+SDL_DestroyWindow ((SDL_Window*)app.Window);
 SDL_Quit ();
 return 0;
         """
 
     let clear () : unit = C """ glClear (GL_COLOR_BUFFER_BIT); """
 
-    let draw (app: Application) : unit = C """ SDL_GL_SwapWindow (app.Window); """
+    let draw (app: Application) : unit = C """ SDL_GL_SwapWindow ((SDL_Window*)app.Window); """
 
     let shouldQuit () : int =
         C """
@@ -104,11 +104,11 @@ glDrawArrays (GL_LINES, 0, size);
     let loadShaders (vertexSource: byte[]) (fragmentSource: byte[]) : unit =
         C """
 GLuint vertexShader = glCreateShader (GL_VERTEX_SHADER);
-glShaderSource (vertexShader, 1, &vertexSource, NULL);    
+glShaderSource (vertexShader, 1, (const GLchar*const*)&vertexSource, NULL);    
 glCompileShader (vertexShader);
 
 GLuint fragmentShader = glCreateShader (GL_FRAGMENT_SHADER);
-glShaderSource (fragmentShader, 1, &fragmentSource, NULL);
+glShaderSource (fragmentShader, 1, (const GLchar*const*)&fragmentSource, NULL);
 glCompileShader (fragmentShader);
 
 /******************************************************/

@@ -47,6 +47,10 @@ type Module = {
         this.Attributes
         |> Seq.exists (fun x -> x.AttributeType = typeof<Msvc64bitAttribute>)
 
+    member this.IsCpp =
+        this.Attributes
+        |> Seq.exists (fun x -> x.AttributeType = typeof<CppAttribute>)
+
     member this.Includes =
         match Seq.isEmpty this.IncludeAttributes with
         | true -> ""
@@ -109,6 +113,8 @@ let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
 
 let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
 
+let makeCppFilePath path modul = Path.Combine (path, sprintf "%s.cpp" modul.Name)
+
 let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
 
 let dummyC = ""
@@ -153,7 +159,7 @@ open Ferop.CConversion
 open Ferop.CGen
 
 let makeFsModule (modul: Module) = 
-    { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions  }
+    { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions; IsCpp = modul.IsCpp }
 
 let makeCGen outputPath (modul: Module) =
     let env = makeCEnv <| makeFsModule modul
@@ -161,7 +167,10 @@ let makeCGen outputPath (modul: Module) =
 
 let writeCGen outputPath modul cgen = io {
     let hFile = makeHFilePath outputPath modul
-    let cFile = makeCFilePath outputPath modul
+    let cFile = 
+        if modul.IsCpp
+        then makeCppFilePath outputPath modul
+        else makeCFilePath outputPath modul
 
     File.WriteAllText (hFile, cgen.Header)
     File.WriteAllText (cFile, cgen.Source)

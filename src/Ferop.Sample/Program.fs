@@ -70,26 +70,7 @@ let makeLines degrees length (line: DrawLine) =
             makeLines ldeg length (ll :: lines) (fun x ->
                 makeLines rdeg length (rl :: x) cont n) n
 
-    let rec makeLinesParallel rads length (lines: DrawLine list) cont = function
-        | n ->
-            let ldeg = rads + lrad
-            let rdeg = rads + rrad
-            let ll = makeDrawLine ldeg length lines.Head
-            let rl = makeDrawLine rdeg length lines.Head
-            let n = n + 1
-            let length = length * 0.7f
-
-            let f1 = (makeLines ldeg length (ll :: lines) cont)
-            let f2 = (makeLines rdeg length (rl :: lines) cont)
-
-            let computations = [| f1; f2 |]
-
-            computations
-            |> Array.Parallel.map (fun f -> f n)
-            |> Array.reduce (fun x y -> x @ y)
-
-    //makeLines (degrees * torad) length [line] (fun x -> x) 0
-    makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0  
+    makeLines (degrees * torad) length [line] (fun x -> x) 0
 
 [<EntryPoint>]
 let main args =

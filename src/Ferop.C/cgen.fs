@@ -221,8 +221,17 @@ let generateHeader env includes =
     |> generateMainHeaderCode env.Name
 
 let generateSource (env: CEnv) =
-    (generateHeaderIncludeCode env.Name) + 
-    generateCDecls CGenContext.Source env.Decls
+    (generateHeaderIncludeCode env.Name) +
+    (if env.IsCpp
+    then """extern "C" {
+""" 
+    else "")
+    + generateCDecls CGenContext.Source env.Decls +
+    (if env.IsCpp
+    then
+        """}
+"""
+    else "")
 
 let generate env includes =
     { Header = generateHeader env includes; Source = generateSource env }

@@ -138,3 +138,7 @@ let ``with byte array, should pass byte array and return first element`` () =
 let ``with a delegate type, should pass a delegate and return the result`` () =
     Native.Tests4.testDelegate (fun x -> x)
     |> should equal 1234
+
+[<Test>]
+let ``with a c exported function with cpp, should pass without error`` () =
+    Native.TestsCpp.testCppHelloWorld ()
