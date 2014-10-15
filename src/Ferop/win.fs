@@ -1,5 +1,5 @@
 ﻿[<RequireQualifiedAccess>]
-module internal FSharp.NativeInterop.FeropInternal.Win
+module internal FSharp.Interop.FeropInternal.Win
 
 open System.IO
 open System.Diagnostics

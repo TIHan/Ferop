@@ -1,4 +1,4 @@
-﻿module FSharp.NativeInterop.FeropCompiler
+﻿module FSharp.Interop.FeropCompiler
 
 open System
 open System.IO
@@ -7,8 +7,8 @@ open System.Reflection
 open System.Reflection.Emit
 open System.Runtime.InteropServices
 
-open FSharp.NativeInterop.Ferop
-open FSharp.NativeInterop.FeropInternal.Core
+open FSharp.Interop.Ferop
+open FSharp.Interop.FeropInternal.Core
 
 [<RequireQualifiedAccess>]
 module Ferop =

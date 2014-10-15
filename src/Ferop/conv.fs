@@ -1,4 +1,4 @@
-﻿module internal FSharp.NativeInterop.FeropInternal.CConversion
+﻿module internal FSharp.Interop.FeropInternal.CConversion
 
 open System
 open System.Reflection

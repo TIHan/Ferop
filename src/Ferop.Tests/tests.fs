@@ -4,7 +4,7 @@ open System
 open FsUnit
 open NUnit.Framework
 
-open FSharp.NativeInterop.Ferop
+open FSharp.Interop.Ferop
 
 open Ferop.Tests
 

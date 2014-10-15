@@ -1,4 +1,4 @@
-﻿module FSharp.Control.IO
+﻿module internal FSharp.Control.IO
 
 type IO<'a> = private IO of (unit -> 'a)
  

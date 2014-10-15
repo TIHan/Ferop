@@ -1,6 +1,6 @@
 ﻿namespace Ferop.Tests
 
-open FSharp.NativeInterop.Ferop
+open FSharp.Interop.Ferop
 open System.Runtime.InteropServices
 
 #nowarn "9"

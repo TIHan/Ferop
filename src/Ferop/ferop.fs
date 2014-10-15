@@ -1,4 +1,4 @@
-﻿module FSharp.NativeInterop.Ferop
+﻿module FSharp.Interop.Ferop
 
 type Platform =
     | Auto = 0

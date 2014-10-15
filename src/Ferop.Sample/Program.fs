@@ -9,7 +9,7 @@ open System.Threading
 
 open Microsoft.FSharp.NativeInterop
 
-open FSharp.NativeInterop.Ferop
+open FSharp.Interop.Ferop
 open Ferop.Sample
 
 #if DEBUG

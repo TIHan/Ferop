@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 
-module FSharp.NativeInterop.Ferop.TypeProvider
+module FSharp.Interop.Ferop.CProvider
 
 open System
 open System.IO
@@ -37,8 +37,8 @@ open Microsoft.FSharp.Quotations.ExprShape
 open ProviderImplementation
 open ProviderImplementation.ProvidedTypes
 
-open FSharp.NativeInterop.Ferop
-open FSharp.NativeInterop.FeropCompiler
+open FSharp.Interop.Ferop
+open FSharp.Interop.FeropCompiler
 
 [<RequireQualifiedAccess>]
 module internal TypeProviderConfig =

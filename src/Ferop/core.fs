@@ -1,4 +1,4 @@
-﻿module internal FSharp.NativeInterop.FeropInternal.Core
+﻿module internal FSharp.Interop.FeropInternal.Core
 
 open System
 open System.IO
@@ -8,7 +8,7 @@ open System.Diagnostics
 open System.Security
 open System.Runtime.InteropServices
 
-open FSharp.NativeInterop.Ferop
+open FSharp.Interop.Ferop
 open FSharp.Control.IO
 
 type Module = {
