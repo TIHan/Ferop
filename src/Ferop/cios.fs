@@ -10,8 +10,6 @@ open FSharp.Control.IO
 
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
-let makeDummyOFilePath path = Path.Combine (path, "_ferop_dummy_.o")
-
 let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
 
 let makeArgs flags cFile oFile = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
@@ -58,19 +56,6 @@ let compileC outputPath modul cgen = io {
     let args = makeArgs flags cFile oFile
     do! startClang args
 
-    return oFile }
-
-/// Compiles a dummy c file that contains nothing. This ensures we at least get a dylib.
-let compileDummyC outputPath flags = io {
-    let cFile = makeDummyCFilePath outputPath
-    let oFile = makeDummyOFilePath outputPath
-
-    File.WriteAllText (cFile, dummyC)
-
-    let args = makeArgs flags cFile oFile
-    do! startClang args
-
-    File.Delete (cFile)
     return oFile }
 
 let compileToStaticLibrary oFiles libName = io {

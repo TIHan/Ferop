@@ -101,10 +101,6 @@ let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
 
 let makeCppFilePath path modul = Path.Combine (path, sprintf "%s.cpp" modul.Name)
 
-let makeDummyCFilePath path = Path.Combine (path, "_ferop_dummy_.c")
-
-let dummyC = ""
-
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
 let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
