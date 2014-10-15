@@ -5,8 +5,6 @@ VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop", "src\Ferop\Ferop.fsproj", "{90A45EB2-1122-4BFF-A921-04D926400AC0}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.TypeProvider", "src\Ferop.TypeProvider\Ferop.TypeProvider.fsproj", "{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Sample.Native", "src\Ferop.Sample.Native\Ferop.Sample.Native.fsproj", "{2858E0A3-A638-45DA-9174-C98F0A422993}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Sample", "src\Ferop.Sample\Ferop.Sample.fsproj", "{24CEAB4B-C244-49D6-9DA6-958795993A67}"
@@ -23,10 +21,6 @@ Global
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x64.ActiveCfg = Release|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.ActiveCfg = Release|Any CPU
-		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Release|x64.ActiveCfg = Release|Any CPU
-		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Release|x86.ActiveCfg = Release|Any CPU
 		{2858E0A3-A638-45DA-9174-C98F0A422993}.Debug|x64.ActiveCfg = Debug|x64
 		{2858E0A3-A638-45DA-9174-C98F0A422993}.Debug|x64.Build.0 = Debug|x64
 		{2858E0A3-A638-45DA-9174-C98F0A422993}.Debug|x86.ActiveCfg = Debug|x86
