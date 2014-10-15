@@ -25,8 +25,8 @@ type DrawLine =
     new (x, y) = { X = x; Y = y }
 
 [<ReflectedDefinition>]
-[<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES")>]
-[<ClangLibsOsx ("-framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
+[<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I../../include")>]
+[<ClangLibsOsx ("-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
 #if __64BIT__
 [<MsvcOptionsWin (""" /I ..\..\include ..\..\lib\win\x64\SDL2.lib ..\..\lib\win\x64\SDL2main.lib ..\..\lib\win\x64\glew32.lib opengl32.lib """)>]
 [<Msvc64bit>]
@@ -35,9 +35,15 @@ type DrawLine =
 #endif
 [<Header ("""
 #include <stdio.h>
-#include <SDL2/SDL.h>
-#include <GL/glew.h>
-#include <GL/wglew.h>
+#if defined(__GNUC__)
+#   include <SDL2/SDL.h>
+#   include <SDL2/SDL_opengl.h>
+#else
+#   include <SDL2/SDL.h>
+#   include <SDL2/SDL_opengl.h>
+#   include <GL/glew.h>
+#   include <GL/wglew.h>
+#endif
 """)>]
 module App =
     let init () : Application =
@@ -60,8 +66,11 @@ SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 app.GLContext = SDL_GL_CreateContext ((SDL_Window*)app.Window);
 
+#if defined(__GNUC__)
+#else
 glewExperimental = GL_TRUE;
 glewInit ();
+#endif
 
 return app;
         """
