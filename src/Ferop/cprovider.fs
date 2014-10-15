@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 
-module FSharp.Interop.Ferop.CProvider
+namespace FSharp.Interop
 
 open System
 open System.IO
@@ -61,9 +61,9 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
 
     let tempAsm = ProvidedAssembly (Path.ChangeExtension (Path.GetTempFileName (), ".dll")) 
     let parameters = [
-        ProvidedStaticParameter ("refName", typeof<string>)
-        ProvidedStaticParameter ("relativeDir", typeof<string>)
-        ProvidedStaticParameter ("platform", typeof<Platform>)]
+        ProvidedStaticParameter ("assembly", typeof<string>)
+        ProvidedStaticParameter ("outputDirectory", typeof<string>)
+        ProvidedStaticParameter ("platform", typeof<Platform>, Platform.Auto)]
 
     do
         let def = ProvidedTypeDefinition (asm, ns, pn, Some typeof<obj>, IsErased = false) 

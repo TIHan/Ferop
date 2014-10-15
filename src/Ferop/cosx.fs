@@ -1,5 +1,5 @@
 ﻿[<RequireQualifiedAccess>]
-module internal FSharp.Interop.FeropInternal.Osx
+module internal FSharp.Interop.FeropInternal.COsx
 
 open System.IO
 open System.Diagnostics

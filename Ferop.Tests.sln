@@ -11,8 +11,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Tests", "src\Ferop.Te
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Tests.Native", "src\Ferop.Tests.Native\Ferop.Tests.Native.fsproj", "{6678562D-A620-48F4-A3E3-06FAE7FB50B1}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.TypeProvider", "src\Ferop.TypeProvider\Ferop.TypeProvider.fsproj", "{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,8 +27,6 @@ Global
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

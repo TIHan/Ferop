@@ -4,14 +4,14 @@ open System
 open FsUnit
 open NUnit.Framework
 
-open FSharp.Interop.Ferop
+open FSharp.Interop
 
 open Ferop.Tests
 
 #if DEBUG
-type Native = CProvider<"Ferop.Tests.Native", "bin/Debug", Platform.Auto>
+type Native = CProvider<"Ferop.Tests.Native", "bin/Debug">
 #else
-type Native = CProvider<"Ferop.Tests.Native", "bin/Release", Platform.Auto>
+type Native = CProvider<"Ferop.Tests.Native", "bin/Release">
 #endif
 
 [<Test>]

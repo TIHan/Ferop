@@ -37,10 +37,6 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ferop.TypeProvider\Ferop.TypeProvider.fsproj">
-      <Name>Ferop.TypeProvider</Name>
-      <Project>{3A8A68FE-9195-44E3-84FE-2267EB59DDA5}</Project>
-    </ProjectReference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />

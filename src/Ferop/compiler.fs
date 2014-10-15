@@ -29,10 +29,10 @@ module C =
         | _ -> failwith "OS not supported."
 
     let rec compileModule path modul = function
-        | Platform.Win -> Win.compileModule path modul
+        | Platform.Win -> CWin.compileModule path modul
         | Platform.Linux -> failwith "Linux not supported."
-        | Platform.Osx -> Osx.compileModule path modul
-        | Platform.AppleiOS -> iOS.compileModule path modul
+        | Platform.Osx -> COsx.compileModule path modul
+        | Platform.AppleiOS -> CiOS.compileModule path modul
         | _ ->
 
         match Environment.OSVersion.Platform with
