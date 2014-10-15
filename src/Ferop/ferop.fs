@@ -37,6 +37,6 @@ type ExportAttribute () =
 
 let private errorMsg = "This should not be called directly. Instead, call the generated version."
 
-let C (code: string) =
-    code |> ignore
+let code (text: string) =
+    text |> ignore
     failwith errorMsg

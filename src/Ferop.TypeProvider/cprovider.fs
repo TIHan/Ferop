@@ -103,7 +103,7 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         let dllPath = Path.GetTempPath ()
         let refAsm = this.FindAssembly refName
 
-        let dasmLocation = Ferop.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
+        let dasmLocation = C.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
         let dasm = Assembly.LoadFrom (dasmLocation)
 
         let def = ProvidedTypeDefinition (asm, ns, typeName, Some typeof<obj>, IsErased = false) 

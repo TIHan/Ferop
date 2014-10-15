@@ -11,7 +11,7 @@ open FSharp.Interop.Ferop
 open FSharp.Interop.FeropInternal.Core
 
 [<RequireQualifiedAccess>]
-module Ferop =
+module C =
     val compileDynamic : name: string -> outputPath: string -> dllPath: string -> canCompileModule: bool -> platform: Platform -> asm: Assembly -> AssemblyBuilder
 
     val compile : name: string -> outputPath: string -> dllPath: string -> canCompileModule: bool -> platform: Platform -> asm: Assembly -> string

@@ -41,7 +41,7 @@ type DrawLine =
 """)>]
 module App =
     let init () : Application =
-        C """
+        code """
 SDL_Init (SDL_INIT_VIDEO);
 
 App_Application app;
@@ -67,26 +67,26 @@ return app;
         """
 
     let exit (app: Application) : int =
-        C """
+        code """
 SDL_GL_DeleteContext (app.GLContext);
 SDL_DestroyWindow ((SDL_Window*)app.Window);
 SDL_Quit ();
 return 0;
         """
 
-    let clear () : unit = C """ glClear (GL_COLOR_BUFFER_BIT); """
+    let clear () : unit = code """ glClear (GL_COLOR_BUFFER_BIT); """
 
-    let draw (app: Application) : unit = C """ SDL_GL_SwapWindow ((SDL_Window*)app.Window); """
+    let draw (app: Application) : unit = code """ SDL_GL_SwapWindow ((SDL_Window*)app.Window); """
 
     let shouldQuit () : int =
-        C """
+        code """
 SDL_Event e;
 SDL_PollEvent (&e);
 return e.type == SDL_QUIT;
         """
 
     let generateVbo (size: int) (data: DrawLine[]) : int =
-        C """
+        code """
 GLuint vbo;
 glGenBuffers (1, &vbo);
 
@@ -97,14 +97,14 @@ return vbo;
         """
 
     let drawVbo (size: int) (data: DrawLine[]) (vbo: int) : unit =
-        C """
+        code """
 glBindBuffer (GL_ARRAY_BUFFER, vbo);
 glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 glDrawArrays (GL_LINES, 0, size);
         """
 
     let loadShaders (vertexSource: byte[]) (fragmentSource: byte[]) : unit =
-        C """
+        code """
 GLuint vertexShader = glCreateShader (GL_VERTEX_SHADER);
 glShaderSource (vertexShader, 1, (const GLchar*const*)&vertexSource, NULL);    
 glCompileShader (vertexShader);

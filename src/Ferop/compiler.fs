@@ -12,7 +12,7 @@ open FSharp.Interop.FeropInternal
 open FSharp.Interop.FeropInternal.Core
 
 [<RequireQualifiedAccess>]
-module Ferop =
+module C =
     let rec makeDllName modul = function 
         | Platform.Win -> sprintf "%s.dll" modul.Name
         | Platform.Linux -> failwith "Linux not supported."
