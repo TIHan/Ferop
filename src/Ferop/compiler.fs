@@ -117,13 +117,14 @@ module C =
         |> List.map (fun x ->
             let modul = makeModule x
             let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
+            let internalTb = tb.DefineNestedType ("_internal", TypeAttributes.NestedPublic ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
             generatePInvokeMethods modul platform tb
 
             //-------------------------------------------------------------------------
             //-------------------------------------------------------------------------
 
             let dels = generateReversePInvokeDelegates modul mb
-            let delMeths = generateReversePInvokeMethods modul dels platform tb
+            let delMeths = generateReversePInvokeMethods modul dels platform internalTb
 
             let ctor = tb.DefineTypeInitializer ()
             let il = ctor.GetILGenerator ()
@@ -132,7 +133,7 @@ module C =
             |> List.iteri2 (fun i delMeth del ->
                 let func = modul.ExportedFunctions.[i]
                 let fieldName = "_" + func.Name
-                let field = tb.DefineField (fieldName, del, FieldAttributes.Static ||| FieldAttributes.Public)
+                let field = internalTb.DefineField (fieldName, del, FieldAttributes.Static ||| FieldAttributes.Public)
 
                 il.Emit (OpCodes.Ldnull)
                 il.Emit (OpCodes.Ldftn, func)
@@ -143,12 +144,13 @@ module C =
 
             il.Emit (OpCodes.Ret)
 
+            internalTb.CreateType () |> ignore
             tb.CreateType () |> ignore
             //-------------------------------------------------------------------------
             //-------------------------------------------------------------------------
             let modul' = 
                 { modul with 
-                    Functions = modul.Functions @ (delMeths |> List.map (fun x -> tb.GetMethod (x.Name))) }
+                    Functions = modul.Functions @ (delMeths |> List.map (fun x -> internalTb.GetMethod (x.Name))) }
 
             if canCompileModule then compileModule outputPath modul' platform
 

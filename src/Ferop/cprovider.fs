@@ -109,7 +109,10 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         let def = ProvidedTypeDefinition (asm, ns, typeName, Some typeof<obj>, IsErased = false) 
         tempAsm.AddTypes [def]
 
-        def.AddMembers <| (dasm.GetTypes () |> List.ofArray)
+        def.AddMembers <| 
+            (dasm.GetTypes () 
+            |> Array.filter (fun x -> not x.IsNested)
+            |> List.ofArray)
 
         def
 
