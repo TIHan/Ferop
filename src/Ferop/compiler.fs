@@ -82,9 +82,9 @@ module C =
         |> List.map2 (fun del func ->
             let meth = 
                 tb.DefinePInvokeMethod (
-                    sprintf "ferop_set_%s" func.Name,
+                    sprintf "_ferop_set_%s" func.Name,
                     dllName,
-                    sprintf "%s_ferop_set_%s" func.DeclaringType.Name func.Name,
+                    sprintf "%s__ferop_set_%s" func.DeclaringType.Name func.Name,
                     MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
                     CallingConventions.Standard,
                     typeof<Void>,
@@ -132,7 +132,7 @@ module C =
             |> List.iteri2 (fun i delMeth del ->
                 let func = modul.ExportedFunctions.[i]
                 let fieldName = "_" + func.Name
-                let field = tb.DefineField ("_" + func.Name, del, FieldAttributes.Static ||| FieldAttributes.Public)
+                let field = tb.DefineField (fieldName, del, FieldAttributes.Static ||| FieldAttributes.Public)
 
                 il.Emit (OpCodes.Ldnull)
                 il.Emit (OpCodes.Ldftn, func)
