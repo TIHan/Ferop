@@ -25,21 +25,21 @@ type DrawLine =
     new (x, y) = { X = x; Y = y }
 
 [<ReflectedDefinition>]
-[<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I../../include")>]
+[<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2/Headers")>]
 [<ClangLibsOsx ("-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
 #if __64BIT__
-[<MsvcOptionsWin (""" /I ..\..\include ..\..\lib\win\x64\SDL2.lib ..\..\lib\win\x64\SDL2main.lib ..\..\lib\win\x64\glew32.lib opengl32.lib """)>]
+[<MsvcOptionsWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x64\SDL2.lib ..\..\lib\win\x64\SDL2main.lib ..\..\lib\win\x64\glew32.lib opengl32.lib """)>]
 [<Msvc64bit>]
 #else
-[<MsvcOptionsWin (""" /I ..\..\include ..\..\lib\win\x86\SDL2.lib ..\..\lib\win\x86\SDL2main.lib ..\..\lib\win\x86\glew32.lib opengl32.lib """)>]
+[<MsvcOptionsWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x86\SDL2.lib ..\..\lib\win\x86\SDL2main.lib ..\..\lib\win\x86\glew32.lib opengl32.lib """)>]
 #endif
 [<Header ("""
 #include <stdio.h>
 #if defined(__GNUC__)
-#   include <SDL2/SDL.h>
-#   include <SDL2/SDL_opengl.h>
+#   include "SDL.h"
+#   include "SDL_opengl.h"
 #else
-#   include <SDL2/SDL.h>
+#   include "SDL.h"
 #   include <GL/glew.h>
 #   include <GL/wglew.h>
 #endif
