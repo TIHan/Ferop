@@ -41,13 +41,11 @@
     <Compile Include="cwin.fs" />
     <Compile Include="cosx.fs" />
     <Compile Include="cios.fs" />
-    <Compile Include="compiler.fsi" />
     <Compile Include="compiler.fs" />
     <Compile Include="ProvidedTypes.fsi" />
     <Compile Include="ProvidedTypes.fs" />
     <Compile Include="DebugProvidedTypes.fs" />
     <Compile Include="cprovider.fs" />
-    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
