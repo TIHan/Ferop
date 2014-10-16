@@ -143,6 +143,7 @@ let makeCFields env (typ: Type) =
 
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
+    | x when x.IsArray ->  failwithf "Arrays cannot be return types."
     | x -> Some <| lookupCType env x
 
 let makeParameter env (info: ParameterInfo) = 
