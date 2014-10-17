@@ -26,6 +26,14 @@ type Module = {
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
 
+    member this.GccFlagsLinuxAttribute =
+        this.Attributes
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<GccFlagsLinuxAttribute>)
+
+    member this.GccLibsLinuxAttribute =
+        this.Attributes
+        |> Seq.tryFind (fun x -> x.AttributeType = typeof<GccLibsLinuxAttribute>)
+
     member this.MsvcOptionsWinAttribute =
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcOptionsWinAttribute>)
@@ -57,6 +65,20 @@ type Module = {
 
     member this.ClangLibsOsx =
         match this.ClangLibsOsxAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
+
+    member this.GccFlagsLinux =
+        match this.GccFlagsLinuxAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
+
+    member this.GccLibsLinux =
+        match this.GccLibsLinuxAttribute with
         | None -> ""
         | Some attr ->
             let args = Seq.exactlyOne attr.ConstructorArguments

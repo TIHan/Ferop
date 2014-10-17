@@ -39,6 +39,7 @@
     <Compile Include="io.fs" />
     <Compile Include="core.fs" />
     <Compile Include="cwin.fs" />
+    <Compile Include="clinux.fs" />
     <Compile Include="cosx.fs" />
     <Compile Include="cios.fs" />
     <Compile Include="compiler.fs" />

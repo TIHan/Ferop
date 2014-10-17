@@ -16,6 +16,14 @@ type ClangLibsOsxAttribute (libs: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type GccFlagsLinuxAttribute (flags: string) =
+    inherit System.Attribute ()
+
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type GccLibsLinuxAttribute (libs: string) =
+    inherit System.Attribute ()
+
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
 type MsvcOptionsWinAttribute (libs: string) =
     inherit System.Attribute ()
 

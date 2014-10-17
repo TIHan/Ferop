@@ -38,7 +38,7 @@ module C =
 
     let rec makeDllName modul = function 
         | Platform.Win -> sprintf "%s.dll" modul.Name
-        | Platform.Linux -> failwith "Linux not supported."
+        | Platform.Linux -> sprintf "lib%s.so" modul.Name
         | Platform.Osx -> sprintf "lib%s.dylib" modul.Name
         | Platform.AppleiOS -> "__Internal"
         | _ ->
@@ -55,7 +55,7 @@ module C =
 
     let rec compileModule path modul = function
         | Platform.Win -> CWin.compileModule path modul
-        | Platform.Linux -> failwith "Linux not supported."
+        | Platform.Linux -> CLinux.compileModule path modul
         | Platform.Osx -> COsx.compileModule path modul
         | Platform.AppleiOS -> CiOS.compileModule path modul
         | _ ->
