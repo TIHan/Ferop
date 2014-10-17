@@ -20,7 +20,7 @@ let makeArgs flags cFile oFile (modul: Module) =
     else
         sprintf "-Wall -std=c99 -m32 %s -c %s -o %s" flags cFile oFile
 
-let makeDynamicArgs libs oFile soName = sprintf "-m32 %s %s -shared -o %s" libs oFile soName
+let makeDynamicArgs libs oFile soName = sprintf "-m32 -fPIC %s %s -shared -o %s" libs oFile soName
 
 let makeGccStartInfo args (modul: Module) = 
     if modul.IsCpp
