@@ -16,11 +16,11 @@ let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "l
 let makeArgs flags cFile oFile (modul: Module) =
     if modul.IsCpp
     then
-        sprintf "-Wall -m32 %s -c %s -o %s" flags cFile oFile
+        sprintf "-Wall -m64 %s -c %s -o %s" flags cFile oFile
     else
-        sprintf "-Wall -std=c99 -m32 %s -c %s -o %s" flags cFile oFile
+        sprintf "-Wall -std=c99 -m64 %s -c %s -o %s" flags cFile oFile
 
-let makeDynamicArgs libs oFile soName = sprintf "-m32 -fPIC %s %s -shared -o %s" libs oFile soName
+let makeDynamicArgs libs oFile soName = sprintf "-m64 -fPIC %s %s -shared -o %s" libs oFile soName
 
 let makeGccStartInfo args (modul: Module) = 
     if modul.IsCpp
