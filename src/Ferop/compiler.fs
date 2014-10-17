@@ -13,6 +13,29 @@ open FSharp.Interop.FeropInternal.Core
 
 [<RequireQualifiedAccess>]
 module C =
+
+    [<DllImport("libc")>]
+    extern int uname (nativeint buf)
+
+    //https://github.com/jpobst/Pinta/blob/master/Pinta.Core/Managers/SystemManager.cs#L120
+    let isRunningOnMac () =
+        let mutable buf = IntPtr.Zero
+        try
+            try
+                buf <- Marshal.AllocHGlobal (8192)
+                if uname (buf) = 0
+                then
+                    let os = Marshal.PtrToStringAnsi (buf)
+                    if (os = "Darwin") 
+                    then true
+                    else false
+                else
+                    false
+            with | _ -> false
+        finally
+            if (buf <> IntPtr.Zero) then
+                Marshal.FreeHGlobal (buf)
+
     let rec makeDllName modul = function 
         | Platform.Win -> sprintf "%s.dll" modul.Name
         | Platform.Linux -> failwith "Linux not supported."
@@ -25,7 +48,9 @@ module C =
             x = PlatformID.Win32NT ||
             x = PlatformID.Win32S ||
             x = PlatformID.WinCE -> makeDllName modul Platform.Win
-        | x when x = PlatformID.Unix -> makeDllName modul Platform.Osx
+        | x when x = PlatformID.Unix -> 
+        
+        makeDllName modul Platform.Osx
         | _ -> failwith "OS not supported."
 
     let rec compileModule path modul = function
@@ -40,7 +65,10 @@ module C =
             x = PlatformID.Win32NT ||
             x = PlatformID.Win32S ||
             x = PlatformID.WinCE -> compileModule path modul Platform.Win
-        | x when x = PlatformID.Unix -> compileModule path modul Platform.Osx
+        | x when x = PlatformID.Unix -> 
+            if isRunningOnMac ()
+            then compileModule path modul Platform.Osx
+            else compileModule path modul Platform.Linux
         | _ -> failwith "OS not supported."
 
     let createDynamicAssembly (dllPath: string) dllName =
