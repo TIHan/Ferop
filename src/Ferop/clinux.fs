@@ -12,21 +12,25 @@ let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "lib%s.so" modul.Name)
 
+// build-essentials; libc6-dev-i386
 let makeArgs flags cFile oFile (modul: Module) =
     if modul.IsCpp
     then
-        sprintf "-Wall -arch i386 %s -c %s -o %s" flags cFile oFile
+        sprintf "-Wall -m32 %s -c %s -o %s" flags cFile oFile
     else
-        sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+        sprintf "-Wall -std=c99 -m32 %s -c %s -o %s" flags cFile oFile
 
-let makeDynamicArgs libs oFile soName = sprintf "%s %s -shared -o %s" libs oFile soName
+let makeDynamicArgs libs oFile soName = sprintf "-m32 %s %s -shared -o %s" libs oFile soName
 
-let makeGccStartInfo args = ProcessStartInfo ("g++", args)
+let makeGccStartInfo args (modul: Module) = 
+    if modul.IsCpp
+    then ProcessStartInfo ("g++", args)
+    else ProcessStartInfo ("gcc", args)
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
 
-let startGcc args = io {
-    let pinfo = makeGccStartInfo args
+let startGcc args modul = io {
+    let pinfo = makeGccStartInfo args modul
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
@@ -42,13 +46,13 @@ let compileC outputPath modul cgen = io {
     let flags = modul.GccFlagsLinux
 
     let args = makeArgs flags cFile oFile modul
-    do! startGcc args
+    do! startGcc args modul
 
     return oFile }
 
-let compileToDynamicLibrary libs oFiles dylibName = io {
+let compileToDynamicLibrary libs oFiles dylibName modul = io {
     let args = makeDynamicArgs libs oFiles dylibName
-    do! startGcc args }
+    do! startGcc args modul }
 
 let cleanObjectFiles outputPath = io {
     return
@@ -62,6 +66,6 @@ let compileModule outputPath modul =
 
     io {
         let! oFile = compileC outputPath modul cgen
-        do! compileToDynamicLibrary libs oFile dylibName
+        do! compileToDynamicLibrary libs oFile dylibName modul
         return! cleanObjectFiles outputPath }
     |> IO.run
