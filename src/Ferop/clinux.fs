@@ -12,7 +12,7 @@ let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "lib%s.so" modul.Name)
 
-// build-essentials; libc6-dev-i386
+// build-essential; libc6-dev-i386; g++-multilib
 let makeArgs flags cFile oFile (modul: Module) =
     if modul.IsCpp
     then
