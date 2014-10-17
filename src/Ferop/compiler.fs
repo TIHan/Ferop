@@ -49,8 +49,9 @@ module C =
             x = PlatformID.Win32S ||
             x = PlatformID.WinCE -> makeDllName modul Platform.Win
         | x when x = PlatformID.Unix -> 
-        
-        makeDllName modul Platform.Osx
+            if isRunningOnMac ()
+            then makeDllName modul Platform.Osx
+            else makeDllName modul Platform.Linux
         | _ -> failwith "OS not supported."
 
     let rec compileModule path modul = function
