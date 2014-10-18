@@ -135,12 +135,6 @@ let lookupCType env typ =
 
 let makeCField typ name = { CField.Type = typ; Name = name }
 
-let makeCFields env (typ: Type) =
-    runtimeFields typ
-    |> List.map (fun x ->
-        let ctype = lookupCType env x.FieldType
-        makeCField ctype x.Name)
-
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
     | x when x.IsArray ->  failwithf "Arrays cannot be return types."
@@ -167,9 +161,8 @@ let rec makeCExpr = function
     | x -> failwithf "Expression, %A, not supported." x
 
 let makeCExprFallback (env: CEnv) (func: MethodInfo) =
-    // HACK: Handling non-reflected methods that have delegates. This is used for exported F# functions to C.
     match func.GetParameters () with
-    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> ->
+    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> && func.Name.Contains("_ferop_set_") ->
         let typ = x.ParameterType
         let name = sprintf "%s_%s" env.Name (typ.Name.Replace ("Delegate", ""))
         Text <| sprintf "%s = ptr;" name
@@ -329,6 +322,7 @@ let makeCDecls (env: CEnv) modul =
     let env''''' = makeCDeclFunctions env'''' funcs
     let env'''''' = makeCDeclExterns env''''' dels
     env''''''
+
 //-------------------------------------------------------------------------
 // CEnv
 //-------------------------------------------------------------------------
