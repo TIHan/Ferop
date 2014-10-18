@@ -40,7 +40,7 @@ module C =
         | Platform.Win -> sprintf "%s.dll" modul.Name
         | Platform.Linux -> sprintf "lib%s.so" modul.Name
         | Platform.Osx -> sprintf "lib%s.dylib" modul.Name
-        | Platform.AppleiOS -> "__Internal"
+        //| Platform.AppleiOS -> "__Internal"
         | _ ->
 
         match Environment.OSVersion.Platform with
@@ -58,7 +58,7 @@ module C =
         | Platform.Win -> CWin.compileModule path modul
         | Platform.Linux -> CLinux.compileModule path modul
         | Platform.Osx -> COsx.compileModule path modul
-        | Platform.AppleiOS -> CiOS.compileModule path modul
+        //| Platform.AppleiOS -> CiOS.compileModule path modul
         | _ ->
 
         match Environment.OSVersion.Platform with

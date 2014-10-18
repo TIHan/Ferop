@@ -5,7 +5,7 @@ type Platform =
     | Win = 1
     | Linux = 2
     | Osx = 3
-    | AppleiOS = 4
+    //| AppleiOS = 4
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
 type ClangFlagsOsxAttribute (flags: string) =
@@ -28,7 +28,7 @@ type MsvcOptionsWinAttribute (libs: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
-type Msvc64bitAttribute () =
+type Cpu64bitAttribute () =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]

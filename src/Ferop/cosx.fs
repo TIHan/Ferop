@@ -10,8 +10,6 @@ open FSharp.Control.IO
 
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
-let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
-
 let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
 
 let makeArgs flags cFile oFile (modul: Module) =
@@ -28,8 +26,6 @@ let makeDynamicArgs libs oFiles dylibName = sprintf "-arch i386 -dynamiclib -hea
 let makeClangStartInfo args = ProcessStartInfo ("clang", args)
 
 let makeArStartInfo args = ProcessStartInfo ("ar", args)
-
-let flattenObjectFiles = List.reduce (fun x y -> sprintf "%s %s" x y)
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
 
@@ -64,10 +60,6 @@ let compileC outputPath modul cgen = io {
     do! startClang args
 
     return oFile }
-
-let compileToStaticLibrary aFile oFiles = io {
-    let args = makeStaticArgs aFile oFiles
-    do! startAr args }
 
 let compileToDynamicLibrary libs oFiles dylibName = io {
     let args = makeDynamicArgs libs oFiles dylibName

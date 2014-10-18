@@ -60,7 +60,7 @@ let compileToDynamicLibrary outputPath modul cgen = io {
     let options = modul.MsvcOptionsWin
     let dllName = makeDynamicLibraryPath outputPath modul
 
-    do! writeBat outputPath modul.IsMsvc64bit
+    do! writeBat outputPath modul.Is64bit
     let args = makeArgs options cFile dllName
     do! startMsvc outputPath args }
 

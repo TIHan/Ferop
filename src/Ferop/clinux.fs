@@ -14,13 +14,21 @@ let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "l
 
 // build-essential; libc6-dev-i386; g++-multilib
 let makeArgs flags cFile oFile (modul: Module) =
-    if modul.IsCpp
-    then
-        sprintf "-Wall -m64 -fPIC %s -c %s -o %s" flags cFile oFile
-    else
-        sprintf "-Wall -std=c99 -m64 -fPIC %s -c %s -o %s" flags cFile oFile
+    let is64bit = modul.Is64bit
+    let isCpp = modul.IsCpp
 
-let makeDynamicArgs libs oFile soName = sprintf "-m64 -fPIC %s -shared -o %s %s" oFile soName libs
+    sprintf "-Wall %s %s -fPIC %s -c %s -o %s"
+        (if is64bit then "-m64" else "-m32")
+        (if isCpp then "-std=c99" else "")
+        flags
+        cFile
+        oFile
+
+let makeDynamicArgs libs oFile soName (modul: Module) = 
+    let is64bit = modul.Is64bit
+    sprintf "%s -fPIC %s -shared -o %s %s" 
+        (if is64bit then "-m64" else "-m32")
+        oFile soName libs
 
 let makeGccStartInfo args (modul: Module) = 
     if modul.IsCpp
@@ -51,7 +59,7 @@ let compileC outputPath modul cgen = io {
     return oFile }
 
 let compileToDynamicLibrary libs oFiles dylibName modul = io {
-    let args = makeDynamicArgs libs oFiles dylibName
+    let args = makeDynamicArgs libs oFiles dylibName modul
     do! startGcc args modul }
 
 let cleanObjectFiles outputPath = io {

@@ -38,9 +38,9 @@ type Module = {
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcOptionsWinAttribute>)
 
-    member this.IsMsvc64bit =
+    member this.Is64bit =
         this.Attributes
-        |> Seq.exists (fun x -> x.AttributeType = typeof<Msvc64bitAttribute>)
+        |> Seq.exists (fun x -> x.AttributeType = typeof<Cpu64bitAttribute>)
 
     member this.IsCpp =
         this.Attributes
