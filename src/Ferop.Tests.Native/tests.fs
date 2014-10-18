@@ -77,6 +77,10 @@ type Enum2 =
     | Sub1 = 3
     | Sub2 = 1
 
+#if __64BIT__
+[<Cpu64bit>]
+#else
+#endif
 [<ReflectedDefinition>]
 [<Header ("""
 #include <stdio.h>
@@ -167,16 +171,28 @@ type Tests =
 
     static member testExported_testDouble (x: double) : double = code """ return Tests_exported_testDouble (x); """
 
+#if __64BIT__
+[<Cpu64bit>]
+#else
+#endif
 [<ReflectedDefinition>]
 module Tests2 =
     let testByte (x: byte) : byte = code """ return x; """
 
+#if __64BIT__
+[<Cpu64bit>]
+#else
+#endif
 [<ReflectedDefinition>]
 module Tests3 =
     let testEnum1 (x: Enum1) : Enum1 = code """ return x; """
 
     let testEnum2 (x: Enum2) : Enum2 = code """ return x; """
 
+#if __64BIT__
+[<Cpu64bit>]
+#else
+#endif
 [<ReflectedDefinition>]
 module Tests4 =
     [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
@@ -188,6 +204,10 @@ module Tests4 =
 
     let testRecursiveStruct (x: RecursiveStruct40) : unit = code """ """
 
+#if __64BIT__
+[<Cpu64bit>]
+#else
+#endif
 [<ReflectedDefinition>]
 [<Cpp>]
 [<Header ("""
