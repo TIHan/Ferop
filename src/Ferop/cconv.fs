@@ -3,17 +3,12 @@
 open System
 open System.Reflection
 
-open Microsoft.FSharp.Reflection
-open Microsoft.FSharp.Core.CompilerServices
-open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
-open Microsoft.FSharp.Quotations.ExprShape
  
 open CTypedAST
 
-type FsModule = { 
+type CConvInfo = { 
     Name: string
     Functions: MethodInfo list
     ExportedFunctions: MethodInfo list
@@ -303,9 +298,9 @@ let makeCDeclExterns (env: CEnv) = function
             |> List.map CDecl.Extern
         { env with Decls = env.Decls @ decls }
 
-let makeCDecls (env: CEnv) modul =
-    let funcs = modul.Functions
-    let exportedFuncs = modul.ExportedFunctions
+let makeCDecls (env: CEnv) info =
+    let funcs = info.Functions
+    let exportedFuncs = info.ExportedFunctions
     let dels =
         funcs @ exportedFuncs
         |> List.map (fun x -> x.GetParameters () |> List.ofArray)
@@ -339,6 +334,6 @@ let makeCDecls (env: CEnv) modul =
 // CEnv
 //-------------------------------------------------------------------------
 
-let makeCEnv modul =
-    let env = makeEmptyEnv modul.Name
-    makeCDecls { env with IsCpp = modul.IsCpp } modul
+let makeCEnv info =
+    let env = makeEmptyEnv info.Name
+    makeCDecls { env with IsCpp = info.IsCpp } info

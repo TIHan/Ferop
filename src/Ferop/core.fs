@@ -159,13 +159,13 @@ let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
     meth
 
 open CConversion
-open CGen
+open CGeneration
 
-let makeFsModule (modul: Module) = 
+let makeCConvInfo (modul: Module) = 
     { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions; IsCpp = modul.IsCpp }
 
 let makeCGen (modul: Module) =
-    let env = makeCEnv <| makeFsModule modul
+    let env = makeCEnv <| makeCConvInfo modul
     generate env modul.Header
 
 let writeCGen outputPath modul cgen = io {

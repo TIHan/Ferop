@@ -1,4 +1,4 @@
-﻿module internal FSharp.Interop.FeropInternal.CGen
+﻿module internal FSharp.Interop.FeropInternal.CGeneration
 
 open CTypedAST
 

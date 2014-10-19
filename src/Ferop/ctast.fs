@@ -93,13 +93,6 @@ and
     | GlobalVar of CDeclVar
     | Extern of CDeclExtern
 
-let hasFieldType fieldTypeName = function
-    | [] -> false
-    | fields ->
-
-    fields
-    |> List.exists (function | {CField.Type = CType.Struct x} -> x.Name = fieldTypeName | _ -> false)
-
 type CEnv = { 
     Name: string
     Decls: CDecl list

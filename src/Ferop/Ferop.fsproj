@@ -70,11 +70,11 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <Compile Include="tast.fs" />
-    <Compile Include="conv.fs" />
+    <Compile Include="io.fs" />
+    <Compile Include="ctast.fs" />
+    <Compile Include="cconv.fs" />
     <Compile Include="cgen.fs" />
     <Compile Include="ferop.fs" />
-    <Compile Include="io.fs" />
     <Compile Include="core.fs" />
     <Compile Include="cwin.fs" />
     <Compile Include="clinux.fs" />
