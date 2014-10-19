@@ -1,6 +1,7 @@
 ﻿[<RequireQualifiedAccess>]
 module internal FSharp.Interop.FeropInternal.CWin
 
+open System
 open System.IO
 open System.Diagnostics
 open Microsoft.Win32
@@ -8,22 +9,37 @@ open Microsoft.Win32
 open Core
 open FSharp.Control.IO
 
-let registryKeyPath = "SOFTWARE\\Microsoft\\VisualStudio\\SxS\\Vs7"
-let registryKey = Registry.LocalMachine.OpenSubKey (registryKeyPath)
-let vs = registryKey.GetValue ("12.0") :?> string
-
-// TODO: Try to find a good solution to handle different VS versions.
-let vc12bin = Path.Combine (vs, "VC\\bin")
-
-let vc12bin64bit = Path.Combine (vs, "VC\\bin\\amd64")
-
-let vcvars32 = Path.Combine (vc12bin, "vcvars32.bat")
-let vcvars64 = Path.Combine (vc12bin64bit, "vcvars64.bat")
-let cl = "cl.exe"
-let cl32bit = Path.Combine (vc12bin, cl)
-let cl64bit = Path.Combine (vc12bin64bit, cl)
-
 let bat (is64bit: bool) =
+    let registryKeyPath = "SOFTWARE\\Microsoft\\VisualStudio\\SxS\\Vs7"
+    let registryKeyPath64bit = "SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\Vs7"
+    let registryKey = 
+        match Registry.LocalMachine.OpenSubKey (registryKeyPath64bit) with
+        | null -> 
+            match Registry.LocalMachine.OpenSubKey (registryKeyPath) with
+            | null -> failwith "Unable to find Visual Studio registry keys."
+            | x -> x
+        | x -> x
+
+    let key =
+        registryKey.GetValueNames ()
+        |> Array.choose (fun x -> 
+            match Double.TryParse (x) with
+            | (false,_) -> None
+            | (true, x) -> 
+                Some x)
+        |> Array.max
+
+    let vs = registryKey.GetValue (sprintf "%.1f" key) :?> string
+
+    let vcBin = Path.Combine (vs, "VC\\bin")
+
+    let vcBin64bit = Path.Combine (vs, "VC\\bin\\amd64")
+
+    let vcvars32 = Path.Combine (vcBin, "vcvars32.bat")
+    let vcvars64 = Path.Combine (vcBin64bit, "vcvars64.bat")
+    let cl = "cl.exe"
+    let cl32bit = Path.Combine (vcBin, cl)
+    let cl64bit = Path.Combine (vcBin64bit, cl)
     let cl, vcvars =
         if is64bit
         then cl64bit, vcvars64
