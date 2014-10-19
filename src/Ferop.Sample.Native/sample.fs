@@ -27,6 +27,8 @@ type DrawLine =
 [<ReflectedDefinition>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers")>]
 [<ClangLibsOsx ("-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
+[<GccFlagsLinux ("-I../../include/SDL2")>]
+[<GccLibsLinux ("-lSDL2")>]
 #if __64BIT__
 [<MsvcOptionsWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x64\SDL2.lib ..\..\lib\win\x64\SDL2main.lib ..\..\lib\win\x64\glew32.lib opengl32.lib """)>]
 [<Cpu64bit>]
