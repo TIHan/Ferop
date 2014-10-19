@@ -19,7 +19,7 @@ let makeArgs flags cFile oFile (modul: Module) =
 
     sprintf "-Wall %s %s -fPIC %s -c %s -o %s"
         (if is64bit then "-m64" else "-m32")
-        (if isCpp then "-std=c99" else "")
+        (if isCpp then "" else "-std=c99")
         flags
         cFile
         oFile
