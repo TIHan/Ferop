@@ -109,13 +109,12 @@ let methodHasAttribute (typ: Type) (meth: MethodInfo) =
 let makeModule (typ: Type) =
     let name = typ.Name
     let fullName = typ.FullName
-    let shortName = typ.Name
     let attrs = typ.CustomAttributes |> List.ofSeq
     let funcs = staticMethods typ
     let normalFuncs = funcs |> List.filter (fun x -> not (methodHasAttribute typeof<ExportAttribute> x))
     let exportFuncs = funcs |> List.filter (methodHasAttribute typeof<ExportAttribute>)
 
-    { Name = name; FullName = shortName; Attributes = attrs; Functions = normalFuncs; ExportedFunctions = exportFuncs }
+    { Name = name; FullName = fullName; Attributes = attrs; Functions = normalFuncs; ExportedFunctions = exportFuncs }
 
 let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
 

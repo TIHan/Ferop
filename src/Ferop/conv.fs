@@ -123,6 +123,18 @@ let rec tryLookupCType env = function
         | Some x -> Some <| CType.Struct x
     | x when x.BaseType = typeof<MulticastDelegate> ->
         x.GetMethod "Invoke" |> ignore // make sure there is a method named "Invoke"
+
+        match 
+            x.CustomAttributes
+            |> Seq.tryFind (fun attr -> attr.AttributeType = typeof<System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute>) with
+        | None -> failwithf "Delegate, %s, must have the attribute, UnmanagedFunctionPointer, from System.Runtime.InteropServices with CallingConvention.Cdecl." x.Name
+        | Some attr ->
+            let attr = Seq.exactlyOne attr.ConstructorArguments
+            let attr = attr.Value :?> System.Runtime.InteropServices.CallingConvention
+            if attr <> System.Runtime.InteropServices.CallingConvention.Cdecl
+            then failwithf "Delegate, %s, must have CallingConvention.Cdecl." x.Name
+            else ()
+
         match tryLookupFunction env x with
         | None -> None
         | Some x -> Some <| CType.Function x
