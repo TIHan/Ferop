@@ -196,11 +196,11 @@ module Tests3 =
 [<ReflectedDefinition>]
 module Tests4 =
     [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
-    type TestDelegate = delegate of int -> int
+    type Test = delegate of int -> int
 
     let testByteArray (x: byte[]) : byte = code """ return x[0]; """
 
-    let testDelegate (f: TestDelegate) : int = code """ return f (1234); """
+    let testDelegate (f: Test) : int = code """ return f (1234); """
 
     let testRecursiveStruct (x: RecursiveStruct40) : unit = code """ """
 
@@ -212,6 +212,7 @@ module Tests4 =
 [<Cpp>]
 [<Header ("""
 #include <iostream>
+using namespace std;
 """)>]
 module TestsCpp =
-    let testCppHelloWorld () : unit = code """std::cout << "Hello World!\n";"""
+    let testCppHelloWorld () : unit = code """cout << "Hello World!\n";"""

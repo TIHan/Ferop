@@ -308,6 +308,13 @@ let makeCDecls (env: CEnv) info =
         |> List.map (fun x -> x.ParameterType)
         |> List.filter (fun x -> x.BaseType = typeof<MulticastDelegate>)
 
+    // HACK: This is a hack. If a delegate has the string "Delegate" in it,
+    // then it will create a placeholder for an instance of that delegate.
+    // Need a better convention.
+    let instanceDels =
+        dels
+        |> List.filter (fun x -> x.Name.Contains ("Delegate"))
+
     let structs =
         funcs @ exportedFuncs
         |> List.map (fun x -> (x.GetParameters () |> Array.map (fun x -> x.ParameterType) |> List.ofArray) @ [x.ReturnType])
@@ -325,9 +332,9 @@ let makeCDecls (env: CEnv) info =
     let env' = makeCDeclStructs env structs
     let env'' = makeCDeclEnums env' enums
     let env''' = makeCDeclFunctionPointers env'' dels
-    let env'''' = makeCDeclGlobalVars env''' dels
+    let env'''' = makeCDeclGlobalVars env''' instanceDels
     let env''''' = makeCDeclFunctions env'''' funcs
-    let env'''''' = makeCDeclExterns env''''' dels
+    let env'''''' = makeCDeclExterns env''''' instanceDels
     env''''''
 
 //-------------------------------------------------------------------------
