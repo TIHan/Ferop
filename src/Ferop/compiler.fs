@@ -158,8 +158,8 @@ module C =
             let ctor = tb.DefineTypeInitializer ()
             let il = ctor.GetILGenerator ()
 
-            dels
-            |> List.iteri2 (fun i delMeth del ->
+            (delMeths, dels)
+            ||> List.iteri2 (fun i delMeth del ->
                 let func = modul.ExportedFunctions.[i]
                 let fieldName = "_" + func.Name
                 let field = internalTb.DefineField (fieldName, del, FieldAttributes.Static ||| FieldAttributes.Public)
@@ -169,7 +169,7 @@ module C =
                 il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
                 il.Emit (OpCodes.Stsfld, field)
                 il.Emit (OpCodes.Ldsfld, field)
-                il.Emit (OpCodes.Call, delMeth :> MethodInfo)) delMeths
+                il.Emit (OpCodes.Call, delMeth))
 
             il.Emit (OpCodes.Ret)
 
