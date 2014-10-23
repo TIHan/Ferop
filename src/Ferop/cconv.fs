@@ -109,7 +109,7 @@ let rec tryLookupCType env = function
     | x when x = typeof<double> ->  Some Double
     | x when x = typeof<unativeint> -> Some <| Pointer None
     | x when x = typeof<nativeint> ->  Some <| Pointer None
-    | x when x.IsArray ->
+    | x when x.IsArray || x.IsPointer ->
         match tryLookupCType env (x.GetElementType ()) with
         | None -> None
         | Some x -> Some <| Pointer (Some x)

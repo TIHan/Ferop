@@ -204,6 +204,8 @@ module Tests4 =
 
     let testRecursiveStruct (x: RecursiveStruct40) : unit = code """ """
 
+    let testStructPointer (xp: nativeptr<RecursiveStruct40>) : unit = code """ """
+
 #if __64BIT__
 [<Cpu64bit>]
 #else
