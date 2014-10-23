@@ -81,7 +81,7 @@ type Enum2 =
 [<Cpu64bit>]
 #else
 #endif
-[<ReflectedDefinition>]
+[<Ferop>]
 [<Header ("""
 #include <stdio.h>
 """)>]
@@ -175,7 +175,7 @@ type Tests =
 [<Cpu64bit>]
 #else
 #endif
-[<ReflectedDefinition>]
+[<Ferop>]
 module Tests2 =
     let testByte (x: byte) : byte = code """ return x; """
 
@@ -183,7 +183,7 @@ module Tests2 =
 [<Cpu64bit>]
 #else
 #endif
-[<ReflectedDefinition>]
+[<Ferop>]
 module Tests3 =
     let testEnum1 (x: Enum1) : Enum1 = code """ return x; """
 
@@ -193,7 +193,7 @@ module Tests3 =
 [<Cpu64bit>]
 #else
 #endif
-[<ReflectedDefinition>]
+[<Ferop>]
 module Tests4 =
     [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
     type Test = delegate of int -> int
@@ -208,7 +208,7 @@ module Tests4 =
 [<Cpu64bit>]
 #else
 #endif
-[<ReflectedDefinition>]
+[<Ferop>]
 [<Cpp>]
 [<Header ("""
 #include <iostream>

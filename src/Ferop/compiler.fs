@@ -135,7 +135,7 @@ module C =
         |> Array.filter (fun x ->x.IsClass)
         |> Array.filter (fun x ->
             x.CustomAttributes
-            |> Seq.exists (fun x -> x.AttributeType = typeof<ReflectedDefinitionAttribute>))
+            |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
         |> List.ofArray
     
     let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileModule: bool) (platform: Platform) (asm: Assembly) =

@@ -24,7 +24,7 @@ type DrawLine =
 
     new (x, y) = { X = x; Y = y }
 
-[<ReflectedDefinition>]
+[<Ferop>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers")>]
 [<ClangLibsOsx ("-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
 [<GccFlagsLinux ("-I../../include/SDL2")>]

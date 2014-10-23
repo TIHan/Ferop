@@ -46,10 +46,15 @@ let rec isTypeBlittable (typ: Type) =
     | false -> false
     | _ -> allNestedRuntimeFieldTypes typ |> List.forall check
 
-let methodExpr meth =
-    match Expr.TryGetReflectedDefinition meth with
-    | None -> None
-    | Some expr -> Some expr
+let tryMakeCExpr (meth: MethodInfo) =
+    try
+        let body = meth.GetMethodBody ()
+        let ilBytes = body.GetILAsByteArray ()
+
+        let textExpr = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, 2))
+
+        Some (CExpr.Text textExpr)
+    with | _ -> None
 
 let makeCTypeName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
 
@@ -158,15 +163,6 @@ let makeParameterType env (info: ParameterInfo) = lookupCType env info.Parameter
 
 let makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
 
-let rec makeCExpr = function
-    | Call (_, _, exprList) -> makeCExpr exprList.[0]
-
-    | Lambda (_, body) -> makeCExpr body
-
-    | Value (value, _) -> Text <| value.ToString ()
-
-    | x -> failwithf "Expression, %A, not supported." x
-
 let makeCExprFallback (env: CEnv) (func: MethodInfo) =
     match func.GetParameters () with
     | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> && func.Name.Contains("_ferop_set_") ->
@@ -179,14 +175,14 @@ let makeCExprFallback (env: CEnv) (func: MethodInfo) =
 // CDecls
 //-------------------------------------------------------------------------
 
-let makeCDeclFunction env (func: MethodInfo) =
-    let returnType = makeReturnType env func.ReturnType
-    let name = makeCFunctionName env func
-    let parameters = func.GetParameters () |> makeParameters env
+let makeCDeclFunction env (meth: MethodInfo) =
+    let returnType = makeReturnType env meth.ReturnType
+    let name = makeCFunctionName env meth
+    let parameters = meth.GetParameters () |> makeParameters env
     let expr =
-        match methodExpr func with
-        | None -> makeCExprFallback env func
-        | Some x -> makeCExpr x
+        match tryMakeCExpr meth with
+        | None -> makeCExprFallback env meth
+        | Some x -> x
 
     { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
 

@@ -8,6 +8,10 @@ type Platform =
     //| AppleiOS = 4
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
+type FeropAttribute () =
+    inherit System.Attribute ()
+
+[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
 type ClangFlagsOsxAttribute (flags: string) =
     inherit System.Attribute ()
 
