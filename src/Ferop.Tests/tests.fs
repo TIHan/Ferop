@@ -8,6 +8,8 @@ open FSharp.Interop
 
 open Ferop.Tests
 
+#nowarn "51"
+
 #if DEBUG
 type Native = CProvider<"Ferop.Tests.Native", "bin/Debug">
 #else
@@ -138,6 +140,18 @@ let ``with byte array, should pass byte array and return first element`` () =
 let ``with a delegate type, should pass a delegate and return the result`` () =
     Native.Tests4.testDelegate (fun x -> x)
     |> should equal 1234
+
+[<Test>]
+let ``with a byref type, should pass a reference to get a new value`` () =
+    let x = ref 1.
+    Native.Tests4.testByRef (x)
+    !x |> should equal 30.2
+
+[<Test>]
+let ``with a pointer type, should pass a pointer to get a new value`` () =
+    let mutable x = 1.
+    Native.Tests4.testPointer (&&x)
+    x |> should equal 36.2
 
 [<Test>]
 let ``with a c exported function with cpp, should pass without error`` () =

@@ -96,6 +96,10 @@ let tryLookupFunction env (typ: Type) =
     | None -> None
     | Some x -> Some <| makeCFunction x
 
+let isTypePointer (typ: Type) = 
+    typ.IsArray || typ.IsPointer || typ.IsByRef ||
+    typ = typeof<nativeint> || typ = typeof<unativeint>
+
 let rec tryLookupCType env = function
     | x when x = typeof<byte> ->    Some Byte
     | x when x = typeof<sbyte> ->   Some SByte
@@ -109,8 +113,14 @@ let rec tryLookupCType env = function
     | x when x = typeof<double> ->  Some Double
     | x when x = typeof<unativeint> -> Some <| Pointer None
     | x when x = typeof<nativeint> ->  Some <| Pointer None
-    | x when x.IsArray || x.IsPointer ->
-        match tryLookupCType env (x.GetElementType ()) with
+    | x when isTypePointer x ->
+        let elType = x.GetElementType ()
+
+        if elType = null || isTypePointer elType
+        then None
+        else
+
+        match tryLookupCType env elType with
         | None -> None
         | Some x -> Some <| Pointer (Some x)
     | x when x.IsEnum ->
@@ -142,7 +152,7 @@ let rec tryLookupCType env = function
 
 let lookupCType env typ =
     match tryLookupCType env typ with
-    | None -> failwithf "%A is not supported. Only blittable types are allowed." typ.FullName
+    | None -> failwithf "%A is not supported." typ.FullName
     | Some x -> x
 
 let makeCField typ name = { CField.Type = typ; Name = name }
@@ -150,6 +160,8 @@ let makeCField typ name = { CField.Type = typ; Name = name }
 let makeReturnType env = function
     | x when x = typeof<Void> -> None
     | x when x.IsArray ->  failwithf "Arrays cannot be return types."
+    | x when x.IsPointer -> failwithf "Pointers cannot be return types."
+    | x when x.IsByRef -> failwithf "ByRefs cannot be return types."
     | x -> Some <| lookupCType env x
 
 let makeParameter env (info: ParameterInfo) = 
