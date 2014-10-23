@@ -154,7 +154,7 @@ let ``with a pointer type, should pass a pointer to get a new value`` () =
     x |> should equal 36.2
 
 [<Test>]
-let ``with an array type, should pass an array and have it be modified in unamanged world`` () =
+let ``with an array type, should pass an array and have it be modified in the unmanaged world`` () =
     let arr = [|0.;0.;0.;0.;0.;0.|]
     Native.Tests4.testArray (arr)
     arr.[2] |> should equal 20.45
