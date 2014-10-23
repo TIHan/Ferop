@@ -207,7 +207,10 @@ module Tests4 =
     let testStructPointer (xp: nativeptr<RecursiveStruct40>) : unit = code """ """
 
     let testByRef (xbr: double byref) : unit = code """ *xbr = 30.2; """
+
     let testPointer (xp: nativeptr<double>) : unit = code """ *xp = 36.2; """
+
+    let testArray (xs: double []) : unit = code """ xs[2] = 20.45; """
 
 #if __64BIT__
 [<Cpu64bit>]
