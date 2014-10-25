@@ -72,8 +72,51 @@ let makeLines degrees length (line: DrawLine) =
 
     makeLines (degrees * torad) length [line] (fun x -> x) 0
 
+type GameLoop<'T> = { 
+    State: 'T
+    CurrentTick: int64
+    LastClientTick: int64
+    LastServerTick: int64
+    ClientInterval: int64 }
+
+module GameLoop =
+    let start (state: 'T) (server: int64 -> 'T -> 'T) (client: int64 -> 'T -> 'T)  =
+        let targetServerInterval = TimeSpan.FromMilliseconds(1000. / 20.).Ticks
+        let targetClientInterval = TimeSpan.FromMilliseconds(1000. / 120.).Ticks
+        let l = { State = state; CurrentTick = 0L; LastClientTick = 0L; LastServerTick = 0L; ClientInterval = 0L }
+        let stopwatch = Stopwatch.StartNew ()
+
+        let rec loop l =
+            let serverIntervalDiff = l.CurrentTick - l.LastServerTick
+            let clientIntervalDiff = l.CurrentTick - l.LastClientTick
+            if serverIntervalDiff >= targetServerInterval
+            then 
+                let state = server l.CurrentTick l.State
+                let tick = stopwatch.ElapsedTicks
+                let interval = tick - l.CurrentTick
+                //printfn "Server FPS: %.1f" (1000. / TimeSpan.FromTicks(serverIntervalDiff).TotalMilliseconds)
+                loop { l with State = state; CurrentTick = tick; LastServerTick = l.CurrentTick; LastClientTick = l.CurrentTick; ClientInterval = interval } 
+            else
+                if (clientIntervalDiff >= targetClientInterval && targetClientInterval >= l.ClientInterval) ||
+                   (clientIntervalDiff >= l.ClientInterval && targetClientInterval <= l.ClientInterval) 
+                then 
+                    let state = client l.CurrentTick l.State
+                    let tick = stopwatch.ElapsedTicks
+                    let interval = tick - l.CurrentTick
+                    let clientInterval =
+                        if interval > l.ClientInterval && interval > targetClientInterval
+                        then interval
+                        else l.ClientInterval
+                    printfn "Client FPS: %.1f" (1000. / TimeSpan.FromTicks(clientIntervalDiff).TotalMilliseconds)
+                    loop { l with State = state; CurrentTick = tick; LastClientTick = l.CurrentTick; ClientInterval = clientInterval }
+                else 
+                    loop { l with CurrentTick = stopwatch.ElapsedTicks }
+
+        loop l
+
 [<EntryPoint>]
 let main args =
+    //System.Runtime.GCSettings.LatencyMode <- System.Runtime.GCLatencyMode.SustainedLowLatency
     let app = init ()
 
     let beginPoint = vec2 (0.f, -1.f)
@@ -84,19 +127,14 @@ let main args =
 
     loadShaders ()
 
-    while not <| ((shouldQuit ()) = 1) do
-
-        let stopwatch = Stopwatch.StartNew ()
-        let drawLines = 
+    GameLoop.start [||] 
+        (fun _ _ ->
             makeLines 90.f (0.4f) drawLine
-            |> Array.ofList
-        GC.Collect (2)
-        stopwatch.Stop ()
-
-        printfn "%A" stopwatch.ElapsedMilliseconds
-
-        clear ()
-        drawVbo drawLines vbo
-        draw app
+            |> Array.ofList) 
+        (fun _ drawLines ->
+            clear ()
+            drawVbo drawLines vbo
+            draw app
+            drawLines)
 
     exit (app)
