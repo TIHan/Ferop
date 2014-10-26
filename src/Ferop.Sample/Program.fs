@@ -92,56 +92,55 @@ let makeLines degrees length (line: DrawLine) =
     makeLines (degrees * torad) length [line] (fun x -> x) 0
     //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
 
+// http://gafferongames.com/game-physics/fix-your-timestep/
 module GameLoop =
     type private GameLoop<'T> = { 
         State: 'T
-        LastUpdateTime: float
-        LastRenderTime: float
-        UpdateCount: int }
+        Time: float
+        LastTime: float
+        Accumulator: float }
 
-    let start (state: 'T) (update: float -> 'T -> 'T) (render: float -> 'T -> 'T) =
-        let targetUpdateInterval = 1000. / 30.
-        let targetRenderInterval = 1000. / 120.
-        
-        let gl = 
-            { State = state
-              LastUpdateTime = 0.
-              LastRenderTime = 0.
-              UpdateCount = 0 }
+    let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T) =
+        let targetInterval = 1000. / 30.
 
         let stopwatch = Stopwatch.StartNew ()
+        let inline time () = stopwatch.Elapsed.TotalMilliseconds
 
         let rec loop gl =
-            let currentTime = stopwatch.Elapsed.TotalMilliseconds
-            let elapsedUpdateTime = currentTime - gl.LastUpdateTime
-            let elapsedRenderTime = currentTime - gl.LastRenderTime
+            let currentTime = time ()
+            let deltaTime =
+                match currentTime - gl.LastTime with
+                | x when x > 250. -> 250.
+                | x -> x
 
-            let skipFrame = gl.UpdateCount < 5
+            let accumulator = gl.Accumulator + deltaTime
 
-            if elapsedUpdateTime >= targetUpdateInterval && skipFrame
-            then 
-                printfn "UPDATE FPS: %.2f" (1000. / elapsedUpdateTime)
- 
-                loop
-                    { gl with 
-                        State = update currentTime gl.State
-                        LastUpdateTime = currentTime
-                        UpdateCount = gl.UpdateCount + 1 }
+            let rec processUpdate gl =
+                if gl.Accumulator >= targetInterval
+                then
+                    processUpdate
+                        { gl with 
+                            State = update gl.Time targetInterval gl.State
+                            Time = gl.Time + targetInterval
+                            Accumulator = gl.Accumulator - targetInterval }
+                else
+                    gl
                          
-            elif elapsedRenderTime >= targetRenderInterval
-            then
-                printfn "RENDER FPS: %.2f" (1000. / elapsedRenderTime)        
-
-                loop 
+            let gl = 
+                processUpdate 
                     { gl with 
-                        State = render currentTime gl.State
-                        LastRenderTime = currentTime
-                        UpdateCount = 0 }
+                        LastTime = currentTime
+                        Accumulator = accumulator }       
 
-            else
-                loop gl
+            loop 
+                { gl with 
+                    State = render (gl.Accumulator / deltaTime) gl.State }
 
-        loop gl
+        loop
+            { State = state
+              Time = 0.
+              LastTime = 0.
+              Accumulator = 0. }
 
 [<EntryPoint>]
 let main args =
@@ -158,7 +157,7 @@ let main args =
     let random = Random (Environment.TickCount)
 
     GameLoop.start [||] 
-        (fun _ _ ->
+        (fun _ _ _ ->
             GC.Collect (2)
             makeLines 90.f (0.4f) drawLine
             |> Array.ofList) 
