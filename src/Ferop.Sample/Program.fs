@@ -52,6 +52,20 @@ let torad = 0.0174532925f
 let lrad = 20.f * torad
 let rrad = -lrad
 
+type RandomSingle private () =
+    [<DefaultValue>]
+    [<ThreadStatic>]
+    static val mutable private random : Random
+
+    static member Random
+        with get () = RandomSingle.random
+        and set value = RandomSingle.random <- value
+
+let randomSingle () =
+    if RandomSingle.Random = Unchecked.defaultof<Random> then
+        RandomSingle.Random <- Random (Environment.TickCount)
+    (single (RandomSingle.Random.NextDouble()) * (0.9f - 0.5f) + 0.5f)
+
 let inline makeEndpoint rads length (v: vec2) = vec2 (v.X + length * cos rads, v.Y + length * sin rads)
 
 let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEndpoint rads length line.Y)
@@ -66,19 +80,19 @@ let makeLines degrees length (line: DrawLine) =
             let ll = makeDrawLine ldeg length lines.Head
             let rl = makeDrawLine rdeg length lines.Head
             let n = n + 1
-            let length = length * 0.7f
+            let length = length * randomSingle ()
       
             makeLines ldeg length (ll :: lines) (fun x ->
                 makeLines rdeg length (rl :: x) cont n) n
 
-    let rec makeLinesParallel rads length (lines: DrawLine list) cont = function
+    let makeLinesParallel rads length (lines: DrawLine list) cont = function
             | n ->
                 let ldeg = rads + lrad
                 let rdeg = rads + rrad
                 let ll = makeDrawLine ldeg length lines.Head
                 let rl = makeDrawLine rdeg length lines.Head
                 let n = n + 1
-                let length = length * 0.7f
+                let length = length * randomSingle ()
 
                 let f1 = (makeLines ldeg length (ll :: lines) cont)
                 let f2 = (makeLines rdeg length (rl :: lines) cont)
@@ -96,12 +110,13 @@ let makeLines degrees length (line: DrawLine) =
 module GameLoop =
     type private GameLoop<'T> = { 
         State: 'T
+        PreviousState: 'T
         Time: float
         LastTime: float
         Accumulator: float }
 
-    let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T) =
-        let targetInterval = 1000. / 30.
+    let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> 'T) =
+        let targetInterval = 1000. / 2.
 
         let stopwatch = Stopwatch.StartNew ()
         let inline time () = stopwatch.Elapsed.TotalMilliseconds
@@ -121,6 +136,7 @@ module GameLoop =
                     processUpdate
                         { gl with 
                             State = update gl.Time targetInterval gl.State
+                            PreviousState = gl.State
                             Time = gl.Time + targetInterval
                             Accumulator = gl.Accumulator - targetInterval }
                 else
@@ -134,10 +150,11 @@ module GameLoop =
 
             loop 
                 { gl with 
-                    State = render (gl.Accumulator / deltaTime) gl.State }
+                    State = render (gl.Accumulator / targetInterval) gl.PreviousState gl.State }
 
         loop
             { State = state
+              PreviousState = state
               Time = 0.
               LastTime = 0.
               Accumulator = 0. }
@@ -154,17 +171,28 @@ let main args =
 
     loadShaders ()
 
-    let random = Random (Environment.TickCount)
+    let inline lerp x y t = x + (y - x) * t
 
     GameLoop.start [||] 
         (fun _ _ _ ->
             GC.Collect (2)
             makeLines 90.f (0.4f) drawLine
             |> Array.ofList) 
-        (fun _ drawLines ->
+        (fun t prevDrawLines drawLines ->
+            let t = single t
             GC.Collect (2)
+            let lerpedDrawLines =
+                if prevDrawLines.Length <> drawLines.Length
+                then prevDrawLines
+                else
+                    (prevDrawLines, drawLines)
+                    ||> Array.map2 (fun prev x -> //lerp prev x (single t))
+                        DrawLine (
+                            vec2 (lerp prev.X.X x.X.X t, lerp prev.X.Y x.X.Y t),
+                            vec2 (lerp prev.Y.X x.Y.X t, lerp prev.Y.Y x.Y.Y t)))
+
             clear ()
-            drawVbo drawLines vbo
+            drawVbo lerpedDrawLines vbo
             draw app
             drawLines)
 

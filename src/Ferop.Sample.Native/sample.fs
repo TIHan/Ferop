@@ -17,12 +17,30 @@ type vec2 =
 
     new (x, y) = { X = x; Y = y }
 
+    static member inline (-) (v1: vec2, v2: vec2) =
+        vec2 (v1.X - v2.X, v1.Y - v2.Y)
+
+    static member inline (+) (v1: vec2, v2: vec2) =
+        vec2 (v1.X + v2.X, v1.Y + v2.Y)
+
+    static member inline (*) (v1: vec2, scalar: single) =
+        vec2 (v1.X * scalar, v1.Y * scalar)
+
 [<Struct>]
 type DrawLine =
     val X : vec2
     val Y : vec2
 
     new (x, y) = { X = x; Y = y }
+
+    static member inline (-) (dl1: DrawLine, dl2: DrawLine) =
+        DrawLine (dl1.X - dl2.X, dl1.Y - dl2.Y)
+
+    static member inline (+) (dl1: DrawLine, dl2: DrawLine) =
+        DrawLine (dl1.X + dl2.X, dl1.Y + dl2.Y)
+
+    static member inline (*) (dl1: DrawLine, scalar: single) =
+        DrawLine (dl1.X * scalar, dl1.Y * scalar)
 
 [<Ferop>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers")>]
