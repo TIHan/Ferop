@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Diagnostics
 open System.Reflection
+open System.Runtime
 open System.Runtime.InteropServices
 open System.Threading
 
@@ -38,13 +39,13 @@ let makeVbo (drawLines: DrawLine []) =
 let drawVbo (drawLines: DrawLine []) vbo =
     Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, drawLines, vbo)
 
-let init () = Native.App.init ()
+let init () = 
+    GCSettings.LatencyMode <- GCLatencyMode.Batch
+    Native.App.init ()
 
 let exit app = Native.App.exit app
 
-// http://wiki.libsdl.org/SDL_EventType
 let shouldQuit () = Native.App.shouldQuit ()
-
 
 let torad = 0.0174532925f
 
@@ -58,7 +59,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 11 -> cont lines
+        | 14 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -70,53 +71,80 @@ let makeLines degrees length (line: DrawLine) =
             makeLines ldeg length (ll :: lines) (fun x ->
                 makeLines rdeg length (rl :: x) cont n) n
 
-    makeLines (degrees * torad) length [line] (fun x -> x) 0
+    let rec makeLinesParallel rads length (lines: DrawLine list) cont = function
+            | n ->
+                let ldeg = rads + lrad
+                let rdeg = rads + rrad
+                let ll = makeDrawLine ldeg length lines.Head
+                let rl = makeDrawLine rdeg length lines.Head
+                let n = n + 1
+                let length = length * 0.7f
 
-type GameLoop<'T> = { 
-    State: 'T
-    CurrentTick: int64
-    LastClientTick: int64
-    LastServerTick: int64
-    ClientInterval: int64 }
+                let f1 = (makeLines ldeg length (ll :: lines) cont)
+                let f2 = (makeLines rdeg length (rl :: lines) cont)
+
+                let computations = [| f1; f2 |]
+
+                computations
+                |> Array.Parallel.map (fun f -> f n)
+                |> Array.reduce (fun x y -> x @ y)
+
+    makeLines (degrees * torad) length [line] (fun x -> x) 0
+    //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
 
 module GameLoop =
-    let start (state: 'T) (server: int64 -> 'T -> 'T) (client: int64 -> 'T -> 'T)  =
-        let targetServerInterval = TimeSpan.FromMilliseconds(1000. / 20.).Ticks
-        let targetClientInterval = TimeSpan.FromMilliseconds(1000. / 120.).Ticks
-        let l = { State = state; CurrentTick = 0L; LastClientTick = 0L; LastServerTick = 0L; ClientInterval = 0L }
+    type private GameLoop<'T> = { 
+        State: 'T
+        LastUpdateTime: float
+        LastRenderTime: float
+        UpdateCount: int }
+
+    let start (state: 'T) (update: float -> 'T -> 'T) (render: float -> 'T -> 'T) =
+        let targetUpdateInterval = 1000. / 30.
+        let targetRenderInterval = 1000. / 120.
+        
+        let gl = 
+            { State = state
+              LastUpdateTime = 0.
+              LastRenderTime = 0.
+              UpdateCount = 0 }
+
         let stopwatch = Stopwatch.StartNew ()
 
-        let rec loop l =
-            let serverIntervalDiff = l.CurrentTick - l.LastServerTick
-            let clientIntervalDiff = l.CurrentTick - l.LastClientTick
-            if serverIntervalDiff >= targetServerInterval
-            then 
-                let state = server l.CurrentTick l.State
-                let tick = stopwatch.ElapsedTicks
-                let interval = tick - l.CurrentTick
-                //printfn "Server FPS: %.1f" (1000. / TimeSpan.FromTicks(serverIntervalDiff).TotalMilliseconds)
-                loop { l with State = state; CurrentTick = tick; LastServerTick = l.CurrentTick; LastClientTick = l.CurrentTick; ClientInterval = interval } 
-            else
-                if (clientIntervalDiff >= targetClientInterval && targetClientInterval >= l.ClientInterval) ||
-                   (clientIntervalDiff >= l.ClientInterval && targetClientInterval <= l.ClientInterval) 
-                then 
-                    let state = client l.CurrentTick l.State
-                    let tick = stopwatch.ElapsedTicks
-                    let interval = tick - l.CurrentTick
-                    let clientInterval =
-                        if interval > l.ClientInterval && interval > targetClientInterval
-                        then interval
-                        else l.ClientInterval
-                    printfn "Client FPS: %.1f" (1000. / TimeSpan.FromTicks(clientIntervalDiff).TotalMilliseconds)
-                    loop { l with State = state; CurrentTick = tick; LastClientTick = l.CurrentTick; ClientInterval = clientInterval }
-                else 
-                    loop { l with CurrentTick = stopwatch.ElapsedTicks }
+        let rec loop gl =
+            let currentTime = stopwatch.Elapsed.TotalMilliseconds
+            let elapsedUpdateTime = currentTime - gl.LastUpdateTime
+            let elapsedRenderTime = currentTime - gl.LastRenderTime
 
-        loop l
+            let skipFrame = gl.UpdateCount < 5
+
+            if elapsedUpdateTime >= targetUpdateInterval && skipFrame
+            then 
+                printfn "UPDATE FPS: %.2f" (1000. / elapsedUpdateTime)
+ 
+                loop
+                    { gl with 
+                        State = update currentTime gl.State
+                        LastUpdateTime = currentTime
+                        UpdateCount = gl.UpdateCount + 1 }
+                         
+            elif elapsedRenderTime >= targetRenderInterval
+            then
+                printfn "RENDER FPS: %.2f" (1000. / elapsedRenderTime)        
+
+                loop 
+                    { gl with 
+                        State = render currentTime gl.State
+                        LastRenderTime = currentTime
+                        UpdateCount = 0 }
+
+            else
+                loop gl
+
+        loop gl
 
 [<EntryPoint>]
 let main args =
-    //System.Runtime.GCSettings.LatencyMode <- System.Runtime.GCLatencyMode.SustainedLowLatency
     let app = init ()
 
     let beginPoint = vec2 (0.f, -1.f)
@@ -127,11 +155,16 @@ let main args =
 
     loadShaders ()
 
+    let random = Random (Environment.TickCount)
+
     GameLoop.start [||] 
         (fun _ _ ->
+            GC.Collect (2)
             makeLines 90.f (0.4f) drawLine
             |> Array.ofList) 
         (fun _ drawLines ->
+            GC.Collect (2)
+            Thread.Sleep (50)
             clear ()
             drawVbo drawLines vbo
             draw app
