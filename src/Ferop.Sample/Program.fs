@@ -59,7 +59,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 14 -> cont lines
+        | 11 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -164,7 +164,6 @@ let main args =
             |> Array.ofList) 
         (fun _ drawLines ->
             GC.Collect (2)
-            Thread.Sleep (50)
             clear ()
             drawVbo drawLines vbo
             draw app
