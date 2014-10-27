@@ -73,7 +73,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 16 -> cont lines
+        | 11 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -120,7 +120,7 @@ module GameLoop =
     let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> 'T) =
         let targetUpdateInterval = 1000. / 30.
         let targetRenderInterval = 1000. / 120.
-        let skip = 1000. / 25.
+        let skip = 1000. / 5.
 
         let stopwatch = Stopwatch.StartNew ()
         let inline time () = stopwatch.Elapsed.TotalMilliseconds
