@@ -73,7 +73,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 11 -> cont lines
+        | 16 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -116,7 +116,7 @@ module GameLoop =
         Accumulator: float }
 
     let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> 'T) =
-        let targetInterval = 1000. / 2.
+        let targetInterval = 1000. / 30.
 
         let stopwatch = Stopwatch.StartNew ()
         let inline time () = stopwatch.Elapsed.TotalMilliseconds
@@ -125,7 +125,7 @@ module GameLoop =
             let currentTime = time ()
             let deltaTime =
                 match currentTime - gl.LastTime with
-                | x when x > 250. -> 250.
+                | x when x > 1000. / 25. -> 1000. / 25.
                 | x -> x
 
             let accumulator = gl.Accumulator + deltaTime
@@ -145,11 +145,11 @@ module GameLoop =
             let gl = 
                 processUpdate 
                     { gl with 
-                        LastTime = currentTime
                         Accumulator = accumulator }       
 
             loop 
                 { gl with 
+                    LastTime = currentTime
                     State = render (gl.Accumulator / targetInterval) gl.PreviousState gl.State }
 
         loop
@@ -186,7 +186,7 @@ let main args =
                 then prevDrawLines
                 else
                     (prevDrawLines, drawLines)
-                    ||> Array.map2 (fun prev x -> //lerp prev x (single t))
+                    ||> Array.map2 (fun prev x ->
                         DrawLine (
                             vec2 (lerp prev.X.X x.X.X t, lerp prev.X.Y x.X.Y t),
                             vec2 (lerp prev.Y.X x.Y.X t, lerp prev.Y.Y x.Y.Y t)))
