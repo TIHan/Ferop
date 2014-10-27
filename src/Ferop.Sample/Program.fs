@@ -111,12 +111,13 @@ module GameLoop =
     type private GameLoop<'T> = { 
         State: 'T
         PreviousState: 'T
-        Time: float
+        UpdateTime: float
         LastTime: float
         Accumulator: float }
 
     let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> 'T) =
         let targetInterval = 1000. / 30.
+        let skip = 1000. / 25.
 
         let stopwatch = Stopwatch.StartNew ()
         let inline time () = stopwatch.Elapsed.TotalMilliseconds
@@ -125,7 +126,7 @@ module GameLoop =
             let currentTime = time ()
             let deltaTime =
                 match currentTime - gl.LastTime with
-                | x when x > 1000. / 25. -> 1000. / 25.
+                | x when x > skip -> skip
                 | x -> x
 
             let accumulator = gl.Accumulator + deltaTime
@@ -135,27 +136,27 @@ module GameLoop =
                 then
                     processUpdate
                         { gl with 
-                            State = update gl.Time targetInterval gl.State
+                            State = update gl.UpdateTime targetInterval gl.State
                             PreviousState = gl.State
-                            Time = gl.Time + targetInterval
+                            UpdateTime = gl.UpdateTime + targetInterval
                             Accumulator = gl.Accumulator - targetInterval }
                 else
                     gl
-                         
-            let gl = 
-                processUpdate 
-                    { gl with 
-                        Accumulator = accumulator }       
 
-            loop 
+            let processRender gl =
                 { gl with 
                     LastTime = currentTime
                     State = render (gl.Accumulator / targetInterval) gl.PreviousState gl.State }
+                         
+            { gl with Accumulator = accumulator }
+            |> processUpdate
+            |> processRender
+            |> loop
 
         loop
             { State = state
               PreviousState = state
-              Time = 0.
+              UpdateTime = 0.
               LastTime = 0.
               Accumulator = 0. }
 
