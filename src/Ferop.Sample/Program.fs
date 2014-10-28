@@ -114,7 +114,6 @@ module GameLoop =
         LastTime: float
         UpdateTime: float
         UpdateAccumulator: float
-        RenderAccumulator: float
         RenderInterval: float }
 
     let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> unit) =
@@ -133,7 +132,6 @@ module GameLoop =
                 | x -> x
 
             let updateAcc = gl.UpdateAccumulator + deltaTime
-            let renderAcc = gl.RenderAccumulator + deltaTime
 
             let rec processUpdate gl =
                 if gl.UpdateAccumulator >= targetUpdateInterval
@@ -157,16 +155,12 @@ module GameLoop =
                     gl
 
             let processRender gl =
-                if gl.RenderAccumulator >= gl.RenderInterval then
-                    render (gl.UpdateAccumulator / targetUpdateInterval) gl.PreviousState gl.State
+                render (gl.UpdateAccumulator / targetUpdateInterval) gl.PreviousState gl.State                
 
-                    { gl with 
-                        LastTime = currentTime
-                        RenderAccumulator = gl.RenderAccumulator - gl.RenderInterval }
-                else
-                    { gl with LastTime = currentTime }
+                { gl with 
+                    LastTime = currentTime }
                          
-            { gl with UpdateAccumulator = updateAcc; RenderAccumulator = renderAcc }
+            { gl with UpdateAccumulator = updateAcc }
             |> processUpdate
             |> processRender
             |> loop
@@ -177,7 +171,6 @@ module GameLoop =
               LastTime = 0.
               UpdateTime = 0.
               UpdateAccumulator = 0.
-              RenderAccumulator = 0.
               RenderInterval = 0. }
 
 [<EntryPoint>]
