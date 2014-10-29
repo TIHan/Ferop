@@ -45,7 +45,7 @@ let init () =
 
 let exit app = Native.App.exit app
 
-let shouldQuit () = Native.App.shouldQuit ()
+let pollInputEvents () = Native.App.pollInputEvents ()
 
 let torad = 0.0174532925f
 
@@ -117,7 +117,7 @@ module GameLoop =
         RenderAccumulator: float
         RenderInterval: float }
 
-    let start (state: 'T) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> unit) =
+    let start (state: 'T) (pre: unit -> unit) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> unit) =
         let targetUpdateInterval = 1000. / 25.
         let targetRenderInterval = 1000. / 125.
         let skip = 1000. / 5.
@@ -171,7 +171,9 @@ module GameLoop =
                         RenderAccumulator = gl.RenderAccumulator - gl.RenderInterval }
                 else
                     { gl with LastTime = currentTime }
-                         
+
+            pre ()
+       
             { gl with UpdateAccumulator = updateAcc; RenderAccumulator = renderAcc }
             |> processUpdate
             |> processRender
@@ -201,8 +203,17 @@ let main args =
     let inline lerp x y t = x + (y - x) * t
 
     GameLoop.start [||] 
+        (fun () ->
+            pollInputEvents ())
         (fun _ _ _ ->
             GC.Collect (2)
+
+            Input.processInput ()
+            |> List.iteri (fun i x ->
+                match x with
+                | KeyPressed key -> printfn "Pressed: %A" key
+                | KeyReleased key -> printfn "Released: %A" key)
+
             makeLines 90.f (0.4f) drawLine
             |> Array.ofList) 
         (fun t prevDrawLines drawLines ->

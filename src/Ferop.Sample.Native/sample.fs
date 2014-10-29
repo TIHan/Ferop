@@ -5,6 +5,13 @@ open System.Runtime.InteropServices
 
 #nowarn "9"
 
+type InputEvent =
+    | KeyPressed of char
+    | KeyReleased of char
+
+module InputInternal =
+    let internal inputEvents = ResizeArray<InputEvent> ()
+
 [<Struct>]
 type Application =
     val Window : nativeint
@@ -23,6 +30,11 @@ type DrawLine =
     val Y : vec2
 
     new (x, y) = { X = x; Y = y }
+
+[<Struct>]
+type KeyboardEvent =
+    val IsPressed : int
+    val KeyCode : int
 
 [<Ferop>]
 [<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers")>]
@@ -47,6 +59,15 @@ type DrawLine =
 #endif
 """)>]
 module App =
+
+    [<Export>]
+    let dispatchKeyboardEvent (kbEvt: KeyboardEvent) : unit =
+        InputInternal.inputEvents.Add (
+            if kbEvt.IsPressed = 1 then 
+                InputEvent.KeyPressed (char kbEvt.KeyCode) 
+            else 
+                InputEvent.KeyReleased (char kbEvt.KeyCode))
+
     let init () : Application =
         code """
 SDL_Init (SDL_INIT_VIDEO);
@@ -89,11 +110,35 @@ return 0;
 
     let draw (app: Application) : unit = code """ SDL_GL_SwapWindow ((SDL_Window*)app.Window); """
 
-    let shouldQuit () : int =
+    let pollInputEvents () : unit =
         code """
 SDL_Event e;
-SDL_PollEvent (&e);
-return e.type == SDL_QUIT;
+while (SDL_PollEvent (&e))
+{
+    if (e.type == SDL_KEYDOWN)
+    {
+        SDL_KeyboardEvent* event = (SDL_KeyboardEvent*)&e;
+        printf ("%i\n", event->repeat);
+        if (event->repeat != 0) continue;
+
+        App_KeyboardEvent evt;
+        evt.IsPressed = 1;
+        evt.KeyCode = event->keysym.sym;
+
+        App_dispatchKeyboardEvent (evt);
+    }
+    else if (e.type == SDL_KEYUP)
+    {
+        SDL_KeyboardEvent* event = (SDL_KeyboardEvent*)&e;
+        if (event->repeat != 0) continue;
+
+        App_KeyboardEvent evt;
+        evt.IsPressed = 0;
+        evt.KeyCode = event->keysym.sym;
+
+        App_dispatchKeyboardEvent (evt);
+    }
+} 
         """
 
     let generateVbo (size: int) (data: DrawLine[]) : int =
@@ -149,3 +194,9 @@ glVertexAttribPointer (posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 glEnableVertexAttribArray (posAttrib);
         """
+
+module Input =
+    let processInput () =
+        let evts = InputInternal.inputEvents |> List.ofSeq
+        InputInternal.inputEvents.Clear ()
+        evts
