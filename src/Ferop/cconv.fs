@@ -2,6 +2,7 @@
 
 open System
 open System.Reflection
+open System.Runtime.CompilerServices
 
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
@@ -45,6 +46,11 @@ let rec isTypeBlittable (typ: Type) =
     match check typ with
     | false -> false
     | _ -> allNestedRuntimeFieldTypes typ |> List.forall check
+
+let typeHasAttributeType (attrType: Type) (typ: Type) =
+    typ.GetCustomAttributesData ()
+    |> Seq.map (fun x -> x.AttributeType)
+    |> Seq.exists ((=)attrType)
 
 let tryMakeCExpr (meth: MethodInfo) =
     try
@@ -316,12 +322,12 @@ let makeCDecls (env: CEnv) info =
         |> List.map (fun x -> x.ParameterType)
         |> List.filter (fun x -> x.BaseType = typeof<MulticastDelegate>)
 
-    // HACK: This is a hack. If a delegate has the string "Delegate" in it,
-    // then it will create a placeholder for an instance of that delegate.
-    // Need a better convention.
+
+    // If the delegate is compiler generated, we are creating
+    // an extern function.
     let instanceDels =
         dels
-        |> List.filter (fun x -> x.Name.Contains ("Delegate"))
+        |> List.filter (typeHasAttributeType typeof<CompilerGeneratedAttribute>)
 
     let structs =
         funcs @ exportedFuncs

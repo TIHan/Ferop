@@ -6,6 +6,9 @@ open System.Security
 open System.Reflection
 open System.Reflection.Emit
 open System.Runtime.InteropServices
+open System.Runtime.CompilerServices
+open System.ComponentModel
+open System.Diagnostics
 
 open FSharp.Interop.Ferop
 open FSharp.Interop.FeropInternal
@@ -90,20 +93,6 @@ module C =
 
         meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
         addMethodAttribute<SuppressUnmanagedCodeSecurityAttribute> meth [||] [||]
-
-    #if COPY_PARAMETER_ATTRIBUTES
-        func.GetParameters ()
-        |> Array.iteri (fun i x ->
-            let pb = meth.DefineParameter (x.Position, x.Attributes, x.Name)
-            x.CustomAttributes
-            |> Seq.iter (fun x -> 
-                let at = x.AttributeType
-                let aci = x.Constructor
-                let cargs = x.ConstructorArguments
-                let ab = CustomAttributeBuilder (aci, cargs |> Seq.map (fun y -> y.Value) |> Array.ofSeq)
-                pb.SetCustomAttribute ab))
-    #endif
-
         meth
 
     let generatePInvokeMethods modul platform tb = 
@@ -130,7 +119,8 @@ module C =
                 meth.DefineParameter (i + 1, ParameterAttributes.None, x.Name) |> ignore)
 
             meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
-            addTypeAttribute<UnmanagedFunctionPointerAttribute> del [|typeof<CallingConvention>|] [|CallingConvention.Cdecl|]   
+            addTypeAttribute<UnmanagedFunctionPointerAttribute> del [|typeof<CallingConvention>|] [|CallingConvention.Cdecl|]
+            addTypeAttribute<CompilerGeneratedAttribute> del [||] [||]   
             del.CreateType ())
 
     let generateReversePInvokeMethods modul dels platform (tb: TypeBuilder) =
@@ -172,6 +162,11 @@ module C =
             let modul = makeModule x
             let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
             let internalTb = tb.DefineNestedType ("_internal", TypeAttributes.NestedPublic ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
+            
+            addTypeAttribute<CompilerGeneratedAttribute> internalTb [||] [||]
+            addTypeAttribute<EditorBrowsableAttribute> internalTb [|typeof<EditorBrowsableState>|] [|EditorBrowsableState.Never|]
+            addTypeAttribute<DebuggerBrowsableAttribute> internalTb [|typeof<DebuggerBrowsableState>|] [|DebuggerBrowsableState.Never|]
+            addTypeAttribute<ObsoleteAttribute> internalTb [||] [||]
             generatePInvokeMethods modul platform tb
 
             //-------------------------------------------------------------------------
