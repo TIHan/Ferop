@@ -124,39 +124,17 @@ let makeCppFilePath path modul = Path.Combine (path, sprintf "%s.cpp" modul.Name
 
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
-let definePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
-    let meth = 
-        tb.DefinePInvokeMethod (
-            func.Name,
-            dllName,
-            sprintf "%s_%s" func.DeclaringType.Name func.Name,
-            MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
-            CallingConventions.Standard,
-            func.ReturnType,
-            func.GetParameters () |> Array.map (fun x -> x.ParameterType),
-            CallingConvention.Cdecl,
-            CharSet.Ansi)
+let addMethodAttribute<'T> (meth: MethodBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
+    let attributeType = typeof<'T>
+    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
+    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
+    meth.SetCustomAttribute (attributeBuilder)
 
-    meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-    let attributeType = typeof<SuppressUnmanagedCodeSecurityAttribute>
-    let attributeConstructorInfo = attributeType.GetConstructor([||])
-    let attributeBuilder = CustomAttributeBuilder(attributeConstructorInfo, [||]);
-    meth.SetCustomAttribute(attributeBuilder);
-
-#if COPY_PARAMETER_ATTRIBUTES
-    func.GetParameters ()
-    |> Array.iteri (fun i x ->
-        let pb = meth.DefineParameter (x.Position, x.Attributes, x.Name)
-        x.CustomAttributes
-        |> Seq.iter (fun x -> 
-            let at = x.AttributeType
-            let aci = x.Constructor
-            let cargs = x.ConstructorArguments
-            let ab = CustomAttributeBuilder (aci, cargs |> Seq.map (fun y -> y.Value) |> Array.ofSeq)
-            pb.SetCustomAttribute ab))
-#endif
-
-    meth
+let addTypeAttribute<'T> (tb: TypeBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
+    let attributeType = typeof<'T>
+    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
+    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
+    tb.SetCustomAttribute (attributeBuilder)
 
 open CConversion
 open CGeneration

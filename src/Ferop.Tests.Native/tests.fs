@@ -69,6 +69,11 @@ and [<Struct>]
 
         new (x, y) = { X = x; Y = y }
 
+[<Struct>]
+type Struct4 =
+    val X : single
+    val Y : single
+
 type Enum1 =
     | Sub1 = 0
     | Sub2 = 1
@@ -211,6 +216,8 @@ module Tests4 =
     let testPointer (xp: nativeptr<double>) : unit = code """ *xp = 36.2; """
 
     let testArray (xs: double []) : unit = code """ xs[2] = 20.45; """
+
+    let testStructPointer2 (xp: nativeptr<Struct4>) : unit = code """ """
 
 #if __64BIT__
 [<Cpu64bit>]

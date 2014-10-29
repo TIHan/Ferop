@@ -75,8 +75,39 @@ module C =
     let createDynamicAssembly (dllPath: string) dllName =
         AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
 
+    let generatePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
+        let meth = 
+            tb.DefinePInvokeMethod (
+                func.Name,
+                dllName,
+                sprintf "%s_%s" func.DeclaringType.Name func.Name,
+                MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
+                CallingConventions.Standard,
+                func.ReturnType,
+                func.GetParameters () |> Array.map (fun x -> x.ParameterType),
+                CallingConvention.Cdecl,
+                CharSet.Ansi)
+
+        meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
+        addMethodAttribute<SuppressUnmanagedCodeSecurityAttribute> meth [||] [||]
+
+    #if COPY_PARAMETER_ATTRIBUTES
+        func.GetParameters ()
+        |> Array.iteri (fun i x ->
+            let pb = meth.DefineParameter (x.Position, x.Attributes, x.Name)
+            x.CustomAttributes
+            |> Seq.iter (fun x -> 
+                let at = x.AttributeType
+                let aci = x.Constructor
+                let cargs = x.ConstructorArguments
+                let ab = CustomAttributeBuilder (aci, cargs |> Seq.map (fun y -> y.Value) |> Array.ofSeq)
+                pb.SetCustomAttribute ab))
+    #endif
+
+        meth
+
     let generatePInvokeMethods modul platform tb = 
-        modul.Functions |> List.map (definePInvokeMethod tb (makeDllName modul platform))
+        modul.Functions |> List.map (generatePInvokeMethod tb (makeDllName modul platform))
         |> ignore
 
     let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
@@ -99,10 +130,7 @@ module C =
                 meth.DefineParameter (i + 1, ParameterAttributes.None, x.Name) |> ignore)
 
             meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
-            let attributeType = typeof<UnmanagedFunctionPointerAttribute>
-            let attributeConstructorInfo = attributeType.GetConstructor ([|typeof<CallingConvention>|])
-            let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, [|CallingConvention.Cdecl|])
-            del.SetCustomAttribute (attributeBuilder)     
+            addTypeAttribute<UnmanagedFunctionPointerAttribute> del [|typeof<CallingConvention>|] [|CallingConvention.Cdecl|]   
             del.CreateType ())
 
     let generateReversePInvokeMethods modul dels platform (tb: TypeBuilder) =
@@ -124,10 +152,7 @@ module C =
             meth.DefineParameter (1, ParameterAttributes.None, "ptr") |> ignore
 
             meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-            let attributeType = typeof<SuppressUnmanagedCodeSecurityAttribute>
-            let attributeConstructorInfo = attributeType.GetConstructor ([||])
-            let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, [||])
-            meth.SetCustomAttribute (attributeBuilder)
+            addMethodAttribute<SuppressUnmanagedCodeSecurityAttribute> meth [||] [||]
             meth :> MethodInfo) dels
 
     let feropClasses (asm: Assembly) =
