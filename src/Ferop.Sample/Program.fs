@@ -52,20 +52,6 @@ let torad = 0.0174532925f
 let lrad = 20.f * torad
 let rrad = -lrad
 
-type RandomSingle private () =
-    [<DefaultValue>]
-    [<ThreadStatic>]
-    static val mutable private random : Random
-
-    static member Random
-        with get () = RandomSingle.random
-        and set value = RandomSingle.random <- value
-
-let randomSingle () =
-    if RandomSingle.Random = Unchecked.defaultof<Random> then
-        RandomSingle.Random <- Random (Environment.TickCount)
-    (single (RandomSingle.Random.NextDouble()) * (0.9f - 0.5f) + 0.5f)
-
 let inline makeEndpoint rads length (v: vec2) = vec2 (v.X + length * cos rads, v.Y + length * sin rads)
 
 let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEndpoint rads length line.Y)
@@ -73,14 +59,14 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 11 -> cont lines
+        | 16 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
             let ll = makeDrawLine ldeg length lines.Head
             let rl = makeDrawLine rdeg length lines.Head
             let n = n + 1
-            let length = length * randomSingle ()
+            let length = length * 0.7f
       
             makeLines ldeg length (ll :: lines) (fun x ->
                 makeLines rdeg length (rl :: x) cont n) n
@@ -92,7 +78,7 @@ let makeLines degrees length (line: DrawLine) =
                 let ll = makeDrawLine ldeg length lines.Head
                 let rl = makeDrawLine rdeg length lines.Head
                 let n = n + 1
-                let length = length * randomSingle ()
+                let length = length * 0.7f
 
                 let f1 = (makeLines ldeg length (ll :: lines) cont)
                 let f2 = (makeLines rdeg length (rl :: lines) cont)
@@ -111,19 +97,19 @@ module GameLoop =
     type private GameLoop<'T> = { 
         State: 'T
         PreviousState: 'T
-        LastTime: float
-        UpdateTime: float
-        UpdateAccumulator: float
-        RenderAccumulator: float
-        RenderInterval: float }
+        LastTime: int64
+        UpdateTime: int64
+        UpdateAccumulator: int64
+        RenderAccumulator: int64
+        RenderInterval: int64 }
 
-    let start (state: 'T) (pre: unit -> unit) (update: float -> float -> 'T -> 'T) (render: float -> 'T -> 'T -> unit) =
-        let targetUpdateInterval = 1000. / 25.
-        let targetRenderInterval = 1000. / 125.
-        let skip = 1000. / 5.
+    let start (state: 'T) (pre: unit -> unit) (update: int64 -> int64 -> 'T -> 'T) (render: float32 -> 'T -> 'T -> unit) =
+        let targetUpdateInterval = (1000. / 25.) * 10000. |> int64
+        let targetRenderInterval = (1000. / 120.) * 10000. |> int64
+        let skip = (1000. / 5.) * 10000. |> int64
 
         let stopwatch = Stopwatch.StartNew ()
-        let inline time () = stopwatch.Elapsed.TotalMilliseconds
+        let inline time () = stopwatch.Elapsed.Ticks
 
         let rec loop gl =
             let currentTime = time ()
@@ -164,7 +150,7 @@ module GameLoop =
 
             let processRender gl =
                 if gl.RenderAccumulator >= gl.RenderInterval then
-                    render (gl.UpdateAccumulator / targetUpdateInterval) gl.PreviousState gl.State
+                    render (single gl.UpdateAccumulator / single targetUpdateInterval) gl.PreviousState gl.State
 
                     { gl with 
                         LastTime = currentTime
@@ -182,11 +168,11 @@ module GameLoop =
         loop
             { State = state
               PreviousState = state
-              LastTime = 0.
-              UpdateTime = 0.
-              UpdateAccumulator = 0.
-              RenderAccumulator = 0.
-              RenderInterval = 0. }
+              LastTime = 0L
+              UpdateTime = 0L
+              UpdateAccumulator = 0L
+              RenderAccumulator = 0L
+              RenderInterval = 0L }
 
 [<EntryPoint>]
 let main args =
@@ -202,19 +188,46 @@ let main args =
 
     let inline lerp x y t = x + (y - x) * t
 
+    let refLength = ref 0.4f
+    let refIsUpPressed = ref false
+    let refIsDownPressed = ref false
+
     GameLoop.start [||] 
         (fun () ->
             pollInputEvents ())
-        (fun _ _ _ ->
+        (fun _ time _ ->
             GC.Collect (2)
 
-            Input.processInput ()
-            |> List.iteri (fun i x ->
-                match x with
-                | KeyPressed key -> printfn "Pressed: %A" key
-                | KeyReleased key -> printfn "Released: %A" key)
+            match Input.processInput () with
+            | [] -> ()
+            | xs ->
+                xs
+                |> List.iter (fun x ->
+                    match x with
+                    | KeyPressed key ->
+                        match key with
+                        | 'R' -> refIsUpPressed := true
+                        | 'Q' -> refIsDownPressed := true
+                        | _ -> ()
+                    | KeyReleased key -> 
+                        match key with
+                        | 'R' -> refIsUpPressed := false
+                        | 'Q' -> refIsDownPressed := false
+                        | _ -> ())
 
-            makeLines 90.f (0.4f) drawLine
+            let length = !refLength
+            let length =
+                if !refIsUpPressed then
+                    length + (0.0001f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
+                else length
+                            
+            let length =
+                if !refIsDownPressed then
+                    length - (0.0001f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
+                else length
+                       
+            refLength := length
+            makeLines 90.f (length) drawLine
             |> Array.ofList) 
         (fun t prevDrawLines drawLines ->
             let t = single t

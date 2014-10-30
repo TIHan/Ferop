@@ -118,7 +118,6 @@ while (SDL_PollEvent (&e))
     if (e.type == SDL_KEYDOWN)
     {
         SDL_KeyboardEvent* event = (SDL_KeyboardEvent*)&e;
-        printf ("%i\n", event->repeat);
         if (event->repeat != 0) continue;
 
         App_KeyboardEvent evt;
