@@ -59,7 +59,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 15 -> cont lines
+        | 11 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -89,8 +89,8 @@ let makeLines degrees length (line: DrawLine) =
                 |> Array.Parallel.map (fun f -> f n)
                 |> Array.reduce (fun x y -> x @ y)
 
-    //makeLines (degrees * torad) length [line] (fun x -> x) 0
-    makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
+    makeLines (degrees * torad) length [line] (fun x -> x) 0
+    //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
 
 // http://gafferongames.com/game-physics/fix-your-timestep/
 module GameLoop =
