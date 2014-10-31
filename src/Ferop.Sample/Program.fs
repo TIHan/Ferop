@@ -40,7 +40,7 @@ let drawVbo (drawLines: DrawLine []) vbo =
     Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, drawLines, vbo)
 
 let init () = 
-    GCSettings.LatencyMode <- GCLatencyMode.LowLatency
+    GCSettings.LatencyMode <- GCLatencyMode.Batch
     Native.App.init ()
 
 let exit app = Native.App.exit app
@@ -59,7 +59,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 11 -> cont lines
+        | 15 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -89,8 +89,8 @@ let makeLines degrees length (line: DrawLine) =
                 |> Array.Parallel.map (fun f -> f n)
                 |> Array.reduce (fun x y -> x @ y)
 
-    makeLines (degrees * torad) length [line] (fun x -> x) 0
-    //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
+    //makeLines (degrees * torad) length [line] (fun x -> x) 0
+    makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
 
 // http://gafferongames.com/game-physics/fix-your-timestep/
 module GameLoop =
@@ -101,7 +101,6 @@ module GameLoop =
         UpdateTime: int64
         UpdateAccumulator: int64
         RenderAccumulator: int64
-        RenderInterval: int64
         RenderFrameCount: int
         RenderFrameCountTime: int64
         RenderFrameLastCount: int }
@@ -127,44 +126,37 @@ module GameLoop =
             // so let's put a limit of its interval.
             let renderAcc = 
                 match gl.RenderAccumulator with
-                | x when x > gl.RenderInterval -> gl.RenderInterval
+                | x when x > targetRenderInterval -> targetRenderInterval
                 | x -> x + deltaTime
 
             let rec processUpdate gl =
                 if gl.UpdateAccumulator >= targetUpdateInterval
                 then
                     let state = update gl.UpdateTime targetUpdateInterval gl.State
-                    let renderInterval = time () - currentTime
-
-                    let renderInterval =
-                        if renderInterval < targetRenderInterval
-                        then targetRenderInterval
-                        else renderInterval
 
                     processUpdate
                         { gl with 
                             State = state
                             PreviousState = gl.State
                             UpdateTime = gl.UpdateTime + targetUpdateInterval
-                            UpdateAccumulator = gl.UpdateAccumulator - targetUpdateInterval
-                            RenderInterval = renderInterval }
+                            UpdateAccumulator = gl.UpdateAccumulator - targetUpdateInterval }
                 else
                     gl
 
             let processRender gl =
-                if gl.RenderAccumulator >= gl.RenderInterval then
+                if gl.RenderAccumulator >= targetRenderInterval then
                     render (single gl.UpdateAccumulator / single targetUpdateInterval) gl.PreviousState gl.State
 
                     let renderCount, renderCountTime, renderLastCount =
                         if currentTime >= gl.RenderFrameCountTime + (10000L * 1000L) then
                             printfn "%A" gl.RenderFrameLastCount
-                            0, gl.RenderFrameCountTime + (10000L * 1000L), gl.RenderFrameCount
+                            1, gl.RenderFrameCountTime + (10000L * 1000L), gl.RenderFrameCount
                         else
                             gl.RenderFrameCount + 1, gl.RenderFrameCountTime, gl.RenderFrameLastCount
 
                     { gl with 
                         LastTime = currentTime
-                        RenderAccumulator = gl.RenderAccumulator - gl.RenderInterval
+                        RenderAccumulator = gl.RenderAccumulator - targetRenderInterval
                         RenderFrameCount = renderCount
                         RenderFrameCountTime = renderCountTime
                         RenderFrameLastCount = renderLastCount }
@@ -185,7 +177,6 @@ module GameLoop =
               UpdateTime = 0L
               UpdateAccumulator = targetUpdateInterval
               RenderAccumulator = 0L
-              RenderInterval = 0L
               RenderFrameCount = 0
               RenderFrameCountTime = 0L
               RenderFrameLastCount = 0 }
