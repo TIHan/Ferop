@@ -40,7 +40,7 @@ let drawVbo (drawLines: DrawLine []) vbo =
     Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, drawLines, vbo)
 
 let init () = 
-    GCSettings.LatencyMode <- GCLatencyMode.Batch
+    GCSettings.LatencyMode <- GCLatencyMode.LowLatency
     Native.App.init ()
 
 let exit app = Native.App.exit app
@@ -59,7 +59,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 16 -> cont lines
+        | 11 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -101,10 +101,13 @@ module GameLoop =
         UpdateTime: int64
         UpdateAccumulator: int64
         RenderAccumulator: int64
-        RenderInterval: int64 }
+        RenderInterval: int64
+        RenderFrameCount: int
+        RenderFrameCountTime: int64
+        RenderFrameLastCount: int }
 
     let start (state: 'T) (pre: unit -> unit) (update: int64 -> int64 -> 'T -> 'T) (render: float32 -> 'T -> 'T -> unit) =
-        let targetUpdateInterval = (1000. / 25.) * 10000. |> int64
+        let targetUpdateInterval = (1000. / 30.) * 10000. |> int64
         let targetRenderInterval = (1000. / 120.) * 10000. |> int64
         let skip = (1000. / 5.) * 10000. |> int64
 
@@ -152,9 +155,19 @@ module GameLoop =
                 if gl.RenderAccumulator >= gl.RenderInterval then
                     render (single gl.UpdateAccumulator / single targetUpdateInterval) gl.PreviousState gl.State
 
+                    let renderCount, renderCountTime, renderLastCount =
+                        if currentTime >= gl.RenderFrameCountTime + (10000L * 1000L) then
+                            printfn "%A" gl.RenderFrameLastCount
+                            0, gl.RenderFrameCountTime + (10000L * 1000L), gl.RenderFrameCount
+                        else
+                            gl.RenderFrameCount + 1, gl.RenderFrameCountTime, gl.RenderFrameLastCount
+
                     { gl with 
                         LastTime = currentTime
-                        RenderAccumulator = gl.RenderAccumulator - gl.RenderInterval }
+                        RenderAccumulator = gl.RenderAccumulator - gl.RenderInterval
+                        RenderFrameCount = renderCount
+                        RenderFrameCountTime = renderCountTime
+                        RenderFrameLastCount = renderLastCount }
                 else
                     { gl with LastTime = currentTime }
 
@@ -170,9 +183,12 @@ module GameLoop =
               PreviousState = state
               LastTime = 0L
               UpdateTime = 0L
-              UpdateAccumulator = 0L
+              UpdateAccumulator = targetUpdateInterval
               RenderAccumulator = 0L
-              RenderInterval = 0L }
+              RenderInterval = 0L
+              RenderFrameCount = 0
+              RenderFrameCountTime = 0L
+              RenderFrameLastCount = 0 }
 
 [<EntryPoint>]
 let main args =
@@ -194,10 +210,9 @@ let main args =
 
     GameLoop.start [||] 
         (fun () ->
+            GC.Collect ()
             pollInputEvents ())
         (fun _ time _ ->
-            GC.Collect (2)
-
             match Input.processInput () with
             | [] -> ()
             | xs ->
@@ -218,12 +233,12 @@ let main args =
             let length = !refLength
             let length =
                 if !refIsUpPressed then
-                    length + (0.0001f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
+                    length + (0.0005f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
                 else length
                             
             let length =
                 if !refIsDownPressed then
-                    length - (0.0001f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
+                    length - (0.0005f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
                 else length
                        
             refLength := length
@@ -231,7 +246,7 @@ let main args =
             |> Array.ofList) 
         (fun t prevDrawLines drawLines ->
             let t = single t
-            GC.Collect (2)
+
             let lerpedDrawLines =
                 if prevDrawLines.Length <> drawLines.Length
                 then prevDrawLines
