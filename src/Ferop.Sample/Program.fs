@@ -39,10 +39,6 @@ let makeVbo (drawLines: DrawLine []) =
 let drawVbo (drawLines: DrawLine []) vbo =
     Native.App.drawVbo (drawLines.Length * sizeof<DrawLine>, drawLines, vbo)
 
-let init () = 
-    GCSettings.LatencyMode <- GCLatencyMode.Batch
-    Native.App.init ()
-
 let exit app = Native.App.exit app
 
 let pollInputEvents () = Native.App.pollInputEvents ()
@@ -59,7 +55,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 11 -> cont lines
+        | 5 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -91,6 +87,96 @@ let makeLines degrees length (line: DrawLine) =
 
     makeLines (degrees * torad) length [line] (fun x -> x) 0
     //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
+
+type MainState<'T> = {
+    Current: 'T
+    Next2: 'T
+    Next: 'T
+    Previous: 'T
+    LastTime: int64
+    Accumulator: int64
+    NextAccumulator: int64 }
+
+type StateUpdatePriority =
+    | Normal
+    | Immediate
+
+type StateUpdate<'T> = StateUpdate of StateUpdatePriority * 'T
+
+type StateMachine<'State> (init, normalUpdate, execute) =
+    let targetInterval = (1000. / 120.) * 10000. |> int64
+    let nextInterval = (1000. / 30.) * 10000. |> int64
+    let stopwatch = Stopwatch ()
+    let time () = stopwatch.Elapsed.Ticks
+
+    let mailbox = new MailboxProcessor<StateUpdate<'State>> (fun inbox ->
+        let rec tryUpdate (main: MainState<'State>) =
+            async {
+                if inbox.CurrentQueueLength = 0 then
+                    return None
+                else
+                    let! msg = inbox.Receive ()
+                    match msg with
+                    | StateUpdate (Normal, state) ->
+                        if inbox.CurrentQueueLength > 0 then
+                            return! tryUpdate main
+                        else
+                            return { main with Next2 = normalUpdate main.Next state } |> Some
+
+                    | StateUpdate (Immediate, state) ->
+                        let main = { main with Next = state; Current = state; Previous = state }
+                        if inbox.CurrentQueueLength > 0 then
+                            return! tryUpdate main
+                        else
+                            return Some main
+
+            }
+
+        let rec loop (main: MainState<'State>)  =
+            async {
+                GC.Collect (2)
+                let currentTime = time ()
+                let deltaTime = currentTime - main.LastTime
+                let acc = main.Accumulator + deltaTime
+                let nextAcc = main.NextAccumulator + deltaTime
+
+                let! updated = tryUpdate main
+                let main =
+                    match updated with
+                    | None -> main
+                    | Some x -> x
+
+                let rec processNext main =
+                    if main.NextAccumulator >= nextInterval then
+                        processNext 
+                            { main with 
+                                Next = main.Next2
+                                Current = main.Next
+                                Previous = main.Current
+                                NextAccumulator = main.NextAccumulator - nextInterval }
+                    else 
+                        main
+
+                let main = processNext { main with NextAccumulator = nextAcc }
+
+                if main.Accumulator >= targetInterval then
+                    printfn "%A" (1000. / TimeSpan.FromTicks(main.Accumulator).TotalMilliseconds)
+                    execute (float main.NextAccumulator / float nextInterval) main.Previous main.Current
+                    return! loop { main with LastTime = currentTime; Accumulator = main.Accumulator - targetInterval }
+                else
+                    return! loop { main with LastTime = currentTime; Accumulator = acc }
+                
+            }
+
+        let initial = init ()
+        loop { Current = initial; Next2 = initial; Next = initial; Previous = initial; LastTime = 0L; Accumulator = 0L; NextAccumulator = 0L })
+        
+    member this.Start () =
+        stopwatch.Start ()
+        mailbox.Start ()
+
+    member this.Update priority state =
+        mailbox.Post (StateUpdate (priority, state))
 
 // http://gafferongames.com/game-physics/fix-your-timestep/
 module GameLoop =
@@ -149,7 +235,7 @@ module GameLoop =
 
                     let renderCount, renderCountTime, renderLastCount =
                         if currentTime >= gl.RenderFrameCountTime + (10000L * 1000L) then
-                            printfn "%A" gl.RenderFrameLastCount
+                            //printfn "%A" gl.RenderFrameLastCount
                             1, gl.RenderFrameCountTime + (10000L * 1000L), gl.RenderFrameCount
                         else
                             gl.RenderFrameCount + 1, gl.RenderFrameCountTime, gl.RenderFrameLastCount
@@ -181,19 +267,54 @@ module GameLoop =
               RenderFrameCountTime = 0L
               RenderFrameLastCount = 0 }
 
+type Client = {
+    Application: Application
+    Vbo: int
+    Data: DrawLine [] } with
+
+    static member Default =
+        { Application = Unchecked.defaultof<Application>
+          Vbo = 0
+          Data = [||] }
+
 [<EntryPoint>]
 let main args =
-    let app = init ()
+    GCSettings.LatencyMode <- GCLatencyMode.Batch
+    Native.App.initSystems ()
 
     let beginPoint = vec2 (0.f, -1.f)
     let endPoint = vec2 (0.f, -0.5f)
     let drawLine = DrawLine (beginPoint, endPoint)
 
-    let vbo = makeVbo [||]
-
-    loadShaders ()
-
     let inline lerp x y t = x + (y - x) * t
+
+    let window = Native.App.createWindow ()
+
+    let testStateM = 
+        StateMachine (
+            (fun () ->
+                let app = Native.App.createApp (window)
+                let client = { Client.Default with Application = app; Vbo = makeVbo [||] }
+                loadShaders ()
+                client), 
+            (fun main state -> { main with Data = state.Data }),
+            fun t prev current ->
+                let t = single t
+
+                let lerpedDrawLines =
+                    if prev.Data.Length <> current.Data.Length
+                    then prev.Data
+                    else
+                        (prev.Data, current.Data)
+                        ||> Array.map2 (fun prev x ->
+                            DrawLine (
+                                vec2 (lerp prev.X.X x.X.X t, lerp prev.X.Y x.X.Y t),
+                                vec2 (lerp prev.Y.X x.Y.X t, lerp prev.Y.Y x.Y.Y t)))
+                clear ()
+                drawVbo lerpedDrawLines current.Vbo
+                draw current.Application)
+
+    testStateM.Start ()
 
     let refLength = ref 0.4f
     let refIsUpPressed = ref false
@@ -233,23 +354,12 @@ let main args =
                 else length
                        
             refLength := length
-            makeLines 90.f (length) drawLine
-            |> Array.ofList) 
-        (fun t prevDrawLines drawLines ->
-            let t = single t
-
-            let lerpedDrawLines =
-                if prevDrawLines.Length <> drawLines.Length
-                then prevDrawLines
-                else
-                    (prevDrawLines, drawLines)
-                    ||> Array.map2 (fun prev x ->
-                        DrawLine (
-                            vec2 (lerp prev.X.X x.X.X t, lerp prev.X.Y x.X.Y t),
-                            vec2 (lerp prev.Y.X x.Y.X t, lerp prev.Y.Y x.Y.Y t)))
-
-            clear ()
-            drawVbo lerpedDrawLines vbo
-            draw app)
-
-    exit (app)
+            let lines = 
+                makeLines 90.f (length) drawLine
+                |> Array.ofList
+            testStateM.Update Normal { Client.Default with Data = lines }
+            lines) 
+        (fun t prevDrawLines drawLines -> ())
+//
+//    exit (app)
+    0

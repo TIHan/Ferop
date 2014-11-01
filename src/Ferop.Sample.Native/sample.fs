@@ -68,19 +68,26 @@ module App =
             else 
                 InputEvent.KeyReleased (char kbEvt.KeyCode))
 
-    let init () : Application =
+    let initSystems () : unit =
         code """
 SDL_Init (SDL_INIT_VIDEO);
+"""
 
+    let createWindow () : int =
+        code """
+        return SDL_CreateWindow(
+            "Ferop.Sample",
+            SDL_WINDOWPOS_UNDEFINED,
+            SDL_WINDOWPOS_UNDEFINED,
+            900, 900,
+            SDL_WINDOW_OPENGL);
+"""
+
+    let createApp (window: int) : Application =
+        code """
 App_Application app;
 
-app.Window = 
-    SDL_CreateWindow(
-        "Ferop.Sample",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        900, 900,
-        SDL_WINDOW_OPENGL);
+app.Window = (SDL_Window*)window;
 
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 2);
