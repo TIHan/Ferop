@@ -219,6 +219,10 @@ module Tests4 =
 
     let testStructPointer2 (xp: nativeptr<Struct4>) : unit = code """ """
 
+    let testNativeInt (x: nativeint) : unit = code """ """
+
+    let testUnativeInt (x: unativeint) : unit = code """ """
+
 #if __64BIT__
 [<Cpu64bit>]
 #else

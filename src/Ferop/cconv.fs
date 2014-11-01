@@ -333,7 +333,7 @@ let makeCDecls (env: CEnv) info =
         funcs @ exportedFuncs
         |> List.map (fun x -> (x.GetParameters () |> Array.map (fun x -> x.ParameterType) |> List.ofArray) @ [x.ReturnType])
         |> List.reduce (fun x y -> x @ y)
-        |> List.map (fun x -> if isTypePointer x then x.GetElementType () else x)
+        |> List.map (fun x -> if isTypePointer x && x.GetElementType () <> null then x.GetElementType () else x)
         |> List.filter (fun x -> not (x = typeof<Void>) && not x.IsPrimitive && not x.IsEnum && isTypeBlittable x)
 
     let enums =
