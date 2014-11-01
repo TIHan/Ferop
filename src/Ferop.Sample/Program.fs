@@ -90,9 +90,8 @@ let makeLines degrees length (line: DrawLine) =
     //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
 
 type MainState<'T> = {
-    Current: 'T
-    Next2: 'T
     Next: 'T
+    Current: 'T
     Previous: 'T
     LastTime: int64
     Accumulator: int64
@@ -130,7 +129,7 @@ type StateMachine<'State> (init, normalUpdate, execute) =
                         if not queue.IsEmpty then
                             tryUpdate main
                         else
-                            { main with Next2 = normalUpdate main.Next2 state } |> Some
+                            { main with Next = normalUpdate main.Next state } |> Some
 
                     | StateUpdate (Immediate, state) ->
                         let main = { main with Next = state; Current = state; Previous = state }
@@ -161,7 +160,6 @@ type StateMachine<'State> (init, normalUpdate, execute) =
                     if main.NextAccumulator >= nextInterval then
                         processNext 
                             { main with 
-                                Next = main.Next2
                                 Current = main.Next
                                 Previous = main.Current
                                 NextAccumulator = main.NextAccumulator - nextInterval }
@@ -177,7 +175,7 @@ type StateMachine<'State> (init, normalUpdate, execute) =
                     loop { main with LastTime = currentTime; Accumulator = acc }
 
             let initial = init ()
-            loop { Current = initial; Next2 = initial; Next = initial; Previous = initial; LastTime = 0L; Accumulator = 0L; NextAccumulator = 0L }
+            loop { Current = initial; Next = initial; Previous = initial; LastTime = 0L; Accumulator = 0L; NextAccumulator = 0L }
             |> ignore)
         
     member this.Start () =
@@ -212,6 +210,7 @@ module GameLoop =
                 if gl.Accumulator >= targetUpdateInterval
                 then
                     let state = update gl.Time targetUpdateInterval gl.State
+                    //printfn "%A" (TimeSpan.FromTicks(time () - currentTime).TotalMilliseconds)
                     processUpdate
                         { gl with 
                             State = state
@@ -286,7 +285,7 @@ let main args =
 
     GameLoop.start [||] 
         (fun () ->
-            Thread.Sleep (0)
+            Thread.Sleep (1)
             pollInputEvents ())
         (fun _ time _ ->
             match Input.processInput () with
