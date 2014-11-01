@@ -7,6 +7,7 @@ open System.Reflection
 open System.Runtime
 open System.Runtime.InteropServices
 open System.Threading
+open System.Collections.Concurrent
 
 open Microsoft.FSharp.NativeInterop
 
@@ -55,7 +56,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 13 -> cont lines
+        | 14 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -104,38 +105,43 @@ type StateUpdatePriority =
 type StateUpdate<'T> = StateUpdate of StateUpdatePriority * 'T
 
 type StateMachine<'State> (init, normalUpdate, execute) =
-    let targetInterval = (1000. / 60.) * 10000. |> int64
+    let targetInterval = (1000. / 180.) * 10000. |> int64
     let nextInterval = (1000. / 30.) * 10000. |> int64
 
-    let mailbox = new MailboxProcessor<StateUpdate<'State>> (fun inbox ->
-        let stopwatch = Stopwatch.StartNew ()
-        let time () = stopwatch.Elapsed.Ticks
+    let queue = ConcurrentQueue<StateUpdate<'State>> ()
 
-        let rec tryUpdate (main: MainState<'State>) =
-            async {
-                if inbox.CurrentQueueLength = 0 then
-                    return None
+    let thread =
+        new Thread (fun () ->
+            let stopwatch = Stopwatch.StartNew ()
+            let time () = stopwatch.Elapsed.Ticks
+
+            let rec tryUpdate (main: MainState<'State>) =
+                if queue.IsEmpty then
+                    None
                 else
-                    let! msg = inbox.Receive ()
+                    let success, msg = queue.TryDequeue ()
+
+                    if not success
+                    then tryUpdate main
+                    else
+
                     match msg with
                     | StateUpdate (Normal, state) ->
-                        if inbox.CurrentQueueLength > 0 then
-                            return! tryUpdate main
+                        if not queue.IsEmpty then
+                            tryUpdate main
                         else
-                            return { main with Next2 = normalUpdate main.Next2 state } |> Some
+                            { main with Next2 = normalUpdate main.Next2 state } |> Some
 
                     | StateUpdate (Immediate, state) ->
                         let main = { main with Next = state; Current = state; Previous = state }
-                        if inbox.CurrentQueueLength > 0 then
-                            return! tryUpdate main
+                        if not queue.IsEmpty then
+                            tryUpdate main
                         else
-                            return Some main
+                            Some main
 
-            }
+            let rec loop (main: MainState<'State>) =
+                Thread.Sleep (0)
 
-        let rec loop (main: MainState<'State>)  =
-            async {
-                GC.Collect ()
                 let currentTime = time ()
                 let deltaTime = currentTime - main.LastTime
                 let nextAcc = main.NextAccumulator + deltaTime
@@ -145,7 +151,7 @@ type StateMachine<'State> (init, normalUpdate, execute) =
                     then targetInterval
                     else main.Accumulator + deltaTime
 
-                let! updated = tryUpdate main
+                let updated = tryUpdate main
                 let main =
                     match updated with
                     | None -> main
@@ -165,39 +171,30 @@ type StateMachine<'State> (init, normalUpdate, execute) =
                 let main = processNext { main with NextAccumulator = nextAcc }
 
                 if acc >= targetInterval then
-                    printfn "%A" (1000. / TimeSpan.FromTicks(acc).TotalMilliseconds)
                     execute (float main.NextAccumulator / float nextInterval) main.Previous main.Current
-                    return! loop { main with LastTime = currentTime; Accumulator = acc - targetInterval }
+                    loop { main with LastTime = currentTime; Accumulator = acc - targetInterval }
                 else
-                    return! loop { main with LastTime = currentTime; Accumulator = acc }
-                
-            }
+                    loop { main with LastTime = currentTime; Accumulator = acc }
 
-        let initial = init ()
-        loop { Current = initial; Next2 = initial; Next = initial; Previous = initial; LastTime = 0L; Accumulator = 0L; NextAccumulator = 0L })
+            let initial = init ()
+            loop { Current = initial; Next2 = initial; Next = initial; Previous = initial; LastTime = 0L; Accumulator = 0L; NextAccumulator = 0L }
+            |> ignore)
         
     member this.Start () =
-        mailbox.Start ()
+        thread.Start ()
 
     member this.Update priority state =
-        mailbox.Post (StateUpdate (priority, state))
+        queue.Enqueue (StateUpdate (priority, state))
 
-// http://gafferongames.com/game-physics/fix-your-timestep/
 module GameLoop =
     type private GameLoop<'T> = { 
         State: 'T
-        PreviousState: 'T
         LastTime: int64
-        UpdateTime: int64
-        UpdateAccumulator: int64
-        RenderAccumulator: int64
-        RenderFrameCount: int
-        RenderFrameCountTime: int64
-        RenderFrameLastCount: int }
+        Time: int64
+        Accumulator: int64 }
 
-    let start (state: 'T) (pre: unit -> unit) (update: int64 -> int64 -> 'T -> 'T) (render: float32 -> 'T -> 'T -> unit) =
+    let start (state: 'T) (pre: unit -> unit) (update: int64 -> int64 -> 'T -> 'T) =
         let targetUpdateInterval = (1000. / 30.) * 10000. |> int64
-        let targetRenderInterval = (1000. / 120.) * 10000. |> int64
         let skip = (1000. / 5.) * 10000. |> int64
 
         let stopwatch = Stopwatch.StartNew ()
@@ -205,71 +202,35 @@ module GameLoop =
 
         let rec loop gl =
             let currentTime = time ()
-            let deltaTime =
-                match currentTime - gl.LastTime with
+            let deltaTime = currentTime - gl.LastTime
+            let acc = 
+                match gl.Accumulator + deltaTime with
                 | x when x > skip -> skip
                 | x -> x
 
-            let updateAcc = gl.UpdateAccumulator + deltaTime
-
-            // We do not want our render accumulator going out of control,
-            // so let's put a limit of its interval.
-            let renderAcc = 
-                match gl.RenderAccumulator with
-                | x when x > targetRenderInterval -> targetRenderInterval
-                | x -> x + deltaTime
-
             let rec processUpdate gl =
-                if gl.UpdateAccumulator >= targetUpdateInterval
+                if gl.Accumulator >= targetUpdateInterval
                 then
-                    let state = update gl.UpdateTime targetUpdateInterval gl.State
-
+                    let state = update gl.Time targetUpdateInterval gl.State
                     processUpdate
                         { gl with 
                             State = state
-                            PreviousState = gl.State
-                            UpdateTime = gl.UpdateTime + targetUpdateInterval
-                            UpdateAccumulator = gl.UpdateAccumulator - targetUpdateInterval }
-                else
-                    gl
-
-            let processRender gl =
-                if gl.RenderAccumulator >= targetRenderInterval then
-                    render (single gl.UpdateAccumulator / single targetUpdateInterval) gl.PreviousState gl.State
-
-                    let renderCount, renderCountTime, renderLastCount =
-                        if currentTime >= gl.RenderFrameCountTime + (10000L * 1000L) then
-                            //printfn "%A" gl.RenderFrameLastCount
-                            1, gl.RenderFrameCountTime + (10000L * 1000L), gl.RenderFrameCount
-                        else
-                            gl.RenderFrameCount + 1, gl.RenderFrameCountTime, gl.RenderFrameLastCount
-
-                    { gl with 
-                        LastTime = currentTime
-                        RenderAccumulator = gl.RenderAccumulator - targetRenderInterval
-                        RenderFrameCount = renderCount
-                        RenderFrameCountTime = renderCountTime
-                        RenderFrameLastCount = renderLastCount }
+                            Time = gl.Time + targetUpdateInterval
+                            Accumulator = gl.Accumulator - targetUpdateInterval }
                 else
                     { gl with LastTime = currentTime }
 
             pre ()
        
-            { gl with UpdateAccumulator = updateAcc; RenderAccumulator = renderAcc }
+            { gl with Accumulator = acc }
             |> processUpdate
-            |> processRender
             |> loop
 
         loop
             { State = state
-              PreviousState = state
               LastTime = 0L
-              UpdateTime = 0L
-              UpdateAccumulator = targetUpdateInterval
-              RenderAccumulator = 0L
-              RenderFrameCount = 0
-              RenderFrameCountTime = 0L
-              RenderFrameLastCount = 0 }
+              Time = 0L
+              Accumulator = targetUpdateInterval }
 
 type Client = {
     Application: Application
@@ -283,7 +244,6 @@ type Client = {
 
 [<EntryPoint>]
 let main args =
-    GCSettings.LatencyMode <- GCLatencyMode.Batch
     Native.App.initSystems ()
 
     let beginPoint = vec2 (0.f, -1.f)
@@ -326,7 +286,7 @@ let main args =
 
     GameLoop.start [||] 
         (fun () ->
-            GC.Collect ()
+            Thread.Sleep (0)
             pollInputEvents ())
         (fun _ time _ ->
             match Input.processInput () with
@@ -362,8 +322,5 @@ let main args =
                 makeLines 90.f (length) drawLine
                 |> Array.ofList
             testStateM.Update Normal { Client.Default with Data = lines }
-            lines) 
-        (fun t prevDrawLines drawLines -> ())
-//
-//    exit (app)
+            lines)
     0
