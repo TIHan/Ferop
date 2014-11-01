@@ -210,7 +210,6 @@ module GameLoop =
                 if gl.Accumulator >= targetUpdateInterval
                 then
                     let state = update gl.Time targetUpdateInterval gl.State
-                    //printfn "%A" (TimeSpan.FromTicks(time () - currentTime).TotalMilliseconds)
                     processUpdate
                         { gl with 
                             State = state
@@ -243,6 +242,7 @@ type Client = {
 
 [<EntryPoint>]
 let main args =
+    GCSettings.LatencyMode <- GCLatencyMode.Batch
     Native.App.initSystems ()
 
     let beginPoint = vec2 (0.f, -1.f)
@@ -285,7 +285,7 @@ let main args =
 
     GameLoop.start [||] 
         (fun () ->
-            Thread.Sleep (1)
+            Thread.Sleep (0)
             pollInputEvents ())
         (fun _ time _ ->
             match Input.processInput () with
