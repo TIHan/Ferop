@@ -55,7 +55,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 5 -> cont lines
+        | 13 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -104,12 +104,13 @@ type StateUpdatePriority =
 type StateUpdate<'T> = StateUpdate of StateUpdatePriority * 'T
 
 type StateMachine<'State> (init, normalUpdate, execute) =
-    let targetInterval = (1000. / 120.) * 10000. |> int64
+    let targetInterval = (1000. / 60.) * 10000. |> int64
     let nextInterval = (1000. / 30.) * 10000. |> int64
-    let stopwatch = Stopwatch ()
-    let time () = stopwatch.Elapsed.Ticks
 
     let mailbox = new MailboxProcessor<StateUpdate<'State>> (fun inbox ->
+        let stopwatch = Stopwatch.StartNew ()
+        let time () = stopwatch.Elapsed.Ticks
+
         let rec tryUpdate (main: MainState<'State>) =
             async {
                 if inbox.CurrentQueueLength = 0 then
@@ -121,7 +122,7 @@ type StateMachine<'State> (init, normalUpdate, execute) =
                         if inbox.CurrentQueueLength > 0 then
                             return! tryUpdate main
                         else
-                            return { main with Next2 = normalUpdate main.Next state } |> Some
+                            return { main with Next2 = normalUpdate main.Next2 state } |> Some
 
                     | StateUpdate (Immediate, state) ->
                         let main = { main with Next = state; Current = state; Previous = state }
@@ -134,11 +135,15 @@ type StateMachine<'State> (init, normalUpdate, execute) =
 
         let rec loop (main: MainState<'State>)  =
             async {
-                GC.Collect (2)
+                GC.Collect ()
                 let currentTime = time ()
                 let deltaTime = currentTime - main.LastTime
-                let acc = main.Accumulator + deltaTime
                 let nextAcc = main.NextAccumulator + deltaTime
+
+                let acc =
+                    if main.Accumulator > targetInterval
+                    then targetInterval
+                    else main.Accumulator + deltaTime
 
                 let! updated = tryUpdate main
                 let main =
@@ -159,10 +164,10 @@ type StateMachine<'State> (init, normalUpdate, execute) =
 
                 let main = processNext { main with NextAccumulator = nextAcc }
 
-                if main.Accumulator >= targetInterval then
-                    printfn "%A" (1000. / TimeSpan.FromTicks(main.Accumulator).TotalMilliseconds)
+                if acc >= targetInterval then
+                    printfn "%A" (1000. / TimeSpan.FromTicks(acc).TotalMilliseconds)
                     execute (float main.NextAccumulator / float nextInterval) main.Previous main.Current
-                    return! loop { main with LastTime = currentTime; Accumulator = main.Accumulator - targetInterval }
+                    return! loop { main with LastTime = currentTime; Accumulator = acc - targetInterval }
                 else
                     return! loop { main with LastTime = currentTime; Accumulator = acc }
                 
@@ -172,7 +177,6 @@ type StateMachine<'State> (init, normalUpdate, execute) =
         loop { Current = initial; Next2 = initial; Next = initial; Previous = initial; LastTime = 0L; Accumulator = 0L; NextAccumulator = 0L })
         
     member this.Start () =
-        stopwatch.Start ()
         mailbox.Start ()
 
     member this.Update priority state =
