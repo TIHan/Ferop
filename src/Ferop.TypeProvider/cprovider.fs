@@ -38,7 +38,7 @@ open ProviderImplementation
 open ProviderImplementation.ProvidedTypes
 
 open FSharp.Interop.Ferop
-open FSharp.Interop.FeropCompiler
+open FSharp.Interop.Ferop.Compiler
 
 [<RequireQualifiedAccess>]
 module internal TypeProviderConfig =

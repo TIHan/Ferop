@@ -70,21 +70,16 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <Compile Include="io.fs" />
     <Compile Include="ctast.fs" />
     <Compile Include="cconv.fs" />
     <Compile Include="cgen.fs" />
-    <Compile Include="ferop.fs" />
     <Compile Include="core.fs" />
     <Compile Include="cwin.fs" />
     <Compile Include="clinux.fs" />
     <Compile Include="cosx.fs" />
     <Compile Include="cios.fs" />
     <Compile Include="compiler.fs" />
-    <Compile Include="ProvidedTypes.fsi" />
-    <Compile Include="ProvidedTypes.fs" />
-    <Compile Include="DebugProvidedTypes.fs" />
-    <Compile Include="cprovider.fs" />
+    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -92,5 +87,12 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Ferop.Core\Ferop.Core.fsproj">
+      <Name>Ferop.Core</Name>
+      <Project>{cad65c99-c16f-438e-9d50-e8a15606cb62}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
 </Project>

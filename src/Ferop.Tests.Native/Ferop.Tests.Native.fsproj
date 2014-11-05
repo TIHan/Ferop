@@ -61,9 +61,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <ProjectReference Include="..\Ferop\Ferop.fsproj">
-      <Project>{90A45EB2-1122-4BFF-A921-04D926400AC0}</Project>
-      <Name>Ferop</Name>
+    <ProjectReference Include="..\Ferop.Core\Ferop.Core.fsproj">
+      <Name>Ferop.Core</Name>
+      <Project>{cad65c99-c16f-438e-9d50-e8a15606cb62}</Project>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
 </Project>

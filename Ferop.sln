@@ -5,6 +5,12 @@ VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop", "src\Ferop\Ferop.fsproj", "{90A45EB2-1122-4BFF-A921-04D926400AC0}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.TypeProvider", "src\Ferop.TypeProvider\Ferop.TypeProvider.fsproj", "{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Core", "src\Ferop.Core\Ferop.Core.fsproj", "{CAD65C99-C16F-438E-9D50-E8A15606CB62}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.TypeProvider.Portable", "src\Ferop.TypeProvider\Ferop.TypeProvider.Portable.fsproj", "{8576F175-0E68-466C-995A-77309A6D19F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-﻿module internal FSharp.Interop.FeropCompiler
+﻿module internal FSharp.Interop.Ferop.Compiler
 
 open System
 open System.IO

@@ -11,6 +11,12 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Tests", "src\Ferop.Te
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Tests.Native", "src\Ferop.Tests.Native\Ferop.Tests.Native.fsproj", "{6678562D-A620-48F4-A3E3-06FAE7FB50B1}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.TypeProvider", "src\Ferop.TypeProvider\Ferop.TypeProvider.fsproj", "{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Core", "src\Ferop.Core\Ferop.Core.fsproj", "{CAD65C99-C16F-438E-9D50-E8A15606CB62}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.TypeProvider.Portable", "src\Ferop.TypeProvider\Ferop.TypeProvider.Portable.fsproj", "{8576F175-0E68-466C-995A-77309A6D19F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,8 +27,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Debug|x64.ActiveCfg = Debug|x64
 		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Debug|x86.ActiveCfg = Debug|x86
-		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x64.ActiveCfg = Release|x64
-		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.ActiveCfg = Release|x86
+		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x64.ActiveCfg = Release|Any CPU
+		{90A45EB2-1122-4BFF-A921-04D926400AC0}.Release|x86.ActiveCfg = Release|Any CPU
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x64.ActiveCfg = Debug|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x64.Build.0 = Debug|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x86.ActiveCfg = Debug|x86
@@ -39,6 +45,18 @@ Global
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|x64.Build.0 = Release|x64
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|x86.ActiveCfg = Release|x86
 		{6678562D-A620-48F4-A3E3-06FAE7FB50B1}.Release|x86.Build.0 = Release|x86
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Release|x64.ActiveCfg = Release|Any CPU
+		{2A831928-3BAD-4B1A-ABD0-2B9425DF1A3F}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Release|x64.ActiveCfg = Release|Any CPU
+		{CAD65C99-C16F-438E-9D50-E8A15606CB62}.Release|x86.ActiveCfg = Release|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Release|x64.ActiveCfg = Release|Any CPU
+		{8576F175-0E68-466C-995A-77309A6D19F9}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

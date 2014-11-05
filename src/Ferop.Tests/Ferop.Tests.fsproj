@@ -54,6 +54,16 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Ferop.Core\Ferop.Core.fsproj">
+      <Name>Ferop.Core</Name>
+      <Project>{cad65c99-c16f-438e-9d50-e8a15606cb62}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Ferop.TypeProvider\Ferop.TypeProvider.Portable.fsproj">
+      <Name>Ferop.TypeProvider.Portable</Name>
+      <Project>{8576f175-0e68-466c-995a-77309a6d19f9}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
@@ -69,10 +79,6 @@
     <ProjectReference Include="..\Ferop.Tests.Native\Ferop.Tests.Native.fsproj">
       <Project>{6678562D-A620-48F4-A3E3-06FAE7FB50B1}</Project>
       <Name>Ferop.Tests.Native</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Ferop\Ferop.fsproj">
-      <Project>{90A45EB2-1122-4BFF-A921-04D926400AC0}</Project>
-      <Name>Ferop</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
