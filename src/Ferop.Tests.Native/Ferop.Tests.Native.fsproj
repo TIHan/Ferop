@@ -49,6 +49,9 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ferop">
+      <HintPath>..\Ferop\bin\Release\Ferop.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
@@ -60,10 +63,5 @@
     <Compile Include="tests.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\Ferop\Ferop.fsproj">
-      <Project>{90A45EB2-1122-4BFF-A921-04D926400AC0}</Project>
-      <Name>Ferop</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <Import Project="Ferop.targets" Condition="Exists('Ferop.targets')" />
 </Project>

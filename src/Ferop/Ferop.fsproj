@@ -81,12 +81,11 @@
     <Compile Include="cosx.fs" />
     <Compile Include="cios.fs" />
     <Compile Include="compiler.fs" />
-    <Compile Include="ProvidedTypes.fsi" />
-    <Compile Include="ProvidedTypes.fs" />
-    <Compile Include="DebugProvidedTypes.fs" />
-    <Compile Include="cprovider.fs" />
+    <Compile Include="task.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
