@@ -3,6 +3,7 @@
 open System.Reflection
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
+open Mono.Cecil
 
 type public WeavingTask () =
     inherit Task ()
@@ -10,22 +11,11 @@ type public WeavingTask () =
     [<Required>]
     member val AssemblyPath : string = "" with get, set
 
-    member val IntermediateDir : string = "" with get, set
-    member val KeyFilePath : string = "" with get, set
-    member val SignAssembly : bool = false with get, set
-
     [<Required>]
-    member val ProjectDirectory = "" with get, set
-
-    member val References = "" with get, set
-    member val ReferenceCopyLocalPaths = Array.empty<ITaskItem> with get, set
-
-    [<Required>]
-    member val SolutionDir = "" with get, set
-
-    member val DefineConstants = "" with get, set
+    member val ProjectDirectory : string = "" with get, set
 
     override this.Execute () : bool =  
-        let asm = Assembly.LoadFile (this.AssemblyPath)    
-        FSharp.Interop.FeropCompiler.C.compile this.AssemblyPath this.ProjectDirectory this.ProjectDirectory true FSharp.Interop.Ferop.Platform.Auto asm |> ignore
+        //failwith this.AssemblyPath
+        let asm = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
+        //FSharp.Interop.FeropCompiler.C.compile this.AssemblyPath this.ProjectDirectory this.ProjectDirectory true FSharp.Interop.Ferop.Platform.Auto asm |> ignore
         true
