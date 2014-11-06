@@ -10,12 +10,6 @@ open Ferop.Tests
 
 #nowarn "51"
 
-#if DEBUG
-type Native = CProvider<"Ferop.Tests.Native", "bin/Debug">
-#else
-type Native = CProvider<"Ferop.Tests.Native", "bin/Release">
-#endif
-
 [<Test>]
 let ``with max value of byte, should pass and return the same value`` () =
     Native.Tests.testByte (Byte.MaxValue)
@@ -128,7 +122,7 @@ let ``with max value of double, should pass and return the same value from expor
 
 [<Test>]
 let ``with a Y value of Struct3, should pass Struct3 and return the correct Y value`` () =
-    Native.Tests.testStruct3Value (Struct3 (5., 53.))
+    Native.Tests.testStruct3Value (Native.Struct3 (5., 53.))
     |> should equal 53.
 
 [<Test>]
@@ -138,14 +132,14 @@ let ``with byte array, should pass byte array and return first element`` () =
 
 [<Test>]
 let ``with a delegate type, should pass a delegate and return the result`` () =
-    Native.Tests4.testDelegate (fun x -> x)
+    Native.Tests4.testDelegate (Native.Tests4.Test (fun x -> x))
     |> should equal 1234
 
 [<Test>]
 let ``with a byref type, should pass a reference to get a new value`` () =
-    let x = ref 1.
-    Native.Tests4.testByRef (x)
-    !x |> should equal 30.2
+    let mutable x = 1.
+    Native.Tests4.testByRef (&x)
+    x |> should equal 30.2
 
 [<Test>]
 let ``with a pointer type, should pass a pointer to get a new value`` () =

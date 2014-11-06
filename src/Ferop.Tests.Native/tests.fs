@@ -1,4 +1,4 @@
-﻿namespace Ferop.Tests
+﻿namespace Ferop.Tests.Native
 
 open FSharp.Interop.Ferop
 open System.Runtime.InteropServices
