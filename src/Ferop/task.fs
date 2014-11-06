@@ -1,6 +1,7 @@
 ﻿namespace Ferop
 
 open System
+open System.Runtime.CompilerServices
 open System.Reflection
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
@@ -39,6 +40,50 @@ type public WeavingTask () =
     member val ProjectDirectory : string = "" with get, set
 
     override this.Execute () : bool =  
+        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)
+
+        asmDef.Modules
+        |> Seq.iter (fun m ->
+            m.GetTypes ()
+            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+            |> Seq.iter (fun x -> 
+                x.Methods
+                |> Seq.iter (fun meth ->
+                    if methodHasAttribute typeof<ExportAttribute> meth then
+                        let voidType = m.Import(typeof<Void>)
+                        let objType = m.Import(typeof<obj>)
+                        let nativeintType = m.Import(typeof<nativeint>)
+                        let delType = m.Import(typeof<MulticastDelegate>)
+                        let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
+
+                        let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
+
+                        let ctordel = MethodDefinition (".ctor", MethodAttributes.Public, voidType)
+                        ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
+                        ctordel.Parameters.Add (ParameterDefinition ("'method'", ParameterAttributes.None, nativeintType))
+                        ctordel.ImplAttributes <- ctordel.ImplAttributes ||| MethodImplAttributes.Runtime
+
+                        del.Methods.Add (ctordel)
+
+                        let delmeth = MethodDefinition ("Invoke", MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig, meth.ReturnType)
+                        delmeth.ImplAttributes <- delmeth.ImplAttributes ||| MethodImplAttributes.Runtime
+                        let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
+                        delmeth.CustomAttributes.Add (customAttr)
+
+                        meth.Parameters
+                        |> Seq.iter delmeth.Parameters.Add
+
+                        del.Methods.Add (delmeth)
+
+                        m.Import (del)
+                        |> ignore
+                    else
+                        ()
+                )
+            )
+            m.Write (this.AssemblyPath)
+        )
+
         let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
         let asm = Assembly.Load asmBytes
 
