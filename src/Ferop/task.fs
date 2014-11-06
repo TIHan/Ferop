@@ -19,6 +19,11 @@ type public WeavingTask () =
         |> Seq.exists (fun x ->
             x.AttributeType.FullName.Contains(typ.Name))
 
+    let methodHasAttribute (typ: Type) (methDef: MethodDefinition) =
+        methDef.CustomAttributes
+        |> Seq.exists (fun x ->
+            x.AttributeType.FullName.Contains(typ.Name))
+
     let feropClasses (asm: Assembly) =
         asm.GetTypes ()
         |> Array.filter (fun x ->x.IsClass)
@@ -46,10 +51,13 @@ type public WeavingTask () =
             |> Seq.iter (fun x -> 
                 x.Methods
                 |> Seq.iter (fun meth ->
-                    meth.IsPInvokeImpl <- true
-                    meth.IsPreserveSig <- true
-                    meth.CallingConvention <- MethodCallingConvention.C
-                    m.Import (meth) |> ignore
+                    if methodHasAttribute typeof<ExportAttribute> meth then
+                        ()
+                    else
+                        meth.IsPInvokeImpl <- true
+                        meth.IsPreserveSig <- true
+                        meth.CallingConvention <- MethodCallingConvention.C
+                        m.Import (meth) |> ignore
                 )
             )
             m.Write (this.AssemblyPath)
