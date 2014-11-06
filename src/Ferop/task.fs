@@ -48,7 +48,8 @@ type public WeavingTask () =
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
                 x.Methods
-                |> Seq.iter (fun meth ->
+                |> Array.ofSeq
+                |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
                         let voidType = m.Import(typeof<Void>)
                         let objType = m.Import(typeof<obj>)
@@ -75,14 +76,15 @@ type public WeavingTask () =
 
                         del.Methods.Add (delmeth)
 
-                        m.Import (del)
-                        |> ignore
+                        x.Module.Types.Add del
                     else
                         ()
                 )
             )
             m.Write (this.AssemblyPath)
         )
+
+        asmDef.Write this.AssemblyPath
 
         let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
         let asm = Assembly.Load asmBytes
@@ -95,14 +97,14 @@ type public WeavingTask () =
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
                 x.Methods
-                |> Seq.iter (fun meth ->
+                |> Array.ofSeq
+                |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
                         ()
                     else
                         meth.IsPInvokeImpl <- true
                         meth.IsPreserveSig <- true
                         meth.CallingConvention <- MethodCallingConvention.C
-                        m.Import (meth) |> ignore
                 )
             )
             m.Write (this.AssemblyPath)
