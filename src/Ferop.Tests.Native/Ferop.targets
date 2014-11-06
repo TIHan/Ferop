@@ -50,6 +50,7 @@
     <Ferop.WeavingTask
           AssemblyPath="@(IntermediateAssembly)"
           ProjectDirectory="$(ProjectDir)"
+	  TargetDirectory="$(ProjectDir)$(OutputPath)"
       />
   </Target>
 

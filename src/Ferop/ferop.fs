@@ -47,8 +47,8 @@ type HeaderAttribute (header: string) =
 type ExportAttribute () =
     inherit System.Attribute ()
 
-let private errorMsg = "This should not be called directly. Instead, call the generated version."
-
-let code (text: string) =
+// Hack to get the F# compiler to not inline the function calling this one.
+let inline code (text: string) =
     text |> ignore
-    failwith errorMsg
+    failwith text
+    failwith text

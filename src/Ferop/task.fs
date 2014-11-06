@@ -34,11 +34,32 @@ type public WeavingTask () =
             |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
         |> List.ofArray
 
+    let rec makeDllName name = function 
+        | Platform.Win -> sprintf "%s.dll" name
+        | Platform.Linux -> sprintf "lib%s.so" name
+        | Platform.Osx -> sprintf "lib%s.dylib" name
+        //| Platform.AppleiOS -> "__Internal"
+        | _ ->
+
+        match Environment.OSVersion.Platform with
+        | x when 
+            x = PlatformID.Win32NT ||
+            x = PlatformID.Win32S ||
+            x = PlatformID.WinCE -> makeDllName name Platform.Win
+        | x when x = PlatformID.Unix -> 
+            if C.isRunningOnMac ()
+            then makeDllName name Platform.Osx
+            else makeDllName name Platform.Linux
+        | _ -> failwith "OS not supported."
+
     [<Required>]
     member val AssemblyPath : string = "" with get, set
 
     [<Required>]
     member val ProjectDirectory : string = "" with get, set
+
+    [<Required>]
+    member val TargetDirectory : string = "" with get, set
 
     override this.Execute () : bool =  
         let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)
@@ -60,6 +81,8 @@ type public WeavingTask () =
                         let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
                         let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
                         let callingConvType = m.Import(typeof<CallingConvention>)
+                        let dllimportAttrTypeCtor = m.Import(typeof<DllImportAttribute>.GetConstructor([|typeof<string>|]))
+                        let stringType = m.Import(typeof<string>)
 
                         let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
 
@@ -99,6 +122,10 @@ type public WeavingTask () =
                         meth.IsPreserveSig <- true
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
 
+                        let customAttr = CustomAttribute (dllimportAttrTypeCtor)
+                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (stringType, makeDllName x.Name Platform.Auto))
+                        meth.CustomAttributes.Add (customAttr)
+
                         x.Methods.Add meth
                     else
                         ()
@@ -109,31 +136,41 @@ type public WeavingTask () =
 
         let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
         let asm = Assembly.Load asmBytes
-//
-//        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
-//
-//        asmDef.Modules
-//        |> Seq.iter (fun m ->
-//            m.GetTypes ()
-//            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-//            |> Seq.iter (fun x -> 
-//                x.Methods
-//                |> Array.ofSeq
-//                |> Array.iter (fun meth ->
-//                    if methodHasAttribute typeof<ExportAttribute> meth then
-//                        ()
-//                    else
-//                        meth.IsPInvokeImpl <- true
-//                        meth.IsPreserveSig <- true
-//                        meth.CallingConvention <- MethodCallingConvention.C
-//                )
-//            )
-//            m.Write (this.AssemblyPath)
-//        )
+
+        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
+
+        asmDef.Modules
+        |> Seq.iter (fun m ->
+            m.GetTypes ()
+            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+            |> Seq.iter (fun x -> 
+                x.Methods
+                |> Array.ofSeq
+                |> Array.iter (fun meth ->
+                    if methodHasAttribute typeof<ExportAttribute> meth then
+                        ()
+                    else
+                        let dllimportAttrTypeCtor = m.Import(typeof<DllImportAttribute>.GetConstructor([|typeof<string>|]))
+                        let callingConvType = m.Import(typeof<CallingConvention>)
+                        let stringType = m.Import(typeof<string>)
+                        let charsetType = m.Import(typeof<CharSet>)
+
+                        meth.IsPInvokeImpl <- true
+
+                        let customAttr = CustomAttribute (dllimportAttrTypeCtor)
+                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (stringType, makeDllName x.Name Platform.Auto))
+                        customAttr.Properties.Add (CustomAttributeNamedArgument ("CallingConvention", CustomAttributeArgument (callingConvType, CallingConvention.Cdecl)))
+                        customAttr.Properties.Add (CustomAttributeNamedArgument ("EntryPoint", CustomAttributeArgument (stringType, sprintf "%s_%s" x.Name meth.Name)))
+                        customAttr.Properties.Add (CustomAttributeNamedArgument ("CharSet", CustomAttributeArgument (charsetType, CharSet.Ansi)))
+                        meth.CustomAttributes.Add (customAttr)
+                )
+            )
+            m.Write (this.AssemblyPath)
+        )
 
         feropClasses asm
         |> List.iter (fun m ->
             let modul = makeModule m
-            C.compileModule this.ProjectDirectory modul Platform.Auto
+            C.compileModule this.TargetDirectory modul Platform.Auto
         )
         true
