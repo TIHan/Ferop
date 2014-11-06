@@ -7,6 +7,9 @@ open Microsoft.Build.Utilities
 open Mono.Cecil
 
 open FSharp.Interop.Ferop
+open FSharp.Interop.FeropCompiler
+open FSharp.Interop.FeropInternal
+open FSharp.Interop.FeropInternal.Core
 
 type public WeavingTask () =
     inherit Task ()
@@ -16,6 +19,14 @@ type public WeavingTask () =
         |> Seq.exists (fun x ->
             x.AttributeType.FullName.Contains(typ.Name))
 
+    let feropClasses (asm: Assembly) =
+        asm.GetTypes ()
+        |> Array.filter (fun x ->x.IsClass)
+        |> Array.filter (fun x ->
+            x.CustomAttributes
+            |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
+        |> List.ofArray
+
     [<Required>]
     member val AssemblyPath : string = "" with get, set
 
@@ -23,12 +34,30 @@ type public WeavingTask () =
     member val ProjectDirectory : string = "" with get, set
 
     override this.Execute () : bool =  
-        let asm = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
+        let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
+        let asm = Assembly.Load asmBytes
 
-        asm.Modules
+        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
+
+        asmDef.Modules
         |> Seq.iter (fun m ->
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-            |> Seq.iter (fun x -> ()))
-        //FSharp.Interop.FeropCompiler.C.compile this.AssemblyPath this.ProjectDirectory this.ProjectDirectory true FSharp.Interop.Ferop.Platform.Auto asm |> ignore
+            |> Seq.iter (fun x -> 
+                x.Methods
+                |> Seq.iter (fun meth ->
+                    meth.IsPInvokeImpl <- true
+                    meth.IsPreserveSig <- true
+                    meth.CallingConvention <- MethodCallingConvention.C
+                    m.Import (meth) |> ignore
+                )
+            )
+            m.Write (this.AssemblyPath)
+        )
+
+        feropClasses asm
+        |> List.iter (fun m ->
+            let modul = makeModule m
+            C.compileModule this.ProjectDirectory modul Platform.Auto
+        )
         true
