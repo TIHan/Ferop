@@ -45,8 +45,9 @@ type public WeavingTask () =
         asmDef.Modules
         |> Seq.iter (fun m ->
             m.GetTypes ()
-            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-            |> Seq.iter (fun x -> 
+            |> Array.ofSeq
+            |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+            |> Array.iter (fun x -> 
                 x.Methods
                 |> Array.ofSeq
                 |> Array.iter (fun meth ->
@@ -59,7 +60,7 @@ type public WeavingTask () =
 
                         let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
 
-                        let ctordel = MethodDefinition (".ctor", MethodAttributes.Public, voidType)
+                        let ctordel = MethodDefinition (".ctor", MethodAttributes.Public ||| MethodAttributes.CompilerControlled ||| MethodAttributes.RTSpecialName ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, voidType)
                         ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
                         ctordel.Parameters.Add (ParameterDefinition ("'method'", ParameterAttributes.None, nativeintType))
                         ctordel.ImplAttributes <- ctordel.ImplAttributes ||| MethodImplAttributes.Runtime
@@ -76,39 +77,37 @@ type public WeavingTask () =
 
                         del.Methods.Add (delmeth)
 
-                        x.Module.Types.Add del
+                        m.Types.Add del
                     else
                         ()
                 )
             )
             m.Write (this.AssemblyPath)
         )
-
-        asmDef.Write this.AssemblyPath
 
         let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
         let asm = Assembly.Load asmBytes
-
-        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
-
-        asmDef.Modules
-        |> Seq.iter (fun m ->
-            m.GetTypes ()
-            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-            |> Seq.iter (fun x -> 
-                x.Methods
-                |> Array.ofSeq
-                |> Array.iter (fun meth ->
-                    if methodHasAttribute typeof<ExportAttribute> meth then
-                        ()
-                    else
-                        meth.IsPInvokeImpl <- true
-                        meth.IsPreserveSig <- true
-                        meth.CallingConvention <- MethodCallingConvention.C
-                )
-            )
-            m.Write (this.AssemblyPath)
-        )
+//
+//        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
+//
+//        asmDef.Modules
+//        |> Seq.iter (fun m ->
+//            m.GetTypes ()
+//            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+//            |> Seq.iter (fun x -> 
+//                x.Methods
+//                |> Array.ofSeq
+//                |> Array.iter (fun meth ->
+//                    if methodHasAttribute typeof<ExportAttribute> meth then
+//                        ()
+//                    else
+//                        meth.IsPInvokeImpl <- true
+//                        meth.IsPreserveSig <- true
+//                        meth.CallingConvention <- MethodCallingConvention.C
+//                )
+//            )
+//            m.Write (this.AssemblyPath)
+//        )
 
         feropClasses asm
         |> List.iter (fun m ->
