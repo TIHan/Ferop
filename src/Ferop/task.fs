@@ -2,6 +2,7 @@
 
 open System
 open System.Runtime.CompilerServices
+open System.Runtime.InteropServices
 open System.Reflection
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
@@ -57,6 +58,8 @@ type public WeavingTask () =
                         let nativeintType = m.Import(typeof<nativeint>)
                         let delType = m.Import(typeof<MulticastDelegate>)
                         let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
+                        let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
+                        let callingConvType = m.Import(typeof<CallingConvention>)
 
                         let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
 
@@ -69,8 +72,13 @@ type public WeavingTask () =
 
                         let delmeth = MethodDefinition ("Invoke", MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig, meth.ReturnType)
                         delmeth.ImplAttributes <- delmeth.ImplAttributes ||| MethodImplAttributes.Runtime
+
                         let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
-                        delmeth.CustomAttributes.Add (customAttr)
+                        del.CustomAttributes.Add (customAttr)
+
+                        let customAttr = CustomAttribute (unmanagedFnPtrCtor)
+                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (callingConvType, CallingConvention.Cdecl))
+                        del.CustomAttributes.Add (customAttr)
 
                         meth.Parameters
                         |> Seq.iter delmeth.Parameters.Add
@@ -78,6 +86,20 @@ type public WeavingTask () =
                         del.Methods.Add (delmeth)
 
                         m.Types.Add del
+
+                        // ******
+
+                        let meth = 
+                            MethodDefinition (
+                                sprintf "_ferop_set_%s" meth.Name,
+                                MethodAttributes.Public ||| MethodAttributes.Static,
+                                voidType
+                            )
+                        meth.IsPInvokeImpl <- true
+                        meth.IsPreserveSig <- true
+                        meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
+
+                        x.Methods.Add meth
                     else
                         ()
                 )
