@@ -53,6 +53,79 @@ type Proxy () =
         | _ -> failwith "OS not supported."
 
     member this.Execute (appDomain: AppDomain, assemblyPath: string, references: string, targetDirectory: string) : unit = 
+        let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath)
+
+        asmDef.Modules
+        |> Seq.iter (fun m ->
+            m.GetTypes ()
+            |> Array.ofSeq
+            |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+            |> Array.iter (fun x -> 
+                x.Methods
+                |> Array.ofSeq
+                |> Array.iter (fun meth ->
+                    if methodHasAttribute typeof<ExportAttribute> meth then
+                        let voidType = m.Import(typeof<Void>)
+                        let objType = m.Import(typeof<obj>)
+                        let nativeintType = m.Import(typeof<nativeint>)
+                        let delType = m.Import(typeof<MulticastDelegate>)
+                        let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
+                        let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
+                        let callingConvType = m.Import(typeof<CallingConvention>)
+                        let dllimportAttrTypeCtor = m.Import(typeof<DllImportAttribute>.GetConstructor([|typeof<string>|]))
+                        let stringType = m.Import(typeof<string>)
+
+                        let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
+
+                        let ctordel = MethodDefinition (".ctor", MethodAttributes.Public ||| MethodAttributes.CompilerControlled ||| MethodAttributes.RTSpecialName ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, voidType)
+                        ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
+                        ctordel.Parameters.Add (ParameterDefinition ("'method'", ParameterAttributes.None, nativeintType))
+                        ctordel.ImplAttributes <- ctordel.ImplAttributes ||| MethodImplAttributes.Runtime
+
+                        del.Methods.Add (ctordel)
+
+                        let delmeth = MethodDefinition ("Invoke", MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig, meth.ReturnType)
+                        delmeth.ImplAttributes <- delmeth.ImplAttributes ||| MethodImplAttributes.Runtime
+
+                        let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
+                        del.CustomAttributes.Add (customAttr)
+
+                        let customAttr = CustomAttribute (unmanagedFnPtrCtor)
+                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (callingConvType, CallingConvention.Cdecl))
+                        del.CustomAttributes.Add (customAttr)
+
+                        meth.Parameters
+                        |> Seq.iter delmeth.Parameters.Add
+
+                        del.Methods.Add (delmeth)
+
+                        m.Types.Add del
+
+                        // ******
+
+                        let meth = 
+                            MethodDefinition (
+                                sprintf "_ferop_set_%s" meth.Name,
+                                MethodAttributes.Public ||| MethodAttributes.Static,
+                                voidType
+                            )
+                        meth.IsPInvokeImpl <- true
+                        meth.IsPreserveSig <- true
+                        meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
+
+                        let customAttr = CustomAttribute (dllimportAttrTypeCtor)
+                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (stringType, makeDllName x.Name Platform.Auto))
+                        meth.CustomAttributes.Add (customAttr)
+
+                        x.Methods.Add meth
+                    else
+                        ()
+                )
+            )
+            m.Write (assemblyPath)
+        )
+
+
         let load x = appDomain.Load (System.IO.File.ReadAllBytes (x))
         let asm = load assemblyPath
 
@@ -104,78 +177,6 @@ type public WeavingTask () =
     member val References : string = "" with get, set
 
     override this.Execute () : bool =  
-//        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)
-//
-//        asmDef.Modules
-//        |> Seq.iter (fun m ->
-//            m.GetTypes ()
-//            |> Array.ofSeq
-//            |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-//            |> Array.iter (fun x -> 
-//                x.Methods
-//                |> Array.ofSeq
-//                |> Array.iter (fun meth ->
-//                    if methodHasAttribute typeof<ExportAttribute> meth then
-//                        let voidType = m.Import(typeof<Void>)
-//                        let objType = m.Import(typeof<obj>)
-//                        let nativeintType = m.Import(typeof<nativeint>)
-//                        let delType = m.Import(typeof<MulticastDelegate>)
-//                        let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
-//                        let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
-//                        let callingConvType = m.Import(typeof<CallingConvention>)
-//                        let dllimportAttrTypeCtor = m.Import(typeof<DllImportAttribute>.GetConstructor([|typeof<string>|]))
-//                        let stringType = m.Import(typeof<string>)
-//
-//                        let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
-//
-//                        let ctordel = MethodDefinition (".ctor", MethodAttributes.Public ||| MethodAttributes.CompilerControlled ||| MethodAttributes.RTSpecialName ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, voidType)
-//                        ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
-//                        ctordel.Parameters.Add (ParameterDefinition ("'method'", ParameterAttributes.None, nativeintType))
-//                        ctordel.ImplAttributes <- ctordel.ImplAttributes ||| MethodImplAttributes.Runtime
-//
-//                        del.Methods.Add (ctordel)
-//
-//                        let delmeth = MethodDefinition ("Invoke", MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig, meth.ReturnType)
-//                        delmeth.ImplAttributes <- delmeth.ImplAttributes ||| MethodImplAttributes.Runtime
-//
-//                        let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
-//                        del.CustomAttributes.Add (customAttr)
-//
-//                        let customAttr = CustomAttribute (unmanagedFnPtrCtor)
-//                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (callingConvType, CallingConvention.Cdecl))
-//                        del.CustomAttributes.Add (customAttr)
-//
-//                        meth.Parameters
-//                        |> Seq.iter delmeth.Parameters.Add
-//
-//                        del.Methods.Add (delmeth)
-//
-//                        m.Types.Add del
-//
-//                        // ******
-//
-//                        let meth = 
-//                            MethodDefinition (
-//                                sprintf "_ferop_set_%s" meth.Name,
-//                                MethodAttributes.Public ||| MethodAttributes.Static,
-//                                voidType
-//                            )
-//                        meth.IsPInvokeImpl <- true
-//                        meth.IsPreserveSig <- true
-//                        meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
-//
-//                        let customAttr = CustomAttribute (dllimportAttrTypeCtor)
-//                        customAttr.ConstructorArguments.Add (CustomAttributeArgument (stringType, makeDllName x.Name Platform.Auto))
-//                        meth.CustomAttributes.Add (customAttr)
-//
-//                        x.Methods.Add meth
-//                    else
-//                        ()
-//                )
-//            )
-//            m.Write (this.AssemblyPath)
-//        )
-//
         let currentAsm = Assembly.GetExecutingAssembly ()
 
         let domaininfo = AppDomainSetup ()
