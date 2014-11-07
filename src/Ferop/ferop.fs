@@ -1,5 +1,7 @@
 ﻿module FSharp.Interop.Ferop
 
+open System.Runtime.CompilerServices
+
 type Platform =
     | Auto = 0
     | Win = 1
@@ -47,8 +49,8 @@ type HeaderAttribute (header: string) =
 type ExportAttribute () =
     inherit System.Attribute ()
 
-// Hack to get the F# compiler to not inline the function calling this one.
-let inline code (text: string) =
+[<MethodImpl(MethodImplOptions.NoInlining)>]
+let code (text: string) =
     text |> ignore
     failwith text
     failwith text
