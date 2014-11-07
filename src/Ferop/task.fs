@@ -13,8 +13,8 @@ open FSharp.Interop.FeropCompiler
 open FSharp.Interop.FeropInternal
 open FSharp.Interop.FeropInternal.Core
 
-type public WeavingTask () =
-    inherit Task ()
+type Proxy () =
+    inherit MarshalByRefObject ()
 
     let hasAttribute (typ: Type) (typDef: TypeDefinition) =
         typDef.CustomAttributes
@@ -51,6 +51,46 @@ type public WeavingTask () =
             then makeDllName name Platform.Osx
             else makeDllName name Platform.Linux
         | _ -> failwith "OS not supported."
+
+    member this.Execute (appDomain: AppDomain, assemblyPath: string, references: string, targetDirectory: string) : unit = 
+        let load x = appDomain.Load (System.IO.File.ReadAllBytes (x))
+        let asm = load assemblyPath
+
+        references.Split(';')
+        |> Array.iter (fun x -> load x |> ignore)
+
+        let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath)  
+
+        asmDef.Modules
+        |> Seq.iter (fun m ->
+            let mref = ModuleReference (makeDllName "Tests" Platform.Auto)
+            m.GetTypes ()
+            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+            |> Seq.iter (fun x -> 
+                x.Methods
+                |> Array.ofSeq
+                |> Array.iter (fun meth ->
+                    if methodHasAttribute typeof<ExportAttribute> meth then
+                        ()
+                    else
+                        meth.Attributes <- MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl
+                        meth.IsPInvokeImpl <- true
+                        meth.PInvokeInfo <-
+                            PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
+                )
+            )
+            asmDef.MainModule.ModuleReferences.Add mref
+            m.Write (assemblyPath)
+        )
+
+        feropClasses asm
+        |> List.iter (fun m ->
+            let modul = makeModule m
+            C.compileModule targetDirectory modul Platform.Auto
+        )
+
+type public WeavingTask () =
+    inherit Task ()
 
     [<Required>]
     member val AssemblyPath : string = "" with get, set
@@ -136,40 +176,25 @@ type public WeavingTask () =
 //            m.Write (this.AssemblyPath)
 //        )
 //
-        let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
-        let asm = Assembly.Load asmBytes
+        let currentAsm = Assembly.GetExecutingAssembly ()
 
-        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
+        let domaininfo = AppDomainSetup ()
+        domaininfo.ApplicationBase <- System.Environment.CurrentDirectory;
+        let evidence = AppDomain.CurrentDomain.Evidence;
+        let appDomain = AppDomain.CreateDomain ("Ferop", evidence, domaininfo)
 
-        asmDef.Modules
-        |> Seq.iter (fun m ->
-            let mref = ModuleReference (makeDllName "Tests" Platform.Auto)
-            m.GetTypes ()
-            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-            |> Seq.iter (fun x -> 
-                x.Methods
-                |> Array.ofSeq
-                |> Array.iter (fun meth ->
-                    if methodHasAttribute typeof<ExportAttribute> meth then
-                        ()
-                    else
-                        meth.Attributes <- MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl
-                        meth.IsPInvokeImpl <- true
-                        meth.PInvokeInfo <-
-                            PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
-                )
-            )
-            asmDef.MainModule.ModuleReferences.Add mref
-            m.Write (this.AssemblyPath)
-        )
+        this.Log.LogMessage ("AppDomain Created")
 
-        this.References.Split(';')
-        |> Array.iter (fun x -> Assembly.LoadFile x |> ignore)
+        appDomain.Load (currentAsm.GetName()) |> ignore
+
+        this.Log.LogMessage ("Loaded Ferop Assembly")
+
+        let proxy : Proxy = appDomain.CreateInstanceAndUnwrap (typeof<Proxy>.Assembly.FullName, typeof<Proxy>.FullName) :?> Proxy
+
+        proxy.Execute (appDomain, this.AssemblyPath, this.References, this.TargetDirectory)
 
 
-        feropClasses asm
-        |> List.iter (fun m ->
-            let modul = makeModule m
-            C.compileModule this.TargetDirectory modul Platform.Auto
-        )
+ 
+        AppDomain.Unload appDomain
+        this.Log.LogMessage ("AppDomain Unloaded")
         true
