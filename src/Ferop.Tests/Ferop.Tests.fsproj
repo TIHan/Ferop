@@ -1,8 +1,8 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{6AFEE669-397C-4339-8146-1FDC54D1FA6E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Ferop.Tests</RootNamespace>
@@ -55,9 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="nunit.framework">
@@ -66,13 +64,10 @@
     <Reference Include="FsUnit.NUnit">
       <HintPath>..\..\packages\FsUnit.1.2.1.0\Lib\Net40\FsUnit.NUnit.dll</HintPath>
     </Reference>
-    <ProjectReference Include="..\Ferop.Tests.Native\Ferop.Tests.Native.fsproj">
-      <Project>{6678562D-A620-48F4-A3E3-06FAE7FB50B1}</Project>
-      <Name>Ferop.Tests.Native</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Ferop\Ferop.fsproj">
       <Project>{90A45EB2-1122-4BFF-A921-04D926400AC0}</Project>
       <Name>Ferop</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="Ferop.targets" Condition="Exists('Ferop.targets')" />
 </Project>

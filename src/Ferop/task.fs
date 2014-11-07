@@ -141,6 +141,7 @@ type public WeavingTask () =
 
         asmDef.Modules
         |> Seq.iter (fun m ->
+            let mref = ModuleReference (makeDllName "Tests" Platform.Auto)
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
@@ -155,11 +156,12 @@ type public WeavingTask () =
                         let meth = MethodDefinition (meth.Name, MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl, meth.ReturnType)
                         meth.IsPInvokeImpl <- true
                         meth.PInvokeInfo <-
-                            PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, m)
+                            PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
 
                         x.Methods.Add meth
                 )
             )
+            asmDef.MainModule.ModuleReferences.Add mref
             m.Write (this.AssemblyPath)
         )
 

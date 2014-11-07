@@ -3,16 +3,28 @@
 open System
 open FsUnit
 open NUnit.Framework
+open System.Runtime.InteropServices
+open System.Runtime.CompilerServices
 
-open FSharp.Interop
-
-open Ferop.Tests
+open FSharp.Interop.Ferop
 
 #nowarn "51"
 
+#if __64BIT__
+[<Cpu64bit>]
+#else
+#endif
+[<Ferop>]
+[<Header ("""
+#include <stdio.h>
+""")>]
+type Tests =
+    [<MethodImplAttribute(MethodImplOptions.NoInlining)>]
+    static member testByte (x: byte) : byte = code """ return x; """
+
 [<Test>]
 let ``with max value of byte, should pass and return the same value`` () =
-    Native.Tests.testByte (Byte.MaxValue)
+    Tests.testByte (Byte.MaxValue)
     |> should equal Byte.MaxValue
 
 //[<Test>]
