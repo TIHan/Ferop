@@ -14,6 +14,18 @@ open FSharp.Interop.Ferop
 open FSharp.Interop.FeropInternal
 open FSharp.Interop.FeropInternal.Core
 
+let addMethodAttribute<'T> (meth: MethodBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
+    let attributeType = typeof<'T>
+    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
+    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
+    meth.SetCustomAttribute (attributeBuilder)
+
+let addTypeAttribute<'T> (tb: TypeBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
+    let attributeType = typeof<'T>
+    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
+    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
+    tb.SetCustomAttribute (attributeBuilder)
+
 [<RequireQualifiedAccess>]
 module C =
 
@@ -43,7 +55,7 @@ module C =
         | Platform.Win -> sprintf "%s.dll" modul.Name
         | Platform.Linux -> sprintf "lib%s.so" modul.Name
         | Platform.Osx -> sprintf "lib%s.dylib" modul.Name
-        //| Platform.AppleiOS -> "__Internal"
+        | Platform.AppleiOS -> "__Internal"
         | _ ->
 
         match Environment.OSVersion.Platform with
@@ -61,7 +73,7 @@ module C =
         | Platform.Win -> CWin.compileModule path modul
         | Platform.Linux -> CLinux.compileModule path modul
         | Platform.Osx -> COsx.compileModule path modul
-        //| Platform.AppleiOS -> CiOS.compileModule path modul
+        | Platform.AppleiOS -> CiOS.compileModule path modul
         | _ ->
 
         match Environment.OSVersion.Platform with
@@ -145,7 +157,7 @@ module C =
             addMethodAttribute<SuppressUnmanagedCodeSecurityAttribute> meth [||] [||]
             meth :> MethodInfo) dels
 
-    let feropClasses (asm: Assembly) =
+    let classes (asm: Assembly) =
         asm.GetTypes ()
         |> Array.filter (fun x ->x.IsClass)
         |> Array.filter (fun x ->
@@ -153,11 +165,11 @@ module C =
             |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
         |> List.ofArray
     
-    let processAssembly dllName (outputPath: string) (dllPath: string) (canCompileModule: bool) (platform: Platform) (asm: Assembly) =
+    let processAssembly dllName (outputNativePath: string) (dllPath: string) (canCompileModule: bool) (platform: Platform) (asm: Assembly) =
         let dasm = createDynamicAssembly dllPath dllName
         let mb = dasm.DefineDynamicModule dllName
 
-        feropClasses asm
+        classes asm
         |> List.map (fun x ->
             let modul = makeModule x
             let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
@@ -201,18 +213,19 @@ module C =
                 { modul with 
                     Functions = modul.Functions @ (delMeths |> List.map (fun x -> internalTb.GetMethod (x.Name))) }
 
-            if canCompileModule then compileModule outputPath modul' platform
+            let cgen = makeCGen modul'
+            if canCompileModule then compileModule outputNativePath modul' platform cgen
 
             ()) |> ignore
 
         dasm
 
-    let compileDynamic name outputPath dllPath canCompileModule platform asm =
+    let compileDynamic name outputNativePath dllPath canCompileModule platform asm =
         let dllName = Path.GetFileName (Path.ChangeExtension (name, ".dll"))
-        processAssembly dllName outputPath dllPath canCompileModule platform asm
+        processAssembly dllName outputNativePath dllPath canCompileModule platform asm
     
-    let compile name outputPath dllPath canCompileModule platform asm =
-        let asm = compileDynamic name outputPath dllPath canCompileModule platform asm
+    let compile name outputNativePath dllPath canCompileModule platform asm =
+        let asm = compileDynamic name outputNativePath dllPath canCompileModule platform asm
         let asmName = asm.GetName ()
         asm.Save (asmName.Name)
         Path.Combine (dllPath, asmName.Name)

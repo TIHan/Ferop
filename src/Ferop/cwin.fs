@@ -48,7 +48,7 @@ let bat (is64bit: bool) =
         """call "%s"
 call "%s" %%*""" vcvars cl
 
-let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "%s.dll" modul.Name)
+let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "%s.dll" modul.Name)
 
 let makeArgs cFile options dllName = sprintf """%s %s /link /DLL /OUT:%s""" cFile options dllName
 
@@ -80,9 +80,7 @@ let compileToDynamicLibrary outputPath modul cgen = io {
     let args = makeArgs options cFile dllName
     do! startMsvc outputPath args }
 
-let compileModule outputPath modul =
-    let cgen = makeCGen modul
-
+let compileModule outputPath modul cgen =
     io {
         do! compileToDynamicLibrary outputPath modul cgen }
     |> IO.run

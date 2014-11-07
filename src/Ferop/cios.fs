@@ -67,8 +67,7 @@ let cleanObjectFiles outputPath = io {
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
 
-let compileModule outputPath modul =
-    let cgen = makeCGen modul
+let compileModule outputPath modul cgen =
     let libName = makeStaticLibraryPath outputPath modul
 
     io {

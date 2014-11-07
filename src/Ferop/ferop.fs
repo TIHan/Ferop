@@ -1,11 +1,13 @@
 ﻿module FSharp.Interop.Ferop
 
+open System.Runtime.CompilerServices
+
 type Platform =
     | Auto = 0
     | Win = 1
     | Linux = 2
     | Osx = 3
-    //| AppleiOS = 4
+    | AppleiOS = 4
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
 type FeropAttribute () =
@@ -47,8 +49,5 @@ type HeaderAttribute (header: string) =
 type ExportAttribute () =
     inherit System.Attribute ()
 
-let private errorMsg = "This should not be called directly. Instead, call the generated version."
-
-let code (text: string) =
-    text |> ignore
-    failwith errorMsg
+[<MethodImpl (MethodImplOptions.NoInlining)>]
+let C (text: string) = failwith "This should not be called directly. Call the generated version."

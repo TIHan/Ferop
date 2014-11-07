@@ -38,7 +38,6 @@ open ProviderImplementation
 open ProviderImplementation.ProvidedTypes
 
 open FSharp.Interop.Ferop
-open FSharp.Interop.FeropCompiler
 
 [<RequireQualifiedAccess>]
 module internal TypeProviderConfig =
@@ -107,7 +106,7 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         |> Array.map (fun x -> x.Name)
         |> Array.iter (fun x -> this.FindAssembly (x) |> ignore)
 
-        let dasmLocation = C.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
+        let dasmLocation = FSharp.Interop.FeropCompiler.C.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
         let dasm = Assembly.LoadFrom (dasmLocation)
 
         let def = ProvidedTypeDefinition (asm, ns, typeName, Some typeof<obj>, IsErased = false) 

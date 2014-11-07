@@ -3,15 +3,12 @@
 open System
 open System.IO
 open System.Reflection
-open System.Reflection.Emit
 open System.Diagnostics
-open System.Security
-open System.Runtime.InteropServices
 
 open FSharp.Interop.Ferop
 open FSharp.Control.IO
 
-type Module = {
+type FeropModule = {
     Name: string
     FullName: string
     Attributes: CustomAttributeData list
@@ -124,25 +121,13 @@ let makeCppFilePath path modul = Path.Combine (path, sprintf "%s.cpp" modul.Name
 
 let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
 
-let addMethodAttribute<'T> (meth: MethodBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
-    let attributeType = typeof<'T>
-    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
-    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
-    meth.SetCustomAttribute (attributeBuilder)
-
-let addTypeAttribute<'T> (tb: TypeBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
-    let attributeType = typeof<'T>
-    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
-    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
-    tb.SetCustomAttribute (attributeBuilder)
-
 open CConversion
 open CGeneration
 
-let makeCConvInfo (modul: Module) = 
+let makeCConvInfo (modul: FeropModule) = 
     { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions; IsCpp = modul.IsCpp }
 
-let makeCGen (modul: Module) =
+let makeCGen (modul: FeropModule) =
     let env = makeCEnv <| makeCConvInfo modul
     generate env modul.Header
 

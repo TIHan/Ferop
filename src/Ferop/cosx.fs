@@ -10,9 +10,9 @@ open FSharp.Control.IO
 
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
-let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
+let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
 
-let makeArgs flags cFile oFile (modul: Module) =
+let makeArgs flags cFile oFile (modul: FeropModule) =
     if modul.IsCpp
     then
         sprintf "-Wall -arch i386 %s -c %s -o %s" flags cFile oFile
@@ -70,8 +70,7 @@ let cleanObjectFiles outputPath = io {
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
 
-let compileModule outputPath modul =
-    let cgen = makeCGen modul
+let compileModule outputPath modul cgen =
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 

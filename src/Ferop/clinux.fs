@@ -10,10 +10,10 @@ open FSharp.Control.IO
 
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
-let makeDynamicLibraryPath path (modul: Module) = Path.Combine (path, sprintf "lib%s.so" modul.Name)
+let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "lib%s.so" modul.Name)
 
 // build-essential; libc6-dev-i386; g++-multilib
-let makeArgs flags cFile oFile (modul: Module) =
+let makeArgs flags cFile oFile (modul: FeropModule) =
     let is64bit = modul.Is64bit
     let isCpp = modul.IsCpp
 
@@ -24,13 +24,13 @@ let makeArgs flags cFile oFile (modul: Module) =
         cFile
         oFile
 
-let makeDynamicArgs libs oFile soName (modul: Module) = 
+let makeDynamicArgs libs oFile soName (modul: FeropModule) = 
     let is64bit = modul.Is64bit
     sprintf "%s -fPIC %s -shared -o %s %s" 
         (if is64bit then "-m64" else "-m32")
         oFile soName libs
 
-let makeGccStartInfo args (modul: Module) = 
+let makeGccStartInfo args (modul: FeropModule) = 
     if modul.IsCpp
     then ProcessStartInfo ("g++", args)
     else ProcessStartInfo ("gcc", args)
@@ -67,8 +67,7 @@ let cleanObjectFiles outputPath = io {
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
 
-let compileModule outputPath modul =
-    let cgen = makeCGen modul
+let compileModule outputPath modul cgen =
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.GccLibsLinux
 
