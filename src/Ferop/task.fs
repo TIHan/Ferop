@@ -134,40 +134,36 @@ type public WeavingTask () =
 //            m.Write (this.AssemblyPath)
 //        )
 //
-//        let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
-//        let asm = Assembly.Load asmBytes
+        let asmBytes = System.IO.File.ReadAllBytes (this.AssemblyPath)
+        let asm = Assembly.Load asmBytes
+
+//        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
 //
-        let asmDef = AssemblyDefinition.ReadAssembly (this.AssemblyPath)  
-
-        asmDef.Modules
-        |> Seq.iter (fun m ->
-            let mref = ModuleReference (makeDllName "Tests" Platform.Auto)
-            m.GetTypes ()
-            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-            |> Seq.iter (fun x -> 
-                x.Methods
-                |> Array.ofSeq
-                |> Array.iter (fun meth ->
-                    if methodHasAttribute typeof<ExportAttribute> meth then
-                        ()
-                    else
-                        x.Methods.Remove meth |> ignore
-
-                        let meth = MethodDefinition (meth.Name, MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl, meth.ReturnType)
-                        meth.IsPInvokeImpl <- true
-                        meth.PInvokeInfo <-
-                            PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
-
-                        x.Methods.Add meth
-                )
-            )
-            asmDef.MainModule.ModuleReferences.Add mref
-            m.Write (this.AssemblyPath)
-        )
-
-//        feropClasses asm
-//        |> List.iter (fun m ->
-//            let modul = makeModule m
-//            C.compileModule this.TargetDirectory modul Platform.Auto
+//        asmDef.Modules
+//        |> Seq.iter (fun m ->
+//            let mref = ModuleReference (makeDllName "Tests" Platform.Auto)
+//            m.GetTypes ()
+//            |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
+//            |> Seq.iter (fun x -> 
+//                x.Methods
+//                |> Array.ofSeq
+//                |> Array.iter (fun meth ->
+//                    if methodHasAttribute typeof<ExportAttribute> meth then
+//                        ()
+//                    else
+//                        meth.Attributes <- MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl
+//                        meth.IsPInvokeImpl <- true
+//                        meth.PInvokeInfo <-
+//                            PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
+//                )
+//            )
+//            asmDef.MainModule.ModuleReferences.Add mref
+//            m.Write (this.AssemblyPath)
 //        )
+
+        feropClasses asm
+        |> List.iter (fun m ->
+            let modul = makeModule m
+            C.compileModule this.TargetDirectory modul Platform.Auto
+        )
         true

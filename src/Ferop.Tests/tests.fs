@@ -19,7 +19,7 @@ open FSharp.Interop.Ferop
 #include <stdio.h>
 """)>]
 type Tests =
-    [<MethodImplAttribute(MethodImplOptions.NoInlining)>]
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
     static member testByte (x: byte) : byte = code """ return x; """
 
 [<Test>]
