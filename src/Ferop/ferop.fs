@@ -50,4 +50,4 @@ type ExportAttribute () =
     inherit System.Attribute ()
 
 [<MethodImpl (MethodImplOptions.NoInlining)>]
-let C (text: string) = failwith "This should not be called directly. Call the generated version."
+let C (text: string) = failwith "Ferop: The function has been inlined. Please mark it with [MethodImpl(MethodImplOptions.NoInlining)]"

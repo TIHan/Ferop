@@ -14,18 +14,6 @@ open FSharp.Interop.Ferop
 open FSharp.Interop.FeropInternal
 open FSharp.Interop.FeropInternal.Core
 
-let addMethodAttribute<'T> (meth: MethodBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
-    let attributeType = typeof<'T>
-    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
-    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
-    meth.SetCustomAttribute (attributeBuilder)
-
-let addTypeAttribute<'T> (tb: TypeBuilder) (ctorTypes: Type []) (ctorArgs: obj []) =
-    let attributeType = typeof<'T>
-    let attributeConstructorInfo = attributeType.GetConstructor (ctorTypes)
-    let attributeBuilder = CustomAttributeBuilder (attributeConstructorInfo, ctorArgs)
-    tb.SetCustomAttribute (attributeBuilder)
-
 [<RequireQualifiedAccess>]
 module C =
 
@@ -51,10 +39,10 @@ module C =
             if (buf <> IntPtr.Zero) then
                 Marshal.FreeHGlobal (buf)
 
-    let rec makeDllName modul = function 
-        | Platform.Win -> sprintf "%s.dll" modul.Name
-        | Platform.Linux -> sprintf "lib%s.so" modul.Name
-        | Platform.Osx -> sprintf "lib%s.dylib" modul.Name
+    let rec makeDllName name = function 
+        | Platform.Win -> sprintf "%s.dll" name
+        | Platform.Linux -> sprintf "lib%s.so" name
+        | Platform.Osx -> sprintf "lib%s.dylib" name
         | Platform.AppleiOS -> "__Internal"
         | _ ->
 
@@ -62,11 +50,11 @@ module C =
         | x when 
             x = PlatformID.Win32NT ||
             x = PlatformID.Win32S ||
-            x = PlatformID.WinCE -> makeDllName modul Platform.Win
+            x = PlatformID.WinCE -> makeDllName name Platform.Win
         | x when x = PlatformID.Unix -> 
             if isRunningOnMac ()
-            then makeDllName modul Platform.Osx
-            else makeDllName modul Platform.Linux
+            then makeDllName name Platform.Osx
+            else makeDllName name Platform.Linux
         | _ -> failwith "OS not supported."
 
     let rec compileModule path modul = function
@@ -86,146 +74,3 @@ module C =
             then compileModule path modul Platform.Osx
             else compileModule path modul Platform.Linux
         | _ -> failwith "OS not supported."
-
-    let createDynamicAssembly (dllPath: string) dllName =
-        AppDomain.CurrentDomain.DefineDynamicAssembly (AssemblyName (dllName), Emit.AssemblyBuilderAccess.RunAndSave, dllPath)
-
-    let generatePInvokeMethod (tb: TypeBuilder) dllName (func: MethodInfo) =
-        let meth = 
-            tb.DefinePInvokeMethod (
-                func.Name,
-                dllName,
-                sprintf "%s_%s" func.DeclaringType.Name func.Name,
-                MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
-                CallingConventions.Standard,
-                func.ReturnType,
-                func.GetParameters () |> Array.map (fun x -> x.ParameterType),
-                CallingConvention.Cdecl,
-                CharSet.Ansi)
-
-        meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-        addMethodAttribute<SuppressUnmanagedCodeSecurityAttribute> meth [||] [||]
-        meth
-
-    let generatePInvokeMethods modul platform tb = 
-        modul.Functions |> List.map (generatePInvokeMethod tb (makeDllName modul platform))
-        |> ignore
-
-    let generateReversePInvokeDelegates modul (tb: ModuleBuilder) =
-        let typ = typeof<MulticastDelegate>
-        modul.ExportedFunctions |> List.map (fun x ->
-            let del = tb.DefineType (x.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, typ)
-
-            let ctordel = del.DefineConstructor (MethodAttributes.Public, CallingConventions.Standard, [|typeof<obj>; typeof<nativeint>|])
-            ctordel.SetImplementationFlags (ctordel.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
-
-            let meth =
-                del.DefineMethod (
-                    "Invoke",
-                    MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig,
-                    x.ReturnType,
-                    x.GetParameters () |> Array.map (fun x -> x.ParameterType))
-
-            x.GetParameters ()
-            |> Array.iteri (fun i x ->
-                meth.DefineParameter (i + 1, ParameterAttributes.None, x.Name) |> ignore)
-
-            meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.Runtime)
-            addTypeAttribute<UnmanagedFunctionPointerAttribute> del [|typeof<CallingConvention>|] [|CallingConvention.Cdecl|]
-            addTypeAttribute<CompilerGeneratedAttribute> del [||] [||]   
-            del.CreateType ())
-
-    let generateReversePInvokeMethods modul dels platform (tb: TypeBuilder) =
-        let dllName = makeDllName modul platform
-        modul.ExportedFunctions
-        |> List.map2 (fun del func ->
-            let meth = 
-                tb.DefinePInvokeMethod (
-                    sprintf "_ferop_set_%s" func.Name,
-                    dllName,
-                    sprintf "%s__ferop_set_%s" func.DeclaringType.Name func.Name,
-                    MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PinvokeImpl,
-                    CallingConventions.Standard,
-                    typeof<Void>,
-                    [|del|],
-                    CallingConvention.Cdecl,
-                    CharSet.Ansi)
-
-            meth.DefineParameter (1, ParameterAttributes.None, "ptr") |> ignore
-
-            meth.SetImplementationFlags (meth.GetMethodImplementationFlags () ||| MethodImplAttributes.PreserveSig)
-            addMethodAttribute<SuppressUnmanagedCodeSecurityAttribute> meth [||] [||]
-            meth :> MethodInfo) dels
-
-    let classes (asm: Assembly) =
-        asm.GetTypes ()
-        |> Array.filter (fun x ->x.IsClass)
-        |> Array.filter (fun x ->
-            x.CustomAttributes
-            |> Seq.exists (fun x -> x.AttributeType = typeof<FeropAttribute>))
-        |> List.ofArray
-    
-    let processAssembly dllName (outputNativePath: string) (dllPath: string) (canCompileModule: bool) (platform: Platform) (asm: Assembly) =
-        let dasm = createDynamicAssembly dllPath dllName
-        let mb = dasm.DefineDynamicModule dllName
-
-        classes asm
-        |> List.map (fun x ->
-            let modul = makeModule x
-            let tb = mb.DefineType (x.FullName, TypeAttributes.Public ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-            let internalTb = tb.DefineNestedType ("_internal", TypeAttributes.NestedPublic ||| TypeAttributes.Abstract ||| TypeAttributes.Sealed)
-            
-            addTypeAttribute<CompilerGeneratedAttribute> internalTb [||] [||]
-            addTypeAttribute<EditorBrowsableAttribute> internalTb [|typeof<EditorBrowsableState>|] [|EditorBrowsableState.Never|]
-            addTypeAttribute<DebuggerBrowsableAttribute> internalTb [|typeof<DebuggerBrowsableState>|] [|DebuggerBrowsableState.Never|]
-            addTypeAttribute<ObsoleteAttribute> internalTb [||] [||]
-            generatePInvokeMethods modul platform tb
-
-            //-------------------------------------------------------------------------
-            //-------------------------------------------------------------------------
-
-            let dels = generateReversePInvokeDelegates modul mb
-            let delMeths = generateReversePInvokeMethods modul dels platform internalTb
-
-            let ctor = tb.DefineTypeInitializer ()
-            let il = ctor.GetILGenerator ()
-
-            (delMeths, dels)
-            ||> List.iteri2 (fun i delMeth del ->
-                let func = modul.ExportedFunctions.[i]
-                let fieldName = "_" + func.Name
-                let field = internalTb.DefineField (fieldName, del, FieldAttributes.Static ||| FieldAttributes.Public)
-
-                il.Emit (OpCodes.Ldnull)
-                il.Emit (OpCodes.Ldftn, func)
-                il.Emit (OpCodes.Newobj, del.GetConstructor ([|typeof<obj>;typeof<nativeint>|]))
-                il.Emit (OpCodes.Stsfld, field)
-                il.Emit (OpCodes.Ldsfld, field)
-                il.Emit (OpCodes.Call, delMeth))
-
-            il.Emit (OpCodes.Ret)
-
-            internalTb.CreateType () |> ignore
-            tb.CreateType () |> ignore
-            //-------------------------------------------------------------------------
-            //-------------------------------------------------------------------------
-            let modul' = 
-                { modul with 
-                    Functions = modul.Functions @ (delMeths |> List.map (fun x -> internalTb.GetMethod (x.Name))) }
-
-            let cgen = makeCGen modul'
-            if canCompileModule then compileModule outputNativePath modul' platform cgen
-
-            ()) |> ignore
-
-        dasm
-
-    let compileDynamic name outputNativePath dllPath canCompileModule platform asm =
-        let dllName = Path.GetFileName (Path.ChangeExtension (name, ".dll"))
-        processAssembly dllName outputNativePath dllPath canCompileModule platform asm
-    
-    let compile name outputNativePath dllPath canCompileModule platform asm =
-        let asm = compileDynamic name outputNativePath dllPath canCompileModule platform asm
-        let asmName = asm.GetName ()
-        asm.Save (asmName.Name)
-        Path.Combine (dllPath, asmName.Name)
