@@ -136,10 +136,16 @@ type Proxy () =
 
         asmDef.Modules
         |> Seq.iter (fun m ->
-            let mref = ModuleReference (makeDllName "Tests" Platform.Auto)
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
+                let mref = ModuleReference (makeDllName x.Name Platform.Auto)
+
+                x.CustomAttributes.Remove (
+                    x.CustomAttributes
+                    |> Seq.find (fun x -> x.AttributeType.Name.Contains ("Ferop"))
+                ) |> ignore
+
                 x.Methods
                 |> Array.ofSeq
                 |> Array.iter (fun meth ->
@@ -151,8 +157,8 @@ type Proxy () =
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
                 )
+                asmDef.MainModule.ModuleReferences.Add mref
             )
-            asmDef.MainModule.ModuleReferences.Add mref
             m.Write (assemblyPath)
         )
 
