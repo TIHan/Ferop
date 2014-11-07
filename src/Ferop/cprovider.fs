@@ -83,7 +83,7 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
     /// FindAssembly
     member internal this.FindAssembly fileName =
         match cfg |> TypeProviderConfig.tryFindAssembly (fun fullPath -> Path.GetFileNameWithoutExtension fullPath = fileName) with
-        | None -> failwithf "Invalid assembly name %s. Pick from the list of referenced assemblies." fileName
+        | None -> null
         | Some masmFileName -> TypeProvider.loadAssemblyFile masmFileName
 
     /// IsDesignTime
@@ -102,6 +102,10 @@ type FeropTypeProvider (cfg: TypeProviderConfig) as this =
         let outputPath = Path.Combine (cfg.ResolutionFolder, relativeDir)
         let dllPath = Path.GetTempPath ()
         let refAsm = this.FindAssembly refName
+
+        refAsm.GetReferencedAssemblies ()
+        |> Array.map (fun x -> x.Name)
+        |> Array.iter (fun x -> this.FindAssembly (x) |> ignore)
 
         let dasmLocation = C.compile name outputPath dllPath (not this.IsDesignTime) platform refAsm
         let dasm = Assembly.LoadFrom (dasmLocation)
