@@ -1,8 +1,10 @@
 ﻿namespace Ferop.Tests.Native
 
+open System
 open FSharp.Interop.Ferop
 open System.Runtime.InteropServices
 open System.Runtime.CompilerServices
+open NUnit.Framework
 
 #nowarn "9"
 
@@ -80,7 +82,7 @@ type Enum1 =
     | Sub2 = 1
 
 type Enum2 =
-    | Sub1 = 3
+    | Sub1 = 2
     | Sub2 = 1
 
 #if __64BIT__
@@ -237,3 +239,9 @@ type Tests =
 //""")>]
 //module TestsCpp =
 //    let testCppHelloWorld () : unit = code """cout << "Hello World!\n";"""
+
+
+module UnitTests =
+    [<Test>]
+    let ``with max value of byte, should pass and return the same value`` () =
+        Assert.AreEqual (Byte.MaxValue,Tests.testByte (Byte.MaxValue))

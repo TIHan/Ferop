@@ -51,6 +51,7 @@
           AssemblyPath="@(IntermediateAssembly)"
           ProjectDirectory="$(ProjectDir)"
 	  TargetDirectory="$(ProjectDir)$(OutputPath)"
+          References="@(ReferencePath)"
       />
   </Target>
 
