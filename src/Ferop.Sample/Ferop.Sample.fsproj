@@ -67,22 +67,18 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ferop\Ferop.fsproj">
-      <Name>Ferop</Name>
-      <Project>{90A45EB2-1122-4BFF-A921-04D926400AC0}</Project>
-    </ProjectReference>
+    <Reference Include="Ferop">
+      <HintPath>..\..\bin\Ferop.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\Ferop.Sample.Native\Ferop.Sample.Native.fsproj">
-      <Project>{2858E0A3-A638-45DA-9174-C98F0A422993}</Project>
-      <Name>Ferop.Sample.Native</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>xcopy /f "$(ProjectDir)..\..\lib\win\$(PlatformName)\SDL2.dll" "$(TargetDir)" /q /y
 xcopy /f "$(ProjectDir)..\..\lib\win\$(PlatformName)\glew32.dll" "$(TargetDir)" /q /y</PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
 </Project>

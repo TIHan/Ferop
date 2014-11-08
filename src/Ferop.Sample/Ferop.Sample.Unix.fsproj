@@ -81,4 +81,5 @@
       <Name>Ferop.Sample.Native</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
 </Project>
