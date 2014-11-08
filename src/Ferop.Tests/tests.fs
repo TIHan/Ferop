@@ -141,71 +141,71 @@ type Tests =
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     static member testStruct3Value (x: Struct3) : float = C """ return x.Y; """
 
-//    [<Export>]
-//    static member exported_testByte (x: byte) : byte = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testByte (x: byte) : byte = C """ return Tests_exported_testByte (x); """
-//
-//    [<Export>]
-//    static member exported_testTwoBytes (x: byte) (y: byte) : byte = x + y
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testTwoBytes (x: byte) (y: byte) : byte = C """ return Tests_exported_testTwoBytes (x, y); """
-//
-//    [<Export>]
-//    static member exported_testSByte (x: sbyte) : sbyte = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testSByte (x: sbyte) : sbyte = C """ return Tests_exported_testSByte (x); """
-//
-//    [<Export>]
-//    static member exported_testUInt16 (x: uint16) : uint16 = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testUInt16 (x: uint16) : uint16 = C """ return Tests_exported_testUInt16 (x); """
-//
-//    [<Export>]
-//    static member exported_testInt16 (x: int16) : int16 = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testInt16 (x: int16) : int16 = C """ return Tests_exported_testInt16 (x); """
-//
-//    [<Export>]
-//    static member exported_testUInt32 (x: uint32) : uint32 = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testUInt32 (x: uint32) : uint32 = C """ return Tests_exported_testUInt32 (x); """
-//
-//    [<Export>]
-//    static member exported_testInt32 (x: int) : int = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testInt32 (x: int) : int = C """ return Tests_exported_testInt32 (x); """
-//
-//    [<Export>]
-//    static member exported_testUInt64 (x: uint64) : uint64 = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testUInt64 (x: uint64) : uint64 = C """ return Tests_exported_testUInt64 (x); """
-//
-//    [<Export>]
-//    static member exported_testInt64 (x: int64) : int64 = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testInt64 (x: int64) : int64 = C """ return Tests_exported_testInt64 (x); """
-//
-//    [<Export>]
-//    static member exported_testSingle (x: single) : single = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testSingle (x: single) : single = C """ return Tests_exported_testSingle (x); """
-//
-//    [<Export>]
-//    static member exported_testDouble (x: double) : double = x
-//
-//    [<MethodImpl (MethodImplOptions.NoInlining)>]
-//    static member testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """
+    [<Export>]
+    static member exported_testByte (x: byte) : byte = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testByte (x: byte) : byte = C """ return Tests_exported_testByte (x); """
+
+    [<Export>]
+    static member exported_testTwoBytes (x: byte) (y: byte) : byte = x + y
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testTwoBytes (x: byte) (y: byte) : byte = C """ return Tests_exported_testTwoBytes (x, y); """
+
+    [<Export>]
+    static member exported_testSByte (x: sbyte) : sbyte = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testSByte (x: sbyte) : sbyte = C """ return Tests_exported_testSByte (x); """
+
+    [<Export>]
+    static member exported_testUInt16 (x: uint16) : uint16 = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testUInt16 (x: uint16) : uint16 = C """ return Tests_exported_testUInt16 (x); """
+
+    [<Export>]
+    static member exported_testInt16 (x: int16) : int16 = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testInt16 (x: int16) : int16 = C """ return Tests_exported_testInt16 (x); """
+
+    [<Export>]
+    static member exported_testUInt32 (x: uint32) : uint32 = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testUInt32 (x: uint32) : uint32 = C """ return Tests_exported_testUInt32 (x); """
+
+    [<Export>]
+    static member exported_testInt32 (x: int) : int = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testInt32 (x: int) : int = C """ return Tests_exported_testInt32 (x); """
+
+    [<Export>]
+    static member exported_testUInt64 (x: uint64) : uint64 = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testUInt64 (x: uint64) : uint64 = C """ return Tests_exported_testUInt64 (x); """
+
+    [<Export>]
+    static member exported_testInt64 (x: int64) : int64 = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testInt64 (x: int64) : int64 = C """ return Tests_exported_testInt64 (x); """
+
+    [<Export>]
+    static member exported_testSingle (x: single) : single = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testSingle (x: single) : single = C """ return Tests_exported_testSingle (x); """
+
+    [<Export>]
+    static member exported_testDouble (x: double) : double = x
+
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """
 
 #if __64BIT__
 [<Cpu64bit>]
@@ -331,65 +331,65 @@ let ``with max value of double, should pass and return the same value`` () =
     Tests.testDouble (Double.MaxValue)
     |> should equal Double.MaxValue
 
-//[<Test>]
-//let ``with max value of byte, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testByte (Byte.MaxValue)
-//    |> should equal Byte.MaxValue
-//
-//[<Test>]
-//let ``with max value of sbyte, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testSByte (SByte.MaxValue)
-//    |> should equal SByte.MaxValue
-//
-//[<Test>]
-//let ``with max value of uint16, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testUInt16 (UInt16.MaxValue)
-//    |> should equal UInt16.MaxValue
-//
-//[<Test>]
-//let ``with max value of int16, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testInt16 (Int16.MaxValue)
-//    |> should equal Int16.MaxValue
-//
-//[<Test>]
-//let ``with max value of uint32, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testUInt32 (UInt32.MaxValue)
-//    |> should equal UInt32.MaxValue
-//
-//[<Test>]
-//let ``with max value of int, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testInt32 (Int32.MaxValue)
-//    |> should equal Int32.MaxValue
-//
-//[<Test>]
-//let ``with max value of uint64, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testUInt64 (UInt64.MaxValue)
-//    |> should equal UInt64.MaxValue
-//
-//[<Test>]
-//let ``with max value of int64, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testInt64 (Int64.MaxValue)
-//    |> should equal Int64.MaxValue
-//
-//[<Test>]
-//let ``with max value of single, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testSingle (Single.MaxValue)
-//    |> should equal Single.MaxValue
-//
-//[<Test>]
-//let ``with max value of double, should pass and return the same value from exported`` () =
-//    GC.Collect (2)
-//    Tests.testExported_testDouble (Double.MaxValue)
-//    |> should equal Double.MaxValue
+[<Test>]
+let ``with max value of byte, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testByte (Byte.MaxValue)
+    |> should equal Byte.MaxValue
+
+[<Test>]
+let ``with max value of sbyte, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testSByte (SByte.MaxValue)
+    |> should equal SByte.MaxValue
+
+[<Test>]
+let ``with max value of uint16, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testUInt16 (UInt16.MaxValue)
+    |> should equal UInt16.MaxValue
+
+[<Test>]
+let ``with max value of int16, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testInt16 (Int16.MaxValue)
+    |> should equal Int16.MaxValue
+
+[<Test>]
+let ``with max value of uint32, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testUInt32 (UInt32.MaxValue)
+    |> should equal UInt32.MaxValue
+
+[<Test>]
+let ``with max value of int, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testInt32 (Int32.MaxValue)
+    |> should equal Int32.MaxValue
+
+[<Test>]
+let ``with max value of uint64, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testUInt64 (UInt64.MaxValue)
+    |> should equal UInt64.MaxValue
+
+[<Test>]
+let ``with max value of int64, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testInt64 (Int64.MaxValue)
+    |> should equal Int64.MaxValue
+
+[<Test>]
+let ``with max value of single, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testSingle (Single.MaxValue)
+    |> should equal Single.MaxValue
+
+[<Test>]
+let ``with max value of double, should pass and return the same value from exported`` () =
+    GC.Collect (2)
+    Tests.testExported_testDouble (Double.MaxValue)
+    |> should equal Double.MaxValue
 
 [<Test>]
 let ``with a Y value of Struct3, should pass Struct3 and return the correct Y value`` () =

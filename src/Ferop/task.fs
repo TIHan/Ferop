@@ -45,21 +45,33 @@ type Proxy () =
             let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
             let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
             let callingConvType = m.Import(typeof<CallingConvention>)
-            let dllimportAttrTypeCtor = m.Import(typeof<DllImportAttribute>.GetConstructor([|typeof<string>|]))
-            let stringType = m.Import(typeof<string>)
             let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
 
             m.GetTypes ()
             |> Array.ofSeq
             |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
-            |> Array.iter (fun x -> 
-                let mref = ModuleReference (FSharp.Interop.FeropCompiler.C.makeDllName x.Name Platform.Auto)
+            |> Array.iter (fun x ->
+                let name = FSharp.Interop.FeropCompiler.C.makeDllName x.Name Platform.Auto
+
+                let mref =
+                    match
+                        asmDef.MainModule.ModuleReferences
+                        |> Seq.tryFind (fun x -> x.Name = name) with
+                    | Some x -> x
+                    | None ->
+                        let mref = ModuleReference name
+                        asmDef.MainModule.ModuleReferences.Add mref
+                        mref
+
+                let exportedMeths = ResizeArray<MethodDefinition> ()
+                let exportedDels = ResizeArray<TypeDefinition> ()
+                let exportedSetMeths = ResizeArray<MethodDefinition> ()
 
                 x.Methods
                 |> Array.ofSeq
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
-                        let del = TypeDefinition (meth.DeclaringType.Namespace, meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
+                        let del = TypeDefinition ("", meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
 
                         let ctordel = MethodDefinition (".ctor", MethodAttributes.Public ||| MethodAttributes.CompilerControlled ||| MethodAttributes.RTSpecialName ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, voidType)
                         ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
@@ -85,6 +97,9 @@ type Proxy () =
 
                         m.Types.Add del
 
+                        exportedMeths.Add (meth)
+                        exportedDels.Add (del)
+
                         // ******
 
                         let meth = 
@@ -95,6 +110,7 @@ type Proxy () =
 
                         meth.IsPInvokeImpl <- true
                         meth.IsPreserveSig <- true
+                        meth.HasSecurity <- true
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s__%s" x.Name meth.Name, mref)
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
@@ -103,10 +119,43 @@ type Proxy () =
                         meth.CustomAttributes.Add (customAttr)
 
                         x.Methods.Add meth
+
+                        exportedSetMeths.Add (meth)
                     else
-                        ()
+                        ())
+
+                let fields =
+                    exportedDels
+                    |> Seq.map (fun del ->
+                        let field = FieldDefinition ("_" + del.Name, FieldAttributes.Public ||| FieldAttributes.Static, del)
+                        x.Fields.Add field
+                        field)
+                    |> Array.ofSeq
+
+                let methAttrs = MethodAttributes.Public ||| MethodAttributes.HideBySig ||| MethodAttributes.SpecialName ||| MethodAttributes.RTSpecialName ||| MethodAttributes.Static;
+                let meth = new MethodDefinition(".cctor", methAttrs, voidType);
+
+                exportedMeths
+                |> Seq.iteri (fun i emeth ->
+                    let edel = exportedDels.[i]
+                    let esetmeth = exportedSetMeths.[i]
+                    let field = fields.[i]
+
+                    let edelctor =
+                        edel.Methods
+                        |> Seq.find (fun x -> x.IsConstructor)
+
+                    meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Ldnull))
+                    meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Ldftn, emeth))
+                    meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Newobj, edelctor))
+                    meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Stsfld, field))
+                    meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Ldsfld, field))
+                    meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Call, esetmeth))
                 )
+                meth.Body.Instructions.Add (Cil.Instruction.Create (Cil.OpCodes.Ret))
+                x.Methods.Add meth
             )
+
             m.Write (assemblyPath + "tmp")
         )
 
@@ -126,7 +175,17 @@ type Proxy () =
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
-                let mref = ModuleReference (FSharp.Interop.FeropCompiler.C.makeDllName x.Name Platform.Auto)
+                let name = FSharp.Interop.FeropCompiler.C.makeDllName x.Name Platform.Auto
+
+                let mref =
+                    match
+                        asmDef.MainModule.ModuleReferences
+                        |> Seq.tryFind (fun x -> x.Name = name) with
+                    | Some x -> x
+                    | None ->
+                        let mref = ModuleReference name
+                        asmDef.MainModule.ModuleReferences.Add mref
+                        mref
 
                 x.CustomAttributes.Remove (
                     x.CustomAttributes
@@ -134,6 +193,7 @@ type Proxy () =
 
                 x.Methods
                 |> Array.ofSeq
+                |> Array.filter (fun x -> not x.IsConstructor)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
                         ()
@@ -141,13 +201,13 @@ type Proxy () =
                         meth.Attributes <- MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig
                         meth.IsPInvokeImpl <- true
                         meth.IsPreserveSig <- true
+                        meth.HasSecurity <- true
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
 
                         let customAttr = CustomAttribute (unSecuAttrCtor)
                         meth.CustomAttributes.Add (customAttr)
                 )
-                asmDef.MainModule.ModuleReferences.Add mref
             )
             m.Write (assemblyPath)
         )
@@ -181,13 +241,14 @@ type public WeavingTask () =
         let evidence = AppDomain.CurrentDomain.Evidence;
         let appDomain = AppDomain.CreateDomain ("Ferop", evidence, domaininfo)
 
-        this.Log.LogMessage ("AppDomain Created.")
+        try
 
-        let proxy : Proxy = appDomain.CreateInstanceFromAndUnwrap (currentAsm.Location, typeof<Proxy>.FullName) :?> Proxy
-        this.Log.LogMessage ("Executing...")
-        proxy.Execute (this.AssemblyPath, this.References, this.TargetDirectory)
-        this.Log.LogMessage ("Done.")
- 
-        AppDomain.Unload appDomain
-        this.Log.LogMessage ("AppDomain Unloaded.")
+            this.Log.LogMessage ("AppDomain Created.")
+            let proxy : Proxy = appDomain.CreateInstanceFromAndUnwrap (currentAsm.Location, typeof<Proxy>.FullName) :?> Proxy
+            this.Log.LogMessage ("Executing...")
+            proxy.Execute (this.AssemblyPath, this.References, this.TargetDirectory)
+            this.Log.LogMessage ("Done.")
+        finally
+            AppDomain.Unload appDomain
+            this.Log.LogMessage ("AppDomain Unloaded.")            
         true
