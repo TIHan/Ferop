@@ -30,7 +30,10 @@ type Proxy () =
 
     let classes (asm: Assembly) =
         asm.GetTypes ()
-        |> Array.filter (fun x -> x.IsClass && x.IsDefined (typeof<FeropAttribute>))
+        |> Array.filter (fun x -> x.IsClass)
+        |> Array.filter (fun x ->
+            x.GetCustomAttributesData ()
+            |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<FeropAttribute>.FullName))
         |> List.ofArray
 
     member this.Execute (assemblyPath: string, references: string, targetDirectory: string) : unit = 
@@ -160,7 +163,7 @@ type Proxy () =
         )
 
 
-        let load (x: string) = Assembly.LoadFrom (x)
+        let load (x: string) = Assembly.ReflectionOnlyLoadFrom (x)
         let asm = load (assemblyPath + "tmp")
 
         references.Split(';')

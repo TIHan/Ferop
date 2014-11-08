@@ -239,11 +239,11 @@ let makeCDeclEnum env (typ: Type) =
 
     let name = makeCTypeName env typ
     let constNames = Enum.GetNames typ |> Array.map (fun x -> name + "_" + x)
-    let constValues = Enum.GetValues typ
+    let fields = typ.GetFields () |> Array.filter (fun x -> not <| x.Name.Equals("value__"))
     let intValues = Array.zeroCreate<int> constNames.Length
 
     for i = 0 to intValues.Length - 1 do
-        intValues.[i] <- (constValues.GetValue (i)) :?> int
+        intValues.[i] <- fields.[i].GetRawConstantValue() :?> int
 
     let consts = 
         Array.map2 (fun (x: string) (y: int) -> { CEnumConst.Name = x; Value = y }) 

@@ -17,36 +17,36 @@ type FeropModule = {
 
     member this.ClangFlagsOsxAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangFlagsOsxAttribute>)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangFlagsOsxAttribute>.FullName)
 
     member this.ClangLibsOsxAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<ClangLibsOsxAttribute>)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangLibsOsxAttribute>.FullName)
 
     member this.GccFlagsLinuxAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<GccFlagsLinuxAttribute>)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<GccFlagsLinuxAttribute>.FullName)
 
     member this.GccLibsLinuxAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<GccLibsLinuxAttribute>)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<GccLibsLinuxAttribute>.FullName)
 
     member this.MsvcOptionsWinAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType = typeof<MsvcOptionsWinAttribute>)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<MsvcOptionsWinAttribute>.FullName)
 
     member this.Is64bit =
         this.Attributes
-        |> Seq.exists (fun x -> x.AttributeType = typeof<Cpu64bitAttribute>)
+        |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<Cpu64bitAttribute>.FullName)
 
     member this.IsCpp =
         this.Attributes
-        |> Seq.exists (fun x -> x.AttributeType = typeof<CppAttribute>)
+        |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<CppAttribute>.FullName)
 
     member this.Header =
         match
             this.Attributes
-            |> Seq.tryFind (fun x -> x.AttributeType = typeof<HeaderAttribute>)
+            |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<HeaderAttribute>.FullName)
             with
         | None -> ""
         | Some attr ->
@@ -100,8 +100,8 @@ let staticMethods (t: Type) =
 
 let methodHasAttribute (typ: Type) (meth: MethodInfo) =
     meth.GetCustomAttributesData ()
-    |> Seq.map (fun x -> x.AttributeType)
-    |> Seq.exists ((=)typ)
+    |> Seq.map (fun x -> x.AttributeType.FullName)
+    |> Seq.exists ((=)typ.FullName)
 
 let makeModule (typ: Type) =
     let name = typ.Name
@@ -119,7 +119,11 @@ let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
 
 let makeCppFilePath path modul = Path.Combine (path, sprintf "%s.cpp" modul.Name)
 
-let checkProcessError (p: Process) = if p.ExitCode <> 0 then failwith (p.StandardError.ReadToEnd ())
+let checkProcessError (p: Process) = 
+    if p.ExitCode <> 0 then 
+        let msg = p.StandardError.ReadToEnd ()
+        let msg2 = p.StandardOutput.ReadToEnd ()
+        failwith (msg + "\n" + msg2)
 
 open CConversion
 open CGeneration
