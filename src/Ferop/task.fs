@@ -3,6 +3,7 @@
 open System
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
+open System.Security
 open System.Reflection
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
@@ -13,6 +14,7 @@ open FSharp.Interop.FeropCompiler
 open FSharp.Interop.FeropInternal
 open FSharp.Interop.FeropInternal.Core
 
+[<Serializable>]
 type Proxy () =
     inherit MarshalByRefObject ()
 
@@ -31,7 +33,7 @@ type Proxy () =
         |> Array.filter (fun x -> x.IsClass && x.IsDefined (typeof<FeropAttribute>))
         |> List.ofArray
 
-    member this.Execute (appDomain: AppDomain, assemblyPath: string, references: string, targetDirectory: string) : unit = 
+    member this.Execute (assemblyPath: string, references: string, targetDirectory: string) : unit = 
         let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath)
 
         asmDef.Modules
@@ -45,6 +47,7 @@ type Proxy () =
             let callingConvType = m.Import(typeof<CallingConvention>)
             let dllimportAttrTypeCtor = m.Import(typeof<DllImportAttribute>.GetConstructor([|typeof<string>|]))
             let stringType = m.Import(typeof<string>)
+            let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
 
             m.GetTypes ()
             |> Array.ofSeq
@@ -91,29 +94,35 @@ type Proxy () =
                                 voidType)
 
                         meth.IsPInvokeImpl <- true
+                        meth.IsPreserveSig <- true
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s__%s" x.Name meth.Name, mref)
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
+
+                        let customAttr = CustomAttribute (unSecuAttrCtor)
+                        meth.CustomAttributes.Add (customAttr)
 
                         x.Methods.Add meth
                     else
                         ()
                 )
             )
-            m.Write (assemblyPath)
+            m.Write (assemblyPath + "tmp")
         )
 
 
-        let load x = appDomain.Load (System.IO.File.ReadAllBytes (x))
-        let asm = load assemblyPath
+        let load (x: string) = Assembly.LoadFrom (x)
+        let asm = load (assemblyPath + "tmp")
 
         references.Split(';')
         |> Array.iter (fun x -> load x |> ignore)
 
-        let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath)  
+        let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath + "tmp")  
 
         asmDef.Modules
         |> Seq.iter (fun m ->
+            let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
+
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
@@ -131,8 +140,12 @@ type Proxy () =
                     else
                         meth.Attributes <- MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig
                         meth.IsPInvokeImpl <- true
+                        meth.IsPreserveSig <- true
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s_%s" x.Name meth.Name, mref)
+
+                        let customAttr = CustomAttribute (unSecuAttrCtor)
+                        meth.CustomAttributes.Add (customAttr)
                 )
                 asmDef.MainModule.ModuleReferences.Add mref
             )
@@ -145,6 +158,7 @@ type Proxy () =
             let cgen = makeCGen modul
             FSharp.Interop.FeropCompiler.C.compileModule targetDirectory modul Platform.Auto cgen)
 
+[<Serializable>]
 type public WeavingTask () =
     inherit Task ()
 
@@ -163,19 +177,15 @@ type public WeavingTask () =
         let currentAsm = Assembly.GetExecutingAssembly ()
 
         let domaininfo = AppDomainSetup ()
-        domaininfo.ApplicationBase <- System.Environment.CurrentDirectory;
+        domaininfo.ApplicationBase <- System.Environment.CurrentDirectory
         let evidence = AppDomain.CurrentDomain.Evidence;
         let appDomain = AppDomain.CreateDomain ("Ferop", evidence, domaininfo)
 
         this.Log.LogMessage ("AppDomain Created.")
 
-        appDomain.Load (currentAsm.GetName()) |> ignore
-
-        this.Log.LogMessage ("Loaded Ferop Assembly.")
-
-        let proxy : Proxy = appDomain.CreateInstanceAndUnwrap (typeof<Proxy>.Assembly.FullName, typeof<Proxy>.FullName) :?> Proxy
+        let proxy : Proxy = appDomain.CreateInstanceFromAndUnwrap (currentAsm.Location, typeof<Proxy>.FullName) :?> Proxy
         this.Log.LogMessage ("Executing...")
-        proxy.Execute (appDomain, this.AssemblyPath, this.References, this.TargetDirectory)
+        proxy.Execute (this.AssemblyPath, this.References, this.TargetDirectory)
         this.Log.LogMessage ("Done.")
  
         AppDomain.Unload appDomain
