@@ -13,7 +13,8 @@ type FeropModule = {
     FullName: string
     Attributes: CustomAttributeData list
     Functions: MethodInfo list
-    ExportedFunctions: MethodInfo list } with
+    ExportedFunctions: MethodInfo list
+    Architecture: Mono.Cecil.TargetArchitecture } with
 
     member this.ClangFlagsOsxAttribute =
         this.Attributes
@@ -34,10 +35,6 @@ type FeropModule = {
     member this.MsvcOptionsWinAttribute =
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<MsvcOptionsWinAttribute>.FullName)
-
-    member this.Is64bit =
-        this.Attributes
-        |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<Cpu64bitAttribute>.FullName)
 
     member this.IsCpp =
         this.Attributes
@@ -103,7 +100,7 @@ let methodHasAttribute (typ: Type) (meth: MethodInfo) =
     |> Seq.map (fun x -> x.AttributeType.FullName)
     |> Seq.exists ((=)typ.FullName)
 
-let makeModule (typ: Type) =
+let makeModule arch (typ: Type) =
     let name = typ.Name
     let fullName = typ.FullName
     let attrs = typ.CustomAttributes |> List.ofSeq
@@ -111,7 +108,12 @@ let makeModule (typ: Type) =
     let normalFuncs = funcs |> List.filter (fun x -> not (methodHasAttribute typeof<ExportAttribute> x))
     let exportFuncs = funcs |> List.filter (methodHasAttribute typeof<ExportAttribute>)
 
-    { Name = name; FullName = fullName; Attributes = attrs; Functions = normalFuncs; ExportedFunctions = exportFuncs }
+    { Name = name
+      FullName = fullName
+      Attributes = attrs
+      Functions = normalFuncs
+      ExportedFunctions = exportFuncs
+      Architecture = arch }
 
 let makeHFilePath path modul = Path.Combine (path, sprintf "%s.h" modul.Name)
 

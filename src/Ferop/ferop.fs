@@ -34,10 +34,6 @@ type MsvcOptionsWinAttribute (libs: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
-type Cpu64bitAttribute () =
-    inherit System.Attribute ()
-
-[<System.AttributeUsageAttribute (System.AttributeTargets.Class)>]
 type CppAttribute () =
     inherit System.Attribute ()
 

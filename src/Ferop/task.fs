@@ -217,7 +217,7 @@ type Proxy () =
 
         classes asm
         |> List.iter (fun m ->
-            let modul = makeModule m
+            let modul = makeModule asmDef.MainModule.Architecture m
             let cgen = makeCGen modul
             FSharp.Interop.FeropCompiler.C.compileModule targetDirectory modul Platform.Auto cgen)
 

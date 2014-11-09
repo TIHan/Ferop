@@ -77,7 +77,7 @@ let compileToDynamicLibrary outputPath modul cgen = io {
     let options = modul.MsvcOptionsWin
     let dllName = makeDynamicLibraryPath outputPath modul
 
-    do! writeBat outputPath modul.Is64bit
+    do! writeBat outputPath (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
     let args = makeArgs options cFile dllName
     do! startMsvc outputPath args }
 
