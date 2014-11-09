@@ -56,6 +56,8 @@ let makeBatPath path = Path.Combine (path, "msvc.bat")
 
 let makeMsvcStartInfo outputPath args = ProcessStartInfo (makeBatPath outputPath, args)
 
+let findAllObjectFiles path = Directory.GetFiles (path, "*.obj") |> List.ofArray
+
 let writeBat outputPath is64bit = io {
     File.WriteAllText (makeBatPath outputPath, bat is64bit) }
 
@@ -66,10 +68,12 @@ let startMsvc outputPath args = io {
     pinfo.RedirectStandardError <- true
     pinfo.RedirectStandardOutput <- true
     pinfo.CreateNoWindow <- true
-    pinfo.WorkingDirectory <- outputPath
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()
+
+    findAllObjectFiles System.Environment.CurrentDirectory
+    |> List.iter File.Delete
 
     checkProcessError p }
 
