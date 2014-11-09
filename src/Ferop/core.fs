@@ -105,7 +105,7 @@ let makeModule arch (typ: Type) =
     let fullName = typ.FullName
     let attrs = typ.CustomAttributes |> List.ofSeq
     let funcs = staticMethods typ
-    let normalFuncs = funcs |> List.filter (fun x -> not (methodHasAttribute typeof<ExportAttribute> x))
+    let normalFuncs = funcs |> List.filter (methodHasAttribute typeof<ImportAttribute>)
     let exportFuncs = funcs |> List.filter (methodHasAttribute typeof<ExportAttribute>)
 
     { Name = name

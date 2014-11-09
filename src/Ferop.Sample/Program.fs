@@ -21,9 +21,6 @@ type InputEvent =
     | KeyPressed of char
     | KeyReleased of char
 
-module InputInternal =
-    let internal inputEvents = ResizeArray<InputEvent> ()
-
 [<Struct>]
 type Application =
     val Window : nativeint
@@ -71,14 +68,17 @@ type KeyboardEvent =
 """)>]
 module App =
 
+    let inputEvents = ResizeArray<InputEvent> ()
+
     [<Export>]
     let dispatchKeyboardEvent (kbEvt: KeyboardEvent) : unit =
-        InputInternal.inputEvents.Add (
+        inputEvents.Add (
             if kbEvt.IsPressed = 1 then 
                 InputEvent.KeyPressed (char kbEvt.KeyCode) 
             else 
                 InputEvent.KeyReleased (char kbEvt.KeyCode))
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let init () : Application =
         C """
@@ -110,6 +110,7 @@ glewInit ();
 return app;
         """
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let exit (app: Application) : int =
         C """
@@ -118,13 +119,16 @@ SDL_DestroyWindow ((SDL_Window*)app.Window);
 SDL_Quit ();
 return 0;
         """
-
+    
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let clear () : unit = C """ glClear (GL_COLOR_BUFFER_BIT); """
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let draw (app: Application) : unit = C """ SDL_GL_SwapWindow ((SDL_Window*)app.Window); """
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let pollInputEvents () : unit =
         C """
@@ -156,6 +160,7 @@ while (SDL_PollEvent (&e))
 } 
         """
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let generateVbo (size: int) (data: DrawLine[]) : int =
         C """
@@ -168,6 +173,7 @@ glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 return vbo;
         """
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let drawVbo (size: int) (data: DrawLine[]) (vbo: int) : unit =
         C """
@@ -176,6 +182,7 @@ glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 glDrawArrays (GL_LINES, 0, size);
         """
 
+    [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let loadShaders (vertexSource: byte[]) (fragmentSource: byte[]) : unit =
         C """
@@ -215,8 +222,8 @@ glEnableVertexAttribArray (posAttrib);
 
 module Input =
     let processInput () =
-        let evts = InputInternal.inputEvents |> List.ofSeq
-        InputInternal.inputEvents.Clear ()
+        let evts = App.inputEvents |> List.ofSeq
+        App.inputEvents.Clear ()
         evts
 
 let clear () = App.clear ()

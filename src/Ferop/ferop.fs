@@ -42,6 +42,10 @@ type HeaderAttribute (header: string) =
     inherit System.Attribute ()
 
 [<System.AttributeUsageAttribute (System.AttributeTargets.Method)>]
+type ImportAttribute () =
+    inherit System.Attribute ()
+
+[<System.AttributeUsageAttribute (System.AttributeTargets.Method)>]
 type ExportAttribute () =
     inherit System.Attribute ()
 

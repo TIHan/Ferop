@@ -49,6 +49,7 @@ type Proxy () =
             let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
             let callingConvType = m.Import(typeof<CallingConvention>)
             let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
+            let importAttrCtor = m.Import(typeof<ImportAttribute>.GetConstructor(Array.empty))
 
             m.GetTypes ()
             |> Array.ofSeq
@@ -72,6 +73,8 @@ type Proxy () =
 
                 x.Methods
                 |> Array.ofSeq
+                |> Array.filter (fun x -> not x.IsConstructor)
+                |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
                         let del = TypeDefinition ("", meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
@@ -119,6 +122,9 @@ type Proxy () =
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
 
                         let customAttr = CustomAttribute (unSecuAttrCtor)
+                        meth.CustomAttributes.Add (customAttr)
+
+                        let customAttr = CustomAttribute (importAttrCtor)
                         meth.CustomAttributes.Add (customAttr)
 
                         x.Methods.Add meth
@@ -197,6 +203,7 @@ type Proxy () =
                 x.Methods
                 |> Array.ofSeq
                 |> Array.filter (fun x -> not x.IsConstructor)
+                |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
                         ()
