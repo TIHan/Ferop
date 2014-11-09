@@ -66,6 +66,7 @@ let startMsvc outputPath args = io {
     pinfo.RedirectStandardError <- true
     pinfo.RedirectStandardOutput <- true
     pinfo.CreateNoWindow <- true
+    pinfo.WorkingDirectory <- outputPath
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()
