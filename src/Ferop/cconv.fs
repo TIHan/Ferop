@@ -230,6 +230,9 @@ and makeCDeclStruct env (typ: Type) =
         let name = makeCTypeName env typ
         let env', fields = makeCDeclStructFields env typ
 
+        if typ.IsAutoLayout || typ.IsExplicitLayout then
+            failwithf "Struct, %s, is not allowed to use auto or explicit layout." typ.Name
+
         { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
 
 let makeCDeclEnum env (typ: Type) =

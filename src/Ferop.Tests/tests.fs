@@ -87,10 +87,6 @@ type Enum2 =
     | Sub1 = 3
     | Sub2 = 1
 
-#if __64BIT__
-[<Cpu64bit>]
-#else
-#endif
 [<Ferop>]
 [<Header ("""
 #include <stdio.h>
@@ -207,19 +203,11 @@ type Tests =
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     static member testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """
 
-#if __64BIT__
-[<Cpu64bit>]
-#else
-#endif
 [<Ferop>]
 module Tests2 =
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let testByte (x: byte) : byte = C """ return x; """
 
-#if __64BIT__
-[<Cpu64bit>]
-#else
-#endif
 [<Ferop>]
 module Tests3 =
     [<MethodImpl (MethodImplOptions.NoInlining)>]
@@ -228,10 +216,6 @@ module Tests3 =
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let testEnum2 (x: Enum2) : Enum2 = C """ return x; """
 
-#if __64BIT__
-[<Cpu64bit>]
-#else
-#endif
 [<Ferop>]
 module Tests4 =
     [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
@@ -267,10 +251,6 @@ module Tests4 =
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let testUnativeInt (x: unativeint) : unit = C """ """
 
-#if __64BIT__
-[<Cpu64bit>]
-#else
-#endif
 [<Ferop>]
 [<Cpp>]
 [<Header ("""

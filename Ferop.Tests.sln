@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
+# Visual Studio 2012
 VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7249F228-579F-4214-A2FC-AFF15C482CE5}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Tests", "src\Ferop.Tests\Ferop.Tests.fsproj", "{6AFEE669-397C-4339-8146-1FDC54D1FA6E}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Ferop.Tests", "src\Ferop.Tests\Ferop.Tests.fsproj", "{6AFEE669-397C-4339-8146-1FDC54D1FA6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,13 +22,10 @@ Global
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x86.ActiveCfg = Release|x86
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = src\Ferop.Tests\Ferop.Tests.fsproj
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{6AFEE669-397C-4339-8146-1FDC54D1FA6E} = {7249F228-579F-4214-A2FC-AFF15C482CE5}
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = src\Ferop\Ferop.fsproj
 	EndGlobalSection
 EndGlobal
