@@ -204,6 +204,16 @@ let makeCDeclFunction env (meth: MethodInfo) =
 
     { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
 
+let makeCDeclFunctionPrototype env (meth: MethodInfo) : CDeclFunctionPrototype =
+    let decl = makeCDeclFunction env meth
+    let returnType = decl.ReturnType
+    let name = decl.Name
+    let parameterTypes =
+        decl.Parameters
+        |> List.map (fun x -> x.Type)
+
+    { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
+
 let makeCDeclFunctionPointer (env: CEnv) (typ: Type) =
     let func = typ.GetMethod "Invoke"
     let returnType = makeReturnType env func.ReturnType
@@ -287,6 +297,12 @@ let makeCDeclFunctions (env: CEnv) = function
         let decls = funcs |> List.map (makeCDeclFunction env) |> List.map CDecl.Function
         { env with Decls = env.Decls @ decls }
 
+let makeCDeclFunctionPrototypes (env: CEnv) = function
+    | [] -> env
+    | funcs ->
+        let decls = funcs |> List.map (makeCDeclFunctionPrototype env) |> List.map CDecl.FunctionPrototype
+        { env with Decls = env.Decls @ decls }
+
 let makeCDeclFunctionPointers (env: CEnv) = function
     | [] -> env
     | funcPtrs ->
@@ -325,7 +341,6 @@ let makeCDecls (env: CEnv) info =
         |> List.map (fun x -> x.ParameterType)
         |> List.filter (fun x -> x.BaseType = typeof<MulticastDelegate>)
 
-
     // If the delegate is compiler generated, we are creating
     // an extern function.
     let instanceDels =
@@ -349,10 +364,11 @@ let makeCDecls (env: CEnv) info =
     let env' = makeCDeclStructs env structs
     let env'' = makeCDeclEnums env' enums
     let env''' = makeCDeclFunctionPointers env'' dels
-    let env'''' = makeCDeclGlobalVars env''' instanceDels
-    let env''''' = makeCDeclFunctions env'''' funcs
-    let env'''''' = makeCDeclExterns env''''' instanceDels
-    env''''''
+    let env'''' = makeCDeclFunctionPrototypes env''' funcs
+    let env''''' = makeCDeclGlobalVars env'''' instanceDels
+    let env'''''' = makeCDeclFunctions env''''' funcs
+    let env''''''' = makeCDeclExterns env'''''' instanceDels
+    env'''''''
 
 //-------------------------------------------------------------------------
 // CEnv

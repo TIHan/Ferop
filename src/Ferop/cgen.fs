@@ -213,10 +213,15 @@ let generateCDecls context = function
     | [] -> ""
     | decls -> decls |> List.reduce (fun x y -> x + "\n" + y)
 
-let generateHeader env includes =
+let generateHeader env extra =
     let decls = generateCDecls CGenContext.Header env.Decls
 
-    sprintf "%s\n%s" includes decls
+    (sprintf "%s\n%s\n%s\n%s" extra)
+        (if env.IsCpp then """extern "C" {"""
+        else "") 
+        decls
+        (if env.IsCpp then """}"""
+        else "") 
     |> generateMainHeaderCode env.Name
 
 let generateSource (env: CEnv) =
@@ -228,9 +233,10 @@ let generateSource (env: CEnv) =
     + generateCDecls CGenContext.Source env.Decls +
     (if env.IsCpp
     then
-        """}
+        """
+}
 """
     else "")
 
-let generate env includes =
-    { Header = generateHeader env includes; Source = generateSource env }
+let generate env extraHeader =
+    { Header = generateHeader env extraHeader; Source = generateSource env }
