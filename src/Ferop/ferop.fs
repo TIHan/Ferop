@@ -6,7 +6,7 @@ open System.Runtime.CompilerServices
 /// Marks a class to let Ferop know that its containing static methods marked with the
 /// 'Import' attribute and an 'I' call will be compiled with a C/C++, then
 /// the methods will be modified to be P/Invoke methods calling into the compiled code
-/// that was in the 'I' call.
+/// that was in the 'C' call.
 ///
 /// Static methods marked with 'Export' attribute will tell the C/C++ compiler
 /// that the method needs to be called from within C/C++; this is handled
@@ -23,6 +23,14 @@ type ClangOsxAttribute (flags: string, libs: string) =
 type GccLinuxAttribute (flags: string, libs: string) =
     inherit Attribute ()
 
+/// Allows a hook into the MSVC command line arguments when compiling
+/// C/C++ on Windows.
+///
+/// Ferop will try to choose the very latest MSVC version based on what is stored in
+/// 'HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\Vs7' first, then
+/// 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\Vs7' last.
+///
+/// cl.exe {cfile} {options} /link /DLL /OUT:{dllName}
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type MsvcWinAttribute (options: string) =
     inherit Attribute ()
@@ -60,6 +68,7 @@ type ExportAttribute () =
 [<AutoOpen>]
 module Ferop =
     /// 'C' contains the code that will be compiled.
-    /// Ferop will always remove this call when used in a static method marked with the 'Import' attribute.
+    /// Ferop will always remove this call when used in a static method marked with the 'Import' attribute
+    /// that is inside a class marked with the 'Ferop' attribute.
     [<MethodImpl (MethodImplOptions.NoInlining)>]
     let C (code: string) = failwith "Ferop: The function has been inlined. Please mark it with [MethodImpl(MethodImplOptions.NoInlining)]"
