@@ -6,7 +6,7 @@ open NUnit.Framework
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 
-open FSharp.Interop.Ferop
+open Ferop
 
 #nowarn "51"
 
@@ -445,5 +445,5 @@ let ``with an array type, should pass an array and have it be modified in the un
     arr.[2] |> should equal 20.45
 
 [<Test>]
-let ``with a c exported function with cpp, should pass without error`` () =
+let ``with a C exported function with cpp, should pass without error`` () =
     TestsCpp.testCppHelloWorld ()

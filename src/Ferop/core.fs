@@ -1,12 +1,19 @@
-﻿module internal FSharp.Interop.FeropInternal.Core
+﻿module internal Ferop.Core
 
 open System
 open System.IO
 open System.Reflection
 open System.Diagnostics
 
-open FSharp.Interop.Ferop
+open Ferop
 open FSharp.Control.IO
+
+type Platform =
+    | Auto = 0
+    | Win = 1
+    | Linux = 2
+    | Osx = 3
+    //| AppleiOS = 4
 
 type FeropModule = {
     Name: string
@@ -16,25 +23,17 @@ type FeropModule = {
     ExportedFunctions: MethodInfo list
     Architecture: Mono.Cecil.TargetArchitecture } with
 
-    member this.ClangFlagsOsxAttribute =
+    member this.ClangOsxAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangFlagsOsxAttribute>.FullName)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangOsxAttribute>.FullName)
 
-    member this.ClangLibsOsxAttribute =
+    member this.GccLinuxAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangLibsOsxAttribute>.FullName)
-
-    member this.GccFlagsLinuxAttribute =
-        this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<GccFlagsLinuxAttribute>.FullName)
-
-    member this.GccLibsLinuxAttribute =
-        this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<GccLibsLinuxAttribute>.FullName)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<GccLinuxAttribute>.FullName)
 
     member this.MsvcOptionsWinAttribute =
         this.Attributes
-        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<MsvcOptionsWinAttribute>.FullName)
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<MsvcWinAttribute>.FullName)
 
     member this.IsCpp =
         this.Attributes
@@ -51,31 +50,31 @@ type FeropModule = {
             args.Value :?> string
 
     member this.ClangFlagsOsx =
-        match this.ClangFlagsOsxAttribute with
+        match this.ClangOsxAttribute with
         | None -> ""
         | Some attr ->
-            let args = Seq.exactlyOne attr.ConstructorArguments
+            let args = attr.ConstructorArguments.[0]
             args.Value :?> string
 
     member this.ClangLibsOsx =
-        match this.ClangLibsOsxAttribute with
+        match this.ClangOsxAttribute with
         | None -> ""
         | Some attr ->
-            let args = Seq.exactlyOne attr.ConstructorArguments
+            let args = attr.ConstructorArguments.[1]
             args.Value :?> string
 
     member this.GccFlagsLinux =
-        match this.GccFlagsLinuxAttribute with
+        match this.GccLinuxAttribute with
         | None -> ""
         | Some attr ->
-            let args = Seq.exactlyOne attr.ConstructorArguments
+            let args = attr.ConstructorArguments.[0]
             args.Value :?> string
 
     member this.GccLibsLinux =
-        match this.GccLibsLinuxAttribute with
+        match this.GccLinuxAttribute with
         | None -> ""
         | Some attr ->
-            let args = Seq.exactlyOne attr.ConstructorArguments
+            let args = attr.ConstructorArguments.[1]
             args.Value :?> string
 
     member this.MsvcOptionsWin =

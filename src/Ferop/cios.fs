@@ -1,5 +1,5 @@
 ﻿[<RequireQualifiedAccess>]
-module internal FSharp.Interop.FeropInternal.CiOS
+module internal Ferop.CiOS
 
 open System.IO
 open System.Diagnostics

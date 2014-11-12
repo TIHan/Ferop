@@ -11,7 +11,7 @@ open System.Threading
 
 open Microsoft.FSharp.NativeInterop
 
-open FSharp.Interop.Ferop
+open Ferop
 open Ferop.Sample
 
 #nowarn "9"
@@ -46,14 +46,15 @@ type KeyboardEvent =
     val KeyCode : int
 
 [<Ferop>]
-[<ClangFlagsOsx ("-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers")>]
-[<ClangLibsOsx ("-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2")>]
-[<GccFlagsLinux ("-I../../include/SDL2")>]
-[<GccLibsLinux ("-lSDL2")>]
+[<ClangOsx (
+    "-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers",
+    "-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2"
+)>]
+[<GccLinux ("-I../../include/SDL2", "-lSDL2")>]
 #if __64BIT__
-[<MsvcOptionsWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x64\SDL2.lib ..\..\lib\win\x64\SDL2main.lib ..\..\lib\win\x64\glew32.lib opengl32.lib """)>]
+[<MsvcWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x64\SDL2.lib ..\..\lib\win\x64\SDL2main.lib ..\..\lib\win\x64\glew32.lib opengl32.lib """)>]
 #else
-[<MsvcOptionsWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x86\SDL2.lib ..\..\lib\win\x86\SDL2main.lib ..\..\lib\win\x86\glew32.lib opengl32.lib """)>]
+[<MsvcWin (""" /I ..\..\include\SDL2 /I ..\..\include ..\..\lib\win\x86\SDL2.lib ..\..\lib\win\x86\SDL2main.lib ..\..\lib\win\x86\glew32.lib opengl32.lib """)>]
 #endif
 [<Header ("""
 #include <stdio.h>

@@ -9,13 +9,12 @@ open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
 open Mono.Cecil
 
-open FSharp.Interop.Ferop
-open FSharp.Interop.FeropCompiler
-open FSharp.Interop.FeropInternal
-open FSharp.Interop.FeropInternal.Core
+open Ferop
+open Ferop.Compiler
+open Ferop.Core
 
 [<Serializable>]
-type Proxy () =
+type internal Proxy () =
     inherit MarshalByRefObject ()
 
     let hasAttribute (typ: Type) (typDef: TypeDefinition) =
@@ -55,7 +54,7 @@ type Proxy () =
             |> Array.ofSeq
             |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Array.iter (fun x ->
-                let name = FSharp.Interop.FeropCompiler.C.makeDllName x.Name Platform.Auto
+                let name = makeDllName x.Name Platform.Auto
 
                 let mref =
                     match
@@ -184,7 +183,7 @@ type Proxy () =
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
-                let name = FSharp.Interop.FeropCompiler.C.makeDllName x.Name Platform.Auto
+                let name = makeDllName x.Name Platform.Auto
 
                 let mref =
                     match
@@ -226,7 +225,7 @@ type Proxy () =
         |> List.iter (fun m ->
             let modul = makeModule asmDef.MainModule.Architecture m
             let cgen = makeCGen modul
-            FSharp.Interop.FeropCompiler.C.compileModule targetDirectory modul Platform.Auto cgen)
+            compileModule targetDirectory modul Platform.Auto cgen)
 
 [<Serializable>]
 type public WeavingTask () =

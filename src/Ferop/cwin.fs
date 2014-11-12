@@ -1,5 +1,5 @@
 ﻿[<RequireQualifiedAccess>]
-module internal FSharp.Interop.FeropInternal.CWin
+module internal Ferop.CWin
 
 open System
 open System.IO
