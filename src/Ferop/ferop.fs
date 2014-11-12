@@ -15,22 +15,39 @@ open System.Runtime.CompilerServices
 type FeropAttribute () =
     inherit Attribute ()
 
+/// Allows a hook into the clang command line arguments when compiling
+/// C/C++ on OSX. The two hooks are {flags} and {libs}.
+///
+/// When compiling pure C, Ferop will add '-std=c99' to the flags by default to support <stdint.h>.
+///
+/// 32-bit C:   
+///     clang -Wall -std=c99 -arch i386 {flags} -c {cFile} -o {oFile}
+/// 32-bit C++: 
+///     clang -Wall -arch i386 {flags} -c {cFile} -o {oFile}
+/// 32-bit Dynamic Library: 
+///     clang -arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFiles} -o {dylibName}
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type ClangOsxAttribute (flags: string, libs: string) =
     inherit Attribute ()
 
+/// Allows a hook into the gcc/g++ command line arguments when compiling
+/// C/C++ on Linux. The two hooks are {flags} and {libs}.
+/// TODO:
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type GccLinuxAttribute (flags: string, libs: string) =
     inherit Attribute ()
 
 /// Allows a hook into the MSVC command line arguments when compiling
-/// C/C++ on Windows.
+/// C/C++ on Windows. The hook is {options}.
 ///
 /// Ferop will try to choose the very latest MSVC version based on what is stored in
 /// 'HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\Vs7' first, then
 /// 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\Vs7' last.
 ///
-/// cl.exe {cfile} {options} /link /DLL /OUT:{dllName}
+/// MSVC needs to support <stdint.h> in order to compile.
+///
+/// 32-bit / 64-bit C/C++:
+///     cl.exe {cfile} {options} /link /DLL /OUT:{dllName}
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type MsvcWinAttribute (options: string) =
     inherit Attribute ()
