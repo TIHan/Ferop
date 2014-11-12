@@ -9,10 +9,8 @@ open System.Runtime.CompilerServices
 /// that was in the 'I' call.
 ///
 /// Static methods marked with 'Export' attribute will tell the C/C++ compiler
-/// that the method needs to be called from within the other language; this is handled
+/// that the method needs to be called from within C/C++; this is handled
 /// automatically.
-///
-/// Default language is C. Other option is using the 'Cpp' attribute to use C++.
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type FeropAttribute () =
     inherit Attribute ()
