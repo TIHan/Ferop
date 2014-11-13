@@ -3,6 +3,7 @@
     using Ferop;
 
     [Ferop]
+    [Header("#include <stdio.h>")]
     class Native
     {
         [Import]
