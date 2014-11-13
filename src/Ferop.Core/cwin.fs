@@ -33,10 +33,10 @@ let bat (is64bit: bool) =
 
     let vcBin = Path.Combine (vs, "VC\\bin")
 
-    let vcBin64bit = Path.Combine (vs, "VC\\bin\\amd64")
+    let vcBin64bit = Path.Combine (vs, "VC\\bin\\x86_amd64")
 
     let vcvars32 = Path.Combine (vcBin, "vcvars32.bat")
-    let vcvars64 = Path.Combine (vcBin64bit, "vcvars64.bat")
+    let vcvars64 = Path.Combine (vcBin64bit, "vcvarsx86_amd64.bat")
     let cl = "cl.exe"
     let cl32bit = Path.Combine (vcBin, cl)
     let cl64bit = Path.Combine (vcBin64bit, cl)
@@ -70,12 +70,13 @@ let startMsvc outputPath args = io {
     pinfo.CreateNoWindow <- true
 
     let p = Process.Start (pinfo)
+    let msg = p.StandardOutput.ReadToEnd ()
     p.WaitForExit ()
 
     findAllObjectFiles System.Environment.CurrentDirectory
     |> List.iter File.Delete
 
-    checkProcessError p }
+    checkProcessError msg p }
 
 let compileToDynamicLibrary outputPath modul cgen = io {
     let! _, cFile = writeCGen outputPath modul cgen

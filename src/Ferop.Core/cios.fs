@@ -35,7 +35,7 @@ let startClang args = io {
     let p = Process.Start (pinfo)
     p.WaitForExit ()
 
-    checkProcessError p }
+    checkProcessError "" p }
 
 let startAr args = io {
     let pinfo = makeArStartInfo args
@@ -46,7 +46,7 @@ let startAr args = io {
     let p = Process.Start (pinfo)
     p.WaitForExit ()
 
-    checkProcessError p }
+    checkProcessError "" p }
 
 let compileC outputPath modul cgen = io {
     let! _, cFile = writeCGen outputPath modul cgen

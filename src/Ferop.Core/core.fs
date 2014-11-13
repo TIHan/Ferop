@@ -130,11 +130,11 @@ let makeCFilePath path modul = Path.Combine (path, sprintf "%s.c" modul.Name)
 
 let makeCppFilePath path modul = Path.Combine (path, sprintf "%s.cpp" modul.Name)
 
-let checkProcessError (p: Process) = 
+let checkProcessError extra (p: Process) = 
     if p.ExitCode <> 0 then 
         let msg = p.StandardError.ReadToEnd ()
         let msg2 = p.StandardOutput.ReadToEnd ()
-        failwith (msg + "\n" + msg2)
+        failwith (msg + "\n" + msg2 + "\n" + extra)
 
 open CConversion
 open CGeneration

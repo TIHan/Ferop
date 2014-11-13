@@ -36,7 +36,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG</DefineConstants>
+    <DefineConstants>DEBUG;__64BIT__</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
     <Optimize>false</Optimize>
@@ -76,8 +76,12 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
+  <PropertyGroup>
     <PostBuildEvent>xcopy /f "$(ProjectDir)..\..\lib\win\$(PlatformName)\SDL2.dll" "$(TargetDir)" /q /y
 xcopy /f "$(ProjectDir)..\..\lib\win\$(PlatformName)\glew32.dll" "$(TargetDir)" /q /y</PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
 </Project>

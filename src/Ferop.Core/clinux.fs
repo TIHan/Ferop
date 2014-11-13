@@ -46,7 +46,7 @@ let startGcc args modul = io {
     let p = Process.Start (pinfo)
     p.WaitForExit ()
 
-    checkProcessError p }
+    checkProcessError "" p }
 
 let compileC outputPath modul cgen = io {
     let! _, cFile = writeCGen outputPath modul cgen
