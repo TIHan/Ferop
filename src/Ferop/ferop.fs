@@ -111,4 +111,4 @@ module Ferop =
     /// Ferop will always remove this call when used in a static method marked with the 'Import' attribute
     /// that is inside a class marked with the 'Ferop' attribute.
     [<MethodImpl (MethodImplOptions.NoInlining)>]
-    let C (code: string) = failwith "Ferop: The function has been inlined. Please mark it with [MethodImpl(MethodImplOptions.NoInlining)]"
+    let C (code: string) = failwith "Ferop: The function was not imported or has been inlined. If inlined, please mark it with [MethodImpl(MethodImplOptions.NoInlining)]"

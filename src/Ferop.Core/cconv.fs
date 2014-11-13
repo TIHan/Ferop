@@ -49,23 +49,25 @@ let rec isTypeBlittable (typ: Type) =
 
 let typeHasAttributeType (attrType: Type) (typ: Type) =
     typ.GetCustomAttributesData ()
-    |> Seq.map (fun x -> x.AttributeType)
-    |> Seq.exists ((=)attrType)
+    |> Seq.map (fun x -> x.AttributeType.FullName)
+    |> Seq.exists ((=)attrType.FullName)
 
-// TODO: This needs some cleanup.
-let tryMakeCExpr (meth: MethodInfo) =
-    try
-        let body = meth.GetMethodBody ()
-        let ilBytes = body.GetILAsByteArray ()
+let methodHasAttributeType (attrType: Type) (meth: MethodInfo) =
+    meth.GetCustomAttributesData ()
+    |> Seq.map (fun x -> x.AttributeType.FullName)
+    |> Seq.exists ((=)attrType.FullName)
 
-        let resolve i = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, i))
+let makeCExpr (meth: MethodInfo) =
+    let body = meth.GetMethodBody ()
+    let ilBytes = body.GetILAsByteArray ()
 
-        let textExpr = 
-            try resolve 1
-            with | _ -> resolve 2
+    let resolve i = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, i))
 
-        Some (CExpr.Text textExpr)
-    with | _ -> None
+    let textExpr = 
+        try resolve 1
+        with | _ -> resolve 2
+
+    CExpr.Text textExpr
 
 let makeCTypeName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
 
@@ -186,13 +188,13 @@ let makeParameterType env (info: ParameterInfo) = lookupCType env info.Parameter
 
 let makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParameterType env)
 
-let makeCExprFallback (env: CEnv) (func: MethodInfo) =
-    match func.GetParameters () with
-    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> && func.Name.Contains("_ferop_set_") ->
+let makeCExprFallback (env: CEnv) (meth: MethodInfo) =
+    match meth.GetParameters () with
+    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> && methodHasAttributeType typeof<CompilerGeneratedAttribute> meth ->
         let typ = x.ParameterType
         let name = sprintf "%s_%s" env.Name (typ.Name.Replace ("Delegate", ""))
         Text <| sprintf "%s = ptr;" name
-    | _ -> failwithf "Function, %A, not supported." func.Name
+    | _ -> failwithf "Function, %A, not supported." meth.Name
 
 //-------------------------------------------------------------------------
 // CDecls
@@ -203,9 +205,9 @@ let makeCDeclFunction env (meth: MethodInfo) =
     let name = makeCFunctionName env meth
     let parameters = meth.GetParameters () |> makeParameters env
     let expr =
-        match tryMakeCExpr meth with
-        | None -> makeCExprFallback env meth
-        | Some x -> x
+        if methodHasAttributeType typeof<CompilerGeneratedAttribute> meth
+        then makeCExprFallback env meth
+        else makeCExpr meth
 
     { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
 
@@ -338,6 +340,10 @@ let makeCDeclExterns (env: CEnv) = function
 
 let makeCDecls (env: CEnv) info =
     let funcs = info.Functions
+
+    if funcs.IsEmpty then env
+    else
+
     let exportedFuncs = info.ExportedFunctions
     let dels =
         funcs @ exportedFuncs

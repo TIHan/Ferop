@@ -72,7 +72,7 @@ type internal Proxy () =
 
                 x.Methods
                 |> Array.ofSeq
-                |> Array.filter (fun x -> not x.IsConstructor)
+                |> Array.filter (fun x -> not x.IsConstructor && x.IsPublic)
                 |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
@@ -107,6 +107,9 @@ type internal Proxy () =
 
                         // ******
 
+                        // These generated P/Invoke methods are special and handled by the fallback conversion
+                        // when making a function declaration.
+
                         let meth = 
                             MethodDefinition (
                                 sprintf "_ferop_set_%s" meth.Name,
@@ -119,6 +122,9 @@ type internal Proxy () =
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s__%s" x.Name meth.Name, mref)
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
+
+                        let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
+                        meth.CustomAttributes.Add (customAttr)
 
                         let customAttr = CustomAttribute (importAttrCtor)
                         meth.CustomAttributes.Add (customAttr)
@@ -198,7 +204,7 @@ type internal Proxy () =
 
                 x.Methods
                 |> Array.ofSeq
-                |> Array.filter (fun x -> not x.IsConstructor)
+                |> Array.filter (fun x -> not x.IsConstructor && x.IsPublic)
                 |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then

@@ -3,7 +3,7 @@
 namespace Ferop.CSharp.Sample
 {
     [Ferop]
-    public class Program
+    class Program
     {
         [Import]
         public static int AddOne (int x)
