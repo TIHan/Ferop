@@ -41,7 +41,7 @@
   </PropertyGroup>
   <UsingTask
       TaskName="Ferop.WeavingTask"
-      AssemblyFile="$(FeropPath)\Ferop.dll" />
+      AssemblyFile="$(FeropPath)\Ferop.Core.dll" />
   <Target
       AfterTargets="AfterCompile"
       Name="FeropTarget"
