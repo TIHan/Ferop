@@ -28,13 +28,13 @@ type FeropAttribute () =
 /// 32-bit C++: 
 ///     clang -Wall -arch i386 {flags} -c {cFile} -o {oFile}
 /// 32-bit Dynamic Library: 
-///     clang -arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFiles} -o {dylibName}
+///     clang -arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFile} -o {dylibName}
 /// 64-bit C:   
 ///     clang -Wall -arch x86_64 {flags} -c {cFile} -o {oFile}
 /// 64-bit C++: 
 ///     clang -Wall -arch x86_64 {flags} -c {cFile} -o {oFile}
 /// 64-bit Dynamic Library: 
-///     clang -arch x86_64 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFiles} -o {dylibName}
+///     clang -arch x86_64 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFile} -o {dylibName}
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type ClangOsxAttribute (flags: string, libs: string) =
     inherit Attribute ()
