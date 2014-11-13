@@ -53,6 +53,33 @@ let main args =
     Native.printHelloWorld ()
     0
 </code></pre>
+
+<h3>
+<a id="c" class="anchor" href="#c" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>C#</strong>
+</h3>
+
+<pre><code>namespace Native
+{
+    using Ferop;
+
+    [Ferop]
+    class Native
+    {
+        [Import]
+        public static void PrintHelloWorld()
+        {
+            // 'object' is just a placeholder here for void return types.
+            Ferop.C&lt;object&gt;("printf(\"Hello World!\\n\");");
+        }
+
+        static void Main(string[] args)
+        {
+            Native.PrintHelloWorld();
+            System.Console.Read();
+        }
+    }
+}
+</code></pre>
       </section>
     </div>
 
