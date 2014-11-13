@@ -120,9 +120,6 @@ type internal Proxy () =
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s__%s" x.Name meth.Name, mref)
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
 
-                        let customAttr = CustomAttribute (unSecuAttrCtor)
-                        meth.CustomAttributes.Add (customAttr)
-
                         let customAttr = CustomAttribute (importAttrCtor)
                         meth.CustomAttributes.Add (customAttr)
 
