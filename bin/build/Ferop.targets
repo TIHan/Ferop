@@ -44,7 +44,7 @@
       AssemblyFile="$(FeropPath)\Ferop.dll" />
   <Target
       AfterTargets="AfterCompile"
-      Name="WinFeropTarget"
+      Name="FeropTarget"
       DependsOnTargets="$(FeropDependsOnTargets)">
 
     <Ferop.WeavingTask

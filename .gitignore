@@ -47,3 +47,5 @@ TestResults
 
 *.obj
 *.DS_Store
+
+\bin
