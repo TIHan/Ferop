@@ -52,12 +52,17 @@ let typeHasAttributeType (attrType: Type) (typ: Type) =
     |> Seq.map (fun x -> x.AttributeType)
     |> Seq.exists ((=)attrType)
 
+// TODO: This needs some cleanup.
 let tryMakeCExpr (meth: MethodInfo) =
     try
         let body = meth.GetMethodBody ()
         let ilBytes = body.GetILAsByteArray ()
 
-        let textExpr = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, 2))
+        let resolve i = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, i))
+
+        let textExpr = 
+            try resolve 1
+            with | _ -> resolve 2
 
         Some (CExpr.Text textExpr)
     with | _ -> None
