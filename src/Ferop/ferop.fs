@@ -21,16 +21,16 @@ type FeropAttribute () =
 /// Marks a class to allow a hook into the clang command line arguments when compiling
 /// C/C++ on OSX. The two hooks are {flags} and {libs}.
 ///
-/// When compiling pure C, Ferop will add '-std=c99' to the flags by default to support <stdint.h>.
+/// The compiler must have access to <stdint.h>.
 ///
 /// 32-bit C:   
-///     clang -Wall -arch i386 -std=c99 {flags} -c {cFile} -o {oFile}
+///     clang -Wall -arch i386 {flags} -c {cFile} -o {oFile}
 /// 32-bit C++: 
 ///     clang -Wall -arch i386 {flags} -c {cFile} -o {oFile}
 /// 32-bit Dynamic Library: 
 ///     clang -arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFiles} -o {dylibName}
 /// 64-bit C:   
-///     clang -Wall -arch x86_64 -std=c99 {flags} -c {cFile} -o {oFile}
+///     clang -Wall -arch x86_64 {flags} -c {cFile} -o {oFile}
 /// 64-bit C++: 
 ///     clang -Wall -arch x86_64 {flags} -c {cFile} -o {oFile}
 /// 64-bit Dynamic Library: 
@@ -42,16 +42,16 @@ type ClangOsxAttribute (flags: string, libs: string) =
 /// Marks a class to allow a hook into the gcc/g++ command line arguments when compiling
 /// C/C++ on Linux. The two hooks are {flags} and {libs}.
 ///
-/// When compiling pure C, Ferop will add '-std=c99' to the flags by default to support <stdint.h>.
+/// The compiler must have access to <stdint.h>.
 /// 
 /// 32-bit C:
-///     gcc -Wall -m32 -std=c99 -fPIC {flags} -c {cFile} -o {oFile}
+///     gcc -Wall -m32 -fPIC {flags} -c {cFile} -o {oFile}
 /// 32-bit C++:
 ///     g++ -Wall -m32 -fPIC {flags} -c {cFile} -o {oFile}
 /// 32-bit Dynamic Library:
 ///     gcc -m32 -fPIC {oFile} -shared -o {soName} {libs}
 /// 64-bit C:
-///     gcc -Wall -m64 -std=c99 -fPIC {flags} -c {cFile} -o {oFile}
+///     gcc -Wall -m64 -fPIC {flags} -c {cFile} -o {oFile}
 /// 64-bit C++:
 ///     g++ -Wall -m64 -fPIC {flags} -c {cFile} -o {oFile}
 /// 64-bit Dynamic Library:

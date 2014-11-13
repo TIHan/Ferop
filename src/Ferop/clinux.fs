@@ -17,9 +17,8 @@ let makeArgs flags cFile oFile (modul: FeropModule) =
     let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
     let isCpp = modul.IsCpp
 
-    sprintf "-Wall %s %s -fPIC %s -c %s -o %s"
+    sprintf "-Wall %s -fPIC %s -c %s -o %s"
         (if is64bit then "-m64" else "-m32")
-        (if isCpp then "" else "-std=c99")
         flags
         cFile
         oFile
@@ -42,6 +41,7 @@ let startGcc args modul = io {
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
+    pinfo.RedirectStandardOutput <- true
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()

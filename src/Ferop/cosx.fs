@@ -16,9 +16,8 @@ let makeArgs flags cFile oFile (modul: FeropModule) =
     let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
     let isCpp = modul.IsCpp
 
-    sprintf "-Wall %s %s %s -c %s -o %s"
+    sprintf "-Wall %s %s -c %s -o %s"
         (if is64bit then "-arch x86_64" else "-arch i386")
-        (if isCpp then "" else "-std=c99")
         flags
         cFile
         oFile
