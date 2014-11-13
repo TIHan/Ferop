@@ -13,15 +13,23 @@ let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
 
 let makeArgs flags cFile oFile (modul: FeropModule) =
-    if modul.IsCpp
-    then
-        sprintf "-Wall -arch i386 %s -c %s -o %s" flags cFile oFile
-    else
-        sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+    let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
+    let isCpp = modul.IsCpp
+
+    sprintf "-Wall %s %s %s -c %s -o %s"
+        (if is64bit then "-arch x86_64" else "-arch i386")
+        (if isCpp then "" else "-std=c99")
+        flags
+        cFile
+        oFile
 
 let makeStaticArgs aFile oFiles = sprintf "rcs %s %s" aFile oFiles
 
-let makeDynamicArgs libs oFiles dylibName = sprintf "-arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 %s %s -o %s " libs oFiles dylibName
+let makeDynamicArgs libs oFiles dylibName (modul: FeropModule) = 
+    let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
+    sprintf "%s -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 %s %s -o %s "
+        (if is64bit then "-arch x86_64" else "-arch i386")
+        libs oFiles dylibName
 
 let makeClangStartInfo args = ProcessStartInfo ("clang", args)
 
@@ -61,8 +69,8 @@ let compileC outputPath modul cgen = io {
 
     return oFile }
 
-let compileToDynamicLibrary libs oFiles dylibName = io {
-    let args = makeDynamicArgs libs oFiles dylibName
+let compileToDynamicLibrary libs oFiles dylibName modul = io {
+    let args = makeDynamicArgs libs oFiles dylibName modul
     do! startClang args }
 
 let cleanObjectFiles outputPath = io {
@@ -76,6 +84,6 @@ let compileModule outputPath modul cgen =
 
     io {
         let! oFile = compileC outputPath modul cgen
-        do! compileToDynamicLibrary libs oFile dylibName
+        do! compileToDynamicLibrary libs oFile dylibName modul
         return! cleanObjectFiles outputPath }
     |> IO.run

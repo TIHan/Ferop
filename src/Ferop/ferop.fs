@@ -24,11 +24,17 @@ type FeropAttribute () =
 /// When compiling pure C, Ferop will add '-std=c99' to the flags by default to support <stdint.h>.
 ///
 /// 32-bit C:   
-///     clang -Wall -std=c99 -arch i386 {flags} -c {cFile} -o {oFile}
+///     clang -Wall -arch i386 -std=c99 {flags} -c {cFile} -o {oFile}
 /// 32-bit C++: 
 ///     clang -Wall -arch i386 {flags} -c {cFile} -o {oFile}
 /// 32-bit Dynamic Library: 
 ///     clang -arch i386 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFiles} -o {dylibName}
+/// 64-bit C:   
+///     clang -Wall -arch x86_64 -std=c99 {flags} -c {cFile} -o {oFile}
+/// 64-bit C++: 
+///     clang -Wall -arch x86_64 {flags} -c {cFile} -o {oFile}
+/// 64-bit Dynamic Library: 
+///     clang -arch x86_64 -dynamiclib -headerpad_max_install_names -undefined dynamic_lookup -compatibility_version 1.0 -current_version 1.0 {libs} {oFiles} -o {dylibName}
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type ClangOsxAttribute (flags: string, libs: string) =
     inherit Attribute ()
