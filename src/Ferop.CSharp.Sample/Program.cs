@@ -9,7 +9,7 @@
         public static void PrintHelloWorld()
         {
             // 'object' is just a placeholder here for void return types.
-            Ferop.C<object> ("printf(\"Hello World!\\n\");");
+            Ferop.C<object>("printf(\"Hello World!\\n\");");
         }
 
         static void Main(string[] args)
