@@ -58,16 +58,19 @@ let methodHasAttributeType (attrType: Type) (meth: MethodInfo) =
     |> Seq.exists ((=)attrType.FullName)
 
 let makeCExpr (meth: MethodInfo) =
-    let body = meth.GetMethodBody ()
-    let ilBytes = body.GetILAsByteArray ()
+    try
+        let body = meth.GetMethodBody ()
+        let ilBytes = body.GetILAsByteArray ()
 
-    let resolve i = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, i))
+        let resolve i = meth.Module.ResolveString (BitConverter.ToInt32 (ilBytes, i))
 
-    let textExpr = 
-        try resolve 1
-        with | _ -> resolve 2
+        let textExpr = 
+            try resolve 1
+            with | _ -> resolve 2
 
-    CExpr.Text textExpr
+        CExpr.Text textExpr
+    with | _ ->
+        failwithf "Error finding C/C++ code in function, %s" meth.Name
 
 let makeCTypeName (env: CEnv) (typ: Type) = sprintf "%s_%s" env.Name typ.Name
 
