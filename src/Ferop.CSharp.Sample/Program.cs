@@ -1,19 +1,20 @@
-﻿using Ferop;
-
-namespace Ferop.CSharp.Sample
+﻿namespace Native
 {
+    using Ferop;
+
     [Ferop]
-    class Program
+    class Native
     {
         [Import]
-        public static int AddOne (int x)
+        public static void PrintHelloWorld()
         {
-            return Ferop.C<int> ("return x + 1;");
+            // 'object' is just a placeholder here for void return types.
+            Ferop.C<object> ("printf(\"Hello World!\\n\");");
         }
 
         static void Main(string[] args)
         {
-            System.Console.WriteLine(AddOne(5));
+            Native.PrintHelloWorld();
             System.Console.Read();
         }
     }
