@@ -41,6 +41,7 @@ let startClang args = io {
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
+    pinfo.RedirectStandardOutput <- true
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()
@@ -52,6 +53,7 @@ let startAr args = io {
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
+    pinfo.RedirectStandardOutput <- true
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()

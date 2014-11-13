@@ -224,8 +224,9 @@ let generateHeader env extra =
         else "") 
     |> generateMainHeaderCode env.Name
 
-let generateSource (env: CEnv) =
+let generateSource (env: CEnv) extra =
     (generateHeaderIncludeCode env.Name) +
+    extra + "\n" +
     (if env.IsCpp
     then """extern "C" {
 """ 
@@ -238,5 +239,5 @@ let generateSource (env: CEnv) =
 """
     else "")
 
-let generate env extraHeader =
-    { Header = generateHeader env extraHeader; Source = generateSource env }
+let generate env extraHeader extraSource =
+    { Header = generateHeader env extraHeader; Source = generateSource env extraSource }

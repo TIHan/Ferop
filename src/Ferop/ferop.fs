@@ -63,11 +63,11 @@ type GccLinuxAttribute (flags: string, libs: string) =
 /// Marks a class to allow a hook into the MSVC command line arguments when compiling
 /// C/C++ on Windows. The hook is {options}.
 ///
+/// The compiler must have access to <stdint.h>.
+///
 /// Ferop will try to choose the very latest MSVC version based on what is stored in
 /// 'HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\Vs7' first, then
 /// 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\SxS\Vs7' last.
-///
-/// MSVC needs to support <stdint.h> in order to compile.
 ///
 /// 32-bit / 64-bit C/C++:
 ///     cl.exe {cFile} {options} /link /DLL /OUT:{dllName}

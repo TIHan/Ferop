@@ -49,6 +49,16 @@ type FeropModule = {
             let args = Seq.exactlyOne attr.ConstructorArguments
             args.Value :?> string
 
+    member this.Source =
+        match
+            this.Attributes
+            |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<SourceAttribute>.FullName)
+            with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
+
     member this.ClangFlagsOsx =
         match this.ClangOsxAttribute with
         | None -> ""
@@ -134,7 +144,7 @@ let makeCConvInfo (modul: FeropModule) =
 
 let makeCGen (modul: FeropModule) =
     let env = makeCEnv <| makeCConvInfo modul
-    generate env modul.Header
+    generate env modul.Header modul.Source
 
 let writeCGen outputPath modul cgen = io {
     let hFile = makeHFilePath outputPath modul

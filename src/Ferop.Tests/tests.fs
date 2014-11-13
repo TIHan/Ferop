@@ -91,6 +91,7 @@ type Enum2 =
 [<Header ("""
 #include <stdio.h>
 """)>]
+[<Source ("int _globalX = 500;")>]
 type Tests =
     [<Import>]
     [<MethodImpl (MethodImplOptions.NoInlining)>]
