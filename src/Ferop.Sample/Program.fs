@@ -3,19 +3,9 @@
 open System
 open System.IO
 open System.Diagnostics
-open System.Reflection
 open System.Runtime
-open System.Runtime.InteropServices
-open System.Runtime.CompilerServices
-open System.Threading
-
-open Microsoft.FSharp.NativeInterop
 
 open Ferop
-open Ferop.Sample
-
-#nowarn "9"
-#nowarn "51"
 
 type InputEvent =
     | KeyPressed of char
@@ -79,8 +69,7 @@ module App =
             else 
                 InputEvent.KeyReleased (char kbEvt.KeyCode))
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let init () : Application =
         C """
 SDL_Init (SDL_INIT_VIDEO);
@@ -111,8 +100,7 @@ glewInit ();
 return app;
         """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let exit (app: Application) : int =
         C """
 SDL_GL_DeleteContext (app.GLContext);
@@ -121,16 +109,13 @@ SDL_Quit ();
 return 0;
         """
     
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let clear () : unit = C """ glClear (GL_COLOR_BUFFER_BIT); """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let draw (app: Application) : unit = C """ SDL_GL_SwapWindow ((SDL_Window*)app.Window); """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let pollInputEvents () : unit =
         C """
 SDL_Event e;
@@ -161,8 +146,7 @@ while (SDL_PollEvent (&e))
 } 
         """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let generateVbo (size: int) (data: DrawLine[]) : int =
         C """
 GLuint vbo;
@@ -174,8 +158,7 @@ glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 return vbo;
         """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let drawVbo (size: int) (data: DrawLine[]) (vbo: int) : unit =
         C """
 glBindBuffer (GL_ARRAY_BUFFER, vbo);
@@ -183,8 +166,7 @@ glBufferData (GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 glDrawArrays (GL_LINES, 0, size);
         """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let loadShaders (vertexSource: byte[]) (fragmentSource: byte[]) : unit =
         C """
 GLuint vertexShader = glCreateShader (GL_VERTEX_SHADER);

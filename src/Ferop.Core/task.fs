@@ -181,7 +181,8 @@ type internal Proxy () =
         asm.GetReferencedAssemblies ()
         |> Array.filter (fun x -> not (refAsms |> Array.exists (fun y -> y.FullName = x.FullName)))
         |> Array.iter (fun x -> 
-            Assembly.ReflectionOnlyLoad x.FullName |> ignore)
+            try Assembly.ReflectionOnlyLoad x.FullName |> ignore
+            with | _ -> ())
 
         let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath + "tmp")  
 

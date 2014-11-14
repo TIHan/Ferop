@@ -3,7 +3,6 @@
 open System
 open FsUnit
 open NUnit.Framework
-open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 
 open Ferop
@@ -95,157 +94,128 @@ type Enum2 =
 int _globalX = 500;
 """)>]
 type Tests =
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testByte (x: byte) : byte = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testTwoBytes (x: byte) (y: byte) : byte = C """ return x + y; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testSByte (x: sbyte) : sbyte = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testUInt16 (x: uint16) : uint16 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testInt16 (x: int16) : int16 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testUInt32 (x: uint32) : uint32 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testInt32 (x: int) : int = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testUInt64 (x: uint64) : uint64 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testInt64 (x: int64) : int64 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testSingle (x: single) : single = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testDouble (x: double) : double = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testStruct1 (x: Struct1) : Struct1 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testStruct2 (x: Struct2) : Struct2 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testStruct3 (x: Struct3) : Struct3 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testStruct3Value (x: Struct3) : float = C """ return x.Y; """
 
     [<Export>]
     static member exported_testByte (x: byte) : byte = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testByte (x: byte) : byte = C """ return Tests_exported_testByte (x); """
 
     [<Export>]
     static member exported_testTwoBytes (x: byte) (y: byte) : byte = x + y
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testTwoBytes (x: byte) (y: byte) : byte = C """ return Tests_exported_testTwoBytes (x, y); """
 
     [<Export>]
     static member exported_testSByte (x: sbyte) : sbyte = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testSByte (x: sbyte) : sbyte = C """ return Tests_exported_testSByte (x); """
 
     [<Export>]
     static member exported_testUInt16 (x: uint16) : uint16 = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testUInt16 (x: uint16) : uint16 = C """ return Tests_exported_testUInt16 (x); """
 
     [<Export>]
     static member exported_testInt16 (x: int16) : int16 = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testInt16 (x: int16) : int16 = C """ return Tests_exported_testInt16 (x); """
 
     [<Export>]
     static member exported_testUInt32 (x: uint32) : uint32 = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testUInt32 (x: uint32) : uint32 = C """ return Tests_exported_testUInt32 (x); """
 
     [<Export>]
     static member exported_testInt32 (x: int) : int = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testInt32 (x: int) : int = C """ return Tests_exported_testInt32 (x); """
 
     [<Export>]
     static member exported_testUInt64 (x: uint64) : uint64 = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testUInt64 (x: uint64) : uint64 = C """ return Tests_exported_testUInt64 (x); """
 
     [<Export>]
     static member exported_testInt64 (x: int64) : int64 = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testInt64 (x: int64) : int64 = C """ return Tests_exported_testInt64 (x); """
 
     [<Export>]
     static member exported_testSingle (x: single) : single = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testSingle (x: single) : single = C """ return Tests_exported_testSingle (x); """
 
     [<Export>]
     static member exported_testDouble (x: double) : double = x
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     static member testExported_testDouble (x: double) : double = C """ return Tests_exported_testDouble (x); """
 
 [<Ferop>]
 module Tests2 =
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testByte (x: byte) : byte = C """ return x; """
 
 [<Ferop>]
 module Tests3 =
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testEnum1 (x: Enum1) : Enum1 = C """ return x; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testEnum2 (x: Enum2) : Enum2 = C """ return x; """
 
 [<Ferop>]
@@ -253,44 +223,34 @@ module Tests4 =
     [<UnmanagedFunctionPointerAttribute (CallingConvention.Cdecl)>]
     type TestDelegate = delegate of int -> int
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testByteArray (x: byte[]) : byte = C """ return x[0]; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testDelegate (f: TestDelegate) : int = C """ return f (1234); """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testRecursiveStruct (x: RecursiveStruct40) : unit = C """ """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testStructPointer (xp: nativeptr<RecursiveStruct40>) : unit = C """ """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testByRef (xbr: double byref) : unit = C """ *xbr = 30.2; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testPointer (xp: nativeptr<double>) : unit = C """ *xp = 36.2; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testArray (xs: double []) : unit = C """ xs[2] = 20.45; """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testStructPointer2 (xp: nativeptr<Struct4>) : unit = C """ """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testNativeInt (x: nativeint) : unit = C """ """
 
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testUnativeInt (x: unativeint) : unit = C """ """
 
 [<Ferop>]
@@ -300,8 +260,7 @@ module Tests4 =
 using namespace std;
 """)>]
 module TestsCpp =
-    [<Import>]
-    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let testCppHelloWorld () : unit = C """cout << "Hello World!\n";"""
 
 [<Test>]
