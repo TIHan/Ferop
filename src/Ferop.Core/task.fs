@@ -174,8 +174,14 @@ type internal Proxy () =
         let load (x: string) = Assembly.ReflectionOnlyLoadFrom (x)
         let asm = load (assemblyPath + "tmp")
 
-        references.Split(';')
-        |> Array.iter (fun x -> load x |> ignore)
+        let refAsms =
+            references.Split(';')
+            |> Array.map (fun x -> load x)
+
+        asm.GetReferencedAssemblies ()
+        |> Array.filter (fun x -> not (refAsms |> Array.exists (fun y -> y.FullName = x.FullName)))
+        |> Array.iter (fun x -> 
+            Assembly.ReflectionOnlyLoad x.FullName |> ignore)
 
         let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath + "tmp")  
 

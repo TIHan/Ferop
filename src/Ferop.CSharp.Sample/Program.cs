@@ -9,12 +9,12 @@
         [Import]
         public static void PrintHelloWorld()
         {
-            Ferop.C ("printf(\"Hello World!\\n\");");
+            Ferop.C (@"printf(""Hello World!\n"");");
         }
 
         static void Main(string[] args)
         {
-            Native.PrintHelloWorld();
+            PrintHelloWorld();
             System.Console.Read();
         }
     }
