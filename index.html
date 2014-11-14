@@ -38,49 +38,47 @@
 <a id="f" class="anchor" href="#f" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>F#</strong>
 </h3>
 
-<pre><code>open System.Runtime.CompilerServices
-open Ferop
+<div class="highlight highlight-fsharp"><pre><span class="pl-k">open</span> <span class="pl-som">System.<span class="pl-som">Runtime</span>.<span class="pl-som">CompilerServices</span></span>
+<span class="pl-k">open</span> <span class="pl-som">Ferop</span>
 
 [&lt;Ferop&gt;]
-[&lt;Header("""#include &lt;stdio.h&gt;""")&gt;]
+[&lt;Header(<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pds">"</span><span class="pl-pds">"</span>#include &lt;stdio.h&gt;<span class="pl-pds">"</span><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)&gt;]
 module Native =
     [&lt;Import&gt;]
-    [&lt;MethodImpl (MethodImplOptions.NoInlining)&gt;]
-    let printHelloWorld () : unit = C """printf("Hello World!\n");"""
+    [&lt;MethodImpl (<span class="pl-som">MethodImplOptions</span>.NoInlining)&gt;]
+    <span class="pl-k">let</span> printHelloWorld <span class="pl-v">()</span> : <span class="pl-v">unit</span> = C <span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pds">"</span><span class="pl-pds">"</span>printf(<span class="pl-pds">"</span></span>Hello World!\n<span class="pl-s1"><span class="pl-pds">"</span>);<span class="pl-pds">"</span><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
 
 [&lt;EntryPoint&gt;]
-let main args =
-    Native.printHelloWorld ()
-    0
-</code></pre>
+<span class="pl-k">let</span> main <span class="pl-v">args</span> =
+    <span class="pl-som">Native</span>.printHelloWorld <span class="pl-c1">()</span>
+    <span class="pl-cn">0</span></pre></div>
 
 <h3>
 <a id="c" class="anchor" href="#c" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>C#</strong>
 </h3>
 
-<pre><code>namespace Native
+<div class="highlight highlight-csharp"><pre><span class="pl-k">namespace</span> Native
 {
-    using Ferop;
+    <span class="pl-ko">using</span> Ferop;
 
     [Ferop]
-    [Header("#include &lt;stdio.h&gt;")]
-    class Native
+    [Header(<span class="pl-s1"><span class="pl-pds">"</span>#include &lt;stdio.h&gt;<span class="pl-pds">"</span></span>)]
+    <span class="pl-s">class</span> <span class="pl-entc">Native</span>
     {
         [Import]
-        public static void PrintHelloWorld()
+        <span class="pl-s">public</span> <span class="pl-s">static</span> <span class="pl-s">void</span> <span class="pl-enf">PrintHelloWorld</span>()
         {
-            // 'object' is just a placeholder here for void return types.
-            Ferop.C&lt;object&gt;("printf(\"Hello World!\\n\");");
+            <span class="pl-c">// 'object' is just a placeholder here for void return types.</span>
+            Ferop.C&lt;<span class="pl-s">object</span>&gt;(<span class="pl-s1"><span class="pl-pds">"</span>printf(<span class="pl-cce">\"</span>Hello World!<span class="pl-cce">\\</span>n<span class="pl-cce">\"</span>);<span class="pl-pds">"</span></span>);
         }
 
-        static void Main(string[] args)
+        <span class="pl-s">static</span> <span class="pl-s">void</span> <span class="pl-enf">Main</span>(<span class="pl-s">string[]</span> <span class="pl-vpf">args</span>)
         {
             Native.PrintHelloWorld();
             System.Console.Read();
         }
     }
-}
-</code></pre>
+}</pre></div>
       </section>
     </div>
 
