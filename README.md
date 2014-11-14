@@ -14,8 +14,7 @@ open Ferop
 [<Ferop>]
 [<Header("""#include <stdio.h>""")>]
 module Native =
-    [<Import>]
-    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    [<Import; MI (MIO.NoInlining)>]
     let printHelloWorld() : unit = C """printf("Hello World!\n");"""
 
 [<EntryPoint>]
