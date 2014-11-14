@@ -48,3 +48,24 @@ namespace Native
     }
 }
 ```
+
+<h3>VB</h3>
+```vb
+Imports Ferop
+
+<Ferop>
+<Header("#include <stdio.h>")>
+Module Native
+
+    <Import>
+    Public Sub PrintHelloWorld()
+        Call Ferop.C("printf(""Hello World!\n"");")
+    End Sub
+
+    Sub Main()
+        Call PrintHelloWorld()
+        Console.ReadLine()
+    End Sub
+
+End Module
+```
