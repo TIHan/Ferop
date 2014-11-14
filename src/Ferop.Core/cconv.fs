@@ -276,7 +276,7 @@ let rec makeCDeclStructFields env (typ: Type) =
     runtimeFields typ
     |> List.fold (fun (env, fields) x ->
         let name =
-            // The name is determined if a property's getter is only returning a backing field.
+            // The name is determined by a property's getter only returning a backing field.
             // If so, the property's name is used; otherwise, use the field's name.
             match pfs |> List.tryFind (fun (_,fld) -> fld = x) with
             | None -> x.Name
