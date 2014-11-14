@@ -106,9 +106,24 @@ type ExportAttribute () =
     inherit Attribute ()
 
 [<AutoOpen>]
-module Ferop =
+module FeropModule =
+    let internal errorMsg = "Ferop: The function was not imported or has been inlined. If inlined, please mark it with [MethodImpl(MethodImplOptions.NoInlining)]"
+
     /// 'C' contains the code that will be compiled.
     /// Ferop will always remove this call when used in a static method marked with the 'Import' attribute
     /// that is inside a class marked with the 'Ferop' attribute.
     [<MethodImpl (MethodImplOptions.NoInlining)>]
-    let C (code: string) = failwith "Ferop: The function was not imported or has been inlined. If inlined, please mark it with [MethodImpl(MethodImplOptions.NoInlining)]"
+    let C (code: string) = failwith errorMsg
+
+type Ferop private () =
+    /// 'C' contains the code that will be compiled.
+    /// Ferop will always remove this call when used in a static method marked with the 'Import' attribute
+    /// that is inside a class marked with the 'Ferop' attribute.
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member C (code: string) = failwith errorMsg
+
+    /// 'C' contains the code that will be compiled.
+    /// Ferop will always remove this call when used in a static method marked with the 'Import' attribute
+    /// that is inside a class marked with the 'Ferop' attribute.
+    [<MethodImpl (MethodImplOptions.NoInlining)>]
+    static member C (code: string) : unit = failwith errorMsg
