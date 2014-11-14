@@ -16,11 +16,11 @@ open Ferop
 module Native =
     [<Import>]
     [<MethodImpl(MethodImplOptions.NoInlining)>]
-    let printHelloWorld () : unit = C """printf("Hello World!\n");"""
+    let printHelloWorld() : unit = C """printf("Hello World!\n");"""
 
 [<EntryPoint>]
 let main args =
-    Native.printHelloWorld ()
+    Native.printHelloWorld()
     0
 ```
 
