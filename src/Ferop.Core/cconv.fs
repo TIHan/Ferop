@@ -2,10 +2,15 @@
 
 open System
 open System.Reflection
+open System.Reflection.Emit
 open System.Runtime.CompilerServices
+open System.Runtime.InteropServices
+open Microsoft.FSharp.NativeInterop
 
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
+
+#nowarn "9"
  
 open CTypedAST
 
@@ -14,6 +19,39 @@ type CConvInfo = {
     Functions: MethodInfo list
     ExportedFunctions: MethodInfo list
     IsCpp: bool }
+
+/// Find properties that ONLY return the backing field.
+let propertiesWithFields (typ: Type) =
+    let fields = typ.GetRuntimeFields ()
+
+    typ.GetProperties ()
+    |> Seq.filter (fun x -> not x.GetMethod.IsStatic)
+    |> Seq.choose (fun prop ->
+        let meth = prop.GetMethod
+        let body = meth.GetMethodBody ()
+        let ilBytes = body.GetILAsByteArray ()
+
+        if ilBytes.Length <> 7 then None
+        else
+
+        let il_ldarg_0 = byte OpCodes.Ldarg_0.Value
+        let il_ldfld = byte OpCodes.Ldfld.Value
+        let il_ret = byte OpCodes.Ret.Value
+
+        match ilBytes with
+        | [|ldarg_0;ldfld;_;_;_;_;ret|] when 
+                ldarg_0 = il_ldarg_0 &&
+                ldfld = il_ldfld &&
+                ret = il_ret ->
+            let field = meth.Module.ResolveField (BitConverter.ToInt32 (ilBytes.[2..5], 0))
+            if fields |> Seq.exists (fun x -> x = field) then
+                Some (prop, field)
+            else
+                None
+        | _ -> None)
+    |> Seq.distinctBy (fun (_,x) -> x)
+    |> List.ofSeq
+
 
 let runtimeFields (typ: Type) = 
     typ.GetRuntimeFields () 
@@ -233,9 +271,16 @@ let makeCDeclFunctionPointer (env: CEnv) (typ: Type) =
     { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
 
 let rec makeCDeclStructFields env (typ: Type) =
+    let pfs = propertiesWithFields typ
+
     runtimeFields typ
     |> List.fold (fun (env, fields) x ->
-        let name = x.Name.Replace ("@", "") 
+        let name =
+            // The name is determined if a property's getter is only returning a backing field.
+            // If so, the property's name is used; otherwise, use the field's name.
+            match pfs |> List.tryFind (fun (_,fld) -> fld = x) with
+            | None -> x.Name
+            | Some (x,_) -> x.Name
 
         match tryLookupCType env x.FieldType with
         | None -> 
