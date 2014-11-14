@@ -8,7 +8,6 @@ Quick Start
 
 <h3>F#</h3>
 ```fsharp
-open System.Runtime.CompilerServices
 open Ferop
 
 [<Ferop>]
