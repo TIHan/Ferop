@@ -24,7 +24,7 @@ let main args =
     0
 ```
 
-<h3>F#</h3>
+<h3>C#</h3>
 ```csharp
 namespace Native
 {
