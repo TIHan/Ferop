@@ -1,5 +1,5 @@
 Ferop
-=====
+=
 
 Ferop is a .NET library that allows inline C/C++ to compile and run on Windows/Linux/OSX.
 
@@ -7,7 +7,6 @@ Quick Start
 -
 
 F#
--
 ```fsharp
 open System.Runtime.CompilerServices
 open Ferop
@@ -26,7 +25,6 @@ let main args =
 ```
 
 C#
--
 ```csharp
 namespace Native
 {
