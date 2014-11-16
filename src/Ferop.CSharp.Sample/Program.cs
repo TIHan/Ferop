@@ -2,19 +2,32 @@
 {
     using Ferop;
 
+    public struct Vector2
+    {
+        float _x;
+        public float X
+        { 
+            get 
+            {
+                return _x;
+            }
+        }
+        public float Y { get; set; }
+    }
+
     [Ferop]
     [Header("#include <stdio.h>")]
     class Native
     {
         [Import]
-        public static void PrintHelloWorld()
+        public static void PrintVector2(Vector2 v)
         {
-            Ferop.C (@"printf(""Hello World!\n"");");
+            Ferop.C (@"printf(""Vector2: %f %f\n"", v.X, v.Y);");
         }
 
         static void Main(string[] args)
         {
-            PrintHelloWorld();
+            PrintVector2(new Vector2());
             System.Console.Read();
         }
     }

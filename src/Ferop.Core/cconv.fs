@@ -20,6 +20,8 @@ type CConvInfo = {
     ExportedFunctions: MethodInfo list
     IsCpp: bool }
 
+let byteIsOpCode (opCode: OpCode) (x: byte)  = x = byte opCode.Value
+
 /// Find properties that ONLY return the backing field.
 let propertiesWithFields (typ: Type) =
     let fields = typ.GetRuntimeFields ()
@@ -31,27 +33,33 @@ let propertiesWithFields (typ: Type) =
         let body = meth.GetMethodBody ()
         let ilBytes = body.GetILAsByteArray ()
 
-        if ilBytes.Length <> 7 then None
-        else
+        match ilBytes |> Array.tryFindIndex (byteIsOpCode OpCodes.Ldfld) with
+        | None -> None
+        | Some ldfld_index ->
 
-        let il_ldarg_0 = byte OpCodes.Ldarg_0.Value
-        let il_ldfld = byte OpCodes.Ldfld.Value
-        let il_ret = byte OpCodes.Ret.Value
+        let field = meth.Module.ResolveField (BitConverter.ToInt32 (ilBytes.[ldfld_index+1..ldfld_index+4], 0))
 
-        match ilBytes with
-        | [|ldarg_0;ldfld;_;_;_;_;ret|] when 
-                ldarg_0 = il_ldarg_0 &&
-                ldfld = il_ldfld &&
-                ret = il_ret ->
-            let field = meth.Module.ResolveField (BitConverter.ToInt32 (ilBytes.[2..5], 0))
-            if fields |> Seq.exists (fun x -> x = field) then
-                Some (prop, field)
-            else
-                None
+        match fields |> Seq.tryFind (fun x -> x = field) with
+        | None -> None
+        | Some field ->
+
+        let b = ilBytes.[ldfld_index+5]
+
+        match byteIsOpCode OpCodes.Stloc_0 b with
+        | true ->
+            match ilBytes |> Array.tryFindIndex (byteIsOpCode OpCodes.Ret) with
+            | None -> None
+            | Some ret_index ->
+                match byteIsOpCode OpCodes.Ldloc_0 ilBytes.[ilBytes.Length - 2] with
+                | false -> None
+                | _ -> Some (prop, field)
+        | _ ->
+
+        match byteIsOpCode OpCodes.Ret b with
+        | true -> Some (prop, field)
         | _ -> None)
     |> Seq.distinctBy (fun (_,x) -> x)
     |> List.ofSeq
-
 
 let runtimeFields (typ: Type) = 
     typ.GetRuntimeFields () 
@@ -270,6 +278,14 @@ let makeCDeclFunctionPointer (env: CEnv) (typ: Type) =
 
     { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
 
+let filterName x =
+    match x with
+    | x when x >= 'a' && x <= 'z' -> true
+    | x when x >= 'A' && x <= 'Z' -> true
+    | x when x >= '0' && x <= '9' -> true
+    | x when x = '_' -> true
+    | _ -> false
+
 let rec makeCDeclStructFields env (typ: Type) =
     let pfs = propertiesWithFields typ
 
@@ -281,6 +297,11 @@ let rec makeCDeclStructFields env (typ: Type) =
             match pfs |> List.tryFind (fun (_,fld) -> fld = x) with
             | None -> x.Name
             | Some (x,_) -> x.Name
+
+        let chars = 
+            name
+            |> Seq.filter (fun x -> filterName (char x))
+            |> Array.ofSeq
 
         match tryLookupCType env x.FieldType with
         | None -> 
