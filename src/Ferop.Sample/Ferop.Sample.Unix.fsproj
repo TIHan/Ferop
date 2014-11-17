@@ -76,5 +76,5 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
-  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
+  <Import Project="..\..\bin\lib\Net45\build\Ferop.targets" Condition="Exists('..\..\bin\lib\Net45\build\Ferop.targets')" />
 </Project>
