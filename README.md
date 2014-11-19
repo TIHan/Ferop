@@ -3,6 +3,8 @@ Ferop
 
 Ferop is a .NET library that allows inline C/C++ to compile and run on Windows/Linux/OSX.
 
+iOS and Android support is planned.
+
 Quick Start
 -
 
