@@ -47,7 +47,6 @@ type internal Proxy () =
             let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
             let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
             let callingConvType = m.Import(typeof<CallingConvention>)
-            let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
             let importAttrCtor = m.Import(typeof<ImportAttribute>.GetConstructor(Array.empty))
 
             m.GetTypes ()

@@ -303,6 +303,8 @@ let rec makeCDeclStructFields env (typ: Type) =
             |> Seq.filter (fun x -> filterName (char x))
             |> Array.ofSeq
 
+        let name = String (chars)
+
         match tryLookupCType env x.FieldType with
         | None -> 
             let env = makeCDeclStruct env x.FieldType

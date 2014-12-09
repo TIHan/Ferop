@@ -14,7 +14,6 @@ let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprin
 
 let makeArgs flags cFile oFile (modul: FeropModule) =
     let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
-    let isCpp = modul.IsCpp
 
     sprintf """-Wall %s %s -c "%s" -o "%s" """
         (if is64bit then "-arch x86_64" else "-arch i386")

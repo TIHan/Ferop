@@ -4,9 +4,9 @@ open System
 open System.Runtime.CompilerServices
 
 /// Marks a class to let Ferop know that its containing static methods marked with the
-/// 'Import' attribute and an 'C' call will be compiled with a C/C++, then
-/// the methods will be modified to be P/Invoke methods calling into the compiled code
-/// that was in the 'C' call.
+/// 'Import' attribute and a 'C' call, the methods will be modified to be P/Invoke methods,
+/// and the text of the 'C' call will compile as C/C++ code. The P/Invoke methods will know how to
+/// call into the compiled C/C++ code.
 ///
 /// Static methods marked with 'Export' attribute will tell the C/C++ compiler
 /// that the method needs to be called from within C/C++; this is handled
@@ -49,13 +49,13 @@ type ClangOsxAttribute (flags: string, libs: string) =
 /// 32-bit C++:
 ///     g++ -Wall -m32 -fPIC {flags} -c {cFile} -o {oFile}
 /// 32-bit Dynamic Library:
-///     gcc -m32 -fPIC {oFile} -shared -o {soName} {libs}
+///     gcc -m32 {oFile} -shared -o {soName} {libs}
 /// 64-bit C:
 ///     gcc -Wall -m64 -fPIC {flags} -c {cFile} -o {oFile}
 /// 64-bit C++:
 ///     g++ -Wall -m64 -fPIC {flags} -c {cFile} -o {oFile}
 /// 64-bit Dynamic Library:
-///     g++ -m64 -fPIC {oFile} -shared -o {soName} {libs}
+///     g++ -m64 {oFile} -shared -o {soName} {libs}
 [<AttributeUsageAttribute (AttributeTargets.Class)>]
 type GccLinuxAttribute (flags: string, libs: string) =
     inherit Attribute ()
