@@ -79,7 +79,7 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\..\bin\lib\Net45\build\Ferop.targets" Condition="Exists('..\..\bin\lib\Net45\build\Ferop.targets')" />
+  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /f "$(ProjectDir)..\..\lib\win\$(PlatformName)\SDL2.dll" "$(TargetDir)" /q /y
 xcopy /f "$(ProjectDir)..\..\lib\win\$(PlatformName)\glew32.dll" "$(TargetDir)" /q /y</PostBuildEvent>

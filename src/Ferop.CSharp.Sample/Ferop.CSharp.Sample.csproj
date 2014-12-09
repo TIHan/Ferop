@@ -57,5 +57,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Import Project="..\..\bin\lib\Net45\build\Ferop.targets" Condition="Exists('..\..\bin\lib\Net45\build\Ferop.targets')" />
+  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
 </Project>
