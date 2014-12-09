@@ -50,7 +50,7 @@ call "%s" %%*""" vcvars cl
 
 let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "%s.dll" modul.Name)
 
-let makeArgs options cFile dllName = sprintf """ %s "%s" /link /DLL /OUT:"%s" """ options cFile dllName
+let makeArgs options cFile dllName = sprintf """%s "%s" /link /DLL /OUT:"%s" """ options cFile dllName
 
 let makeBatPath path = Path.Combine (path, "msvc.bat")
 

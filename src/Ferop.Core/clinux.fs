@@ -17,7 +17,7 @@ let makeArgs flags cFile oFile (modul: FeropModule) =
     let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
     let isCpp = modul.IsCpp
 
-    sprintf "-Wall %s -fPIC %s -c %s -o %s"
+    sprintf """-Wall %s -fPIC %s -c "%s" -o "%s" """
         (if is64bit then "-m64" else "-m32")
         flags
         cFile
@@ -25,7 +25,7 @@ let makeArgs flags cFile oFile (modul: FeropModule) =
 
 let makeDynamicArgs libs oFile soName (modul: FeropModule) = 
     let is64bit = (Mono.Cecil.TargetArchitecture.AMD64 = modul.Architecture)
-    sprintf "%s -fPIC %s -shared -o %s %s" 
+    sprintf """%s -fPIC "%s" -shared -o "%s" %s""" 
         (if is64bit then "-m64" else "-m32")
         oFile soName libs
 
