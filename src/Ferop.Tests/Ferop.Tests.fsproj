@@ -56,9 +56,6 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Ferop">
-      <HintPath>..\..\bin\Ferop.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
@@ -68,6 +65,9 @@
     </Reference>
     <Reference Include="FsUnit.NUnit">
       <HintPath>..\..\packages\FsUnit.1.2.1.0\Lib\Net40\FsUnit.NUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="Ferop">
+      <HintPath>..\..\bin\lib\Net45\Ferop.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="..\..\bin\lib\Net45\build\Ferop.targets" Condition="Exists('..\..\bin\lib\Net45\build\Ferop.targets')" />

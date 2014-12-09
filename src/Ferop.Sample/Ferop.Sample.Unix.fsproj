@@ -67,14 +67,14 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Ferop">
-      <HintPath>..\..\bin\Ferop.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="Ferop">
+      <HintPath>..\..\bin\lib\Net45\Ferop.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="..\..\bin\lib\Net45\build\Ferop.targets" Condition="Exists('..\..\bin\lib\Net45\build\Ferop.targets')" />
 </Project>
