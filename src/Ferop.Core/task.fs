@@ -166,7 +166,7 @@ type internal Proxy () =
                 x.Methods.Add meth
             )
 
-            m.Write (assemblyPath + "tmp")
+            m.Write (assemblyPath + "tmp", WriterParameters (WriteSymbols = true))
         )
 
 
@@ -183,7 +183,7 @@ type internal Proxy () =
             try Assembly.ReflectionOnlyLoad x.FullName |> ignore
             with | _ -> ())
 
-        let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath + "tmp")  
+        let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath + "tmp", ReaderParameters (ReadSymbols = true))  
 
         asmDef.Modules
         |> Seq.iter (fun m ->
@@ -227,7 +227,7 @@ type internal Proxy () =
                         meth.CustomAttributes.Add (customAttr)
                 )
             )
-            m.Write (assemblyPath)
+            m.Write (assemblyPath, WriterParameters (WriteSymbols = true))
         )
 
         classes asm
