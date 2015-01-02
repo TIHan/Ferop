@@ -86,6 +86,10 @@ type Enum2 =
     | Sub1 = 3
     | Sub2 = 1
 
+[<Struct>]
+type StructWithEnums =
+    val Value : Enum1
+
 [<Ferop>]
 [<Header ("""
 #include <stdio.h>
@@ -217,6 +221,9 @@ module Tests3 =
 
     [<Import; MI (MIO.NoInlining)>]
     let testEnum2 (x: Enum2) : Enum2 = C """ return x; """
+
+    [<Import; MI (MIO.NoInlining)>]
+    let testStructWithEnums (x: StructWithEnums) : StructWithEnums = C """ return x; """
 
 [<Ferop>]
 module Tests4 =

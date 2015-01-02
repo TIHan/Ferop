@@ -249,7 +249,7 @@ let makeCExprFallback (env: CEnv) (meth: MethodInfo) =
 // CDecls
 //-------------------------------------------------------------------------
 
-let makeCDeclFunction env (meth: MethodInfo) =
+let makeCDeclFunction env (meth: MethodInfo) : CEnv * (CDeclFunction option) =
     let returnType = makeReturnType env meth.ReturnType
     let name = makeCFunctionName env meth
     let parameters = meth.GetParameters () |> makeParameters env
@@ -258,25 +258,30 @@ let makeCDeclFunction env (meth: MethodInfo) =
         then makeCExprFallback env meth
         else makeCExpr meth
 
-    { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
+    let func = { ReturnType = returnType; Name = name; Parameters = parameters; Expr = expr }
+    { env with Decls = CDecl.Function func :: env.Decls }, Some func
 
-let makeCDeclFunctionPrototype env (meth: MethodInfo) : CDeclFunctionPrototype =
-    let decl = makeCDeclFunction env meth
-    let returnType = decl.ReturnType
-    let name = decl.Name
-    let parameterTypes =
-        decl.Parameters
-        |> List.map (fun x -> x.Type)
+let makeCDeclFunctionPrototype env (meth: MethodInfo) : CEnv * (CDeclFunctionPrototype option) =
+    match makeCDeclFunction env meth with
+    | _, Some decl ->
+        let returnType = decl.ReturnType
+        let name = decl.Name
+        let parameterTypes =
+            decl.Parameters
+            |> List.map (fun x -> x.Type)
 
-    { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
+        let funcProto : CDeclFunctionPrototype = { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
+        { env with Decls = CDecl.FunctionPrototype funcProto :: env.Decls }, Some funcProto
+    | _ -> env, None
 
-let makeCDeclFunctionPointer (env: CEnv) (typ: Type) =
+let makeCDeclFunctionPointer (env: CEnv) (typ: Type) : CEnv * (CDeclFunctionPointer option) =
     let func = typ.GetMethod "Invoke"
     let returnType = makeReturnType env func.ReturnType
     let name = makeCTypeName env typ
     let parameterTypes = func.GetParameters () |> makeParameterTypes env
 
-    { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
+    let funcPointer = { ReturnType = returnType; Name = name; ParameterTypes = parameterTypes }
+    { env with Decls = CDecl.FunctionPointer funcPointer :: env.Decls }, Some funcPointer
 
 let filterName x =
     match x with
@@ -286,7 +291,7 @@ let filterName x =
     | x when x = '_' -> true
     | _ -> false
 
-let rec makeCDeclStructFields env (typ: Type) =
+let rec makeCFields env (typ: Type) : CEnv * CField list =
     let pfs = propertiesWithFields typ
 
     runtimeFields typ
@@ -307,107 +312,125 @@ let rec makeCDeclStructFields env (typ: Type) =
 
         match tryLookupCType env x.FieldType with
         | None -> 
-            let env = makeCDeclStruct env x.FieldType
+            let env =
+                if x.FieldType.IsEnum then
+                    let env, _ = makeCDeclEnum env x.FieldType
+                    env
+                elif x.FieldType.IsValueType then 
+                    let env, _ = makeCDeclStruct env x.FieldType
+                    env
+                else
+                    failwith "Improper type, %s." x.FieldType.Name
+
             env, makeCField (lookupCType env x.FieldType) name :: fields
         | Some ctype -> env, makeCField ctype name :: fields) (env, [])
             
-and makeCDeclStruct env (typ: Type) =
+and makeCDeclStruct env (typ: Type) : CEnv * (CDeclStruct option) =
     match tryLookupCType env typ with
-    | Some _ -> env
+    | Some _ -> env, None
     | _ ->
         let name = makeCTypeName env typ
-        let env', fields = makeCDeclStructFields env typ
+        let env', fields = makeCFields env typ
 
         if typ.IsAutoLayout || typ.IsExplicitLayout then
             failwithf "Struct, %s, is not allowed to use auto or explicit layout." typ.Name
 
-        { env' with Decls = CDecl.Struct ({ CDeclStruct.Name = name; Fields = fields }) :: env'.Decls }
+        let struc = { CDeclStruct.Name = name; Fields = fields }
+        { env' with Decls = CDecl.Struct struc :: env'.Decls }, Some struc
 
-let makeCDeclEnum env (typ: Type) =
+and makeCDeclEnum env (typ: Type) : CEnv * (CDeclEnum option) =
     match typ.GetEnumUnderlyingType () <> typeof<int> with
     | true -> failwithf "Enum, %s, does not have an underlying type of int." typ.Name
     | _ ->
 
-    let name = makeCTypeName env typ
-    let constNames = Enum.GetNames typ |> Array.map (fun x -> name + "_" + x)
-    let fields = typ.GetFields () |> Array.filter (fun x -> not <| x.Name.Equals("value__"))
-    let intValues = Array.zeroCreate<int> constNames.Length
+        let name = makeCTypeName env typ
+        let constNames = Enum.GetNames typ |> Array.map (fun x -> name + "_" + x)
+        let fields = typ.GetFields () |> Array.filter (fun x -> not <| x.Name.Equals("value__"))
+        let intValues = Array.zeroCreate<int> constNames.Length
 
-    for i = 0 to intValues.Length - 1 do
-        intValues.[i] <- fields.[i].GetRawConstantValue() :?> int
+        for i = 0 to intValues.Length - 1 do
+            intValues.[i] <- fields.[i].GetRawConstantValue() :?> int
 
-    let consts = 
-        Array.map2 (fun (x: string) (y: int) -> { CEnumConst.Name = x; Value = y }) 
-            constNames intValues
-        |> List.ofArray
+        let consts = 
+            Array.map2 (fun (x: string) (y: int) -> { CEnumConst.Name = x; Value = y }) 
+                constNames intValues
+            |> List.ofArray
 
-    { CDeclEnum.Name = name; Consts = consts }
+        let enum = { CDeclEnum.Name = name; Consts = consts }
+        { env with Decls = CDecl.Enum enum :: env.Decls }, Some enum
 
-let makeCDeclVar env name typ =
+let makeCDeclGlobalVar env name typ : CEnv * (CDeclVar option) =
     let ctype = lookupCType env typ
 
-    { CDeclVar.Name = name; Type = ctype }
+    let var = { CDeclVar.Name = name; Type = ctype }
+    { env with Decls = CDecl.GlobalVar var :: env.Decls }, Some var
 
 let makeCDeclExtern env name typ =
     let ctype = lookupCType env typ
 
-    { CDeclExtern.Type = ctype; Name = name }
+    let exter = { CDeclExtern.Type = ctype; Name = name }
+    { env with Decls = CDecl.Extern exter :: env.Decls }, Some exter
 
 let makeCDeclStructs (env: CEnv) = function
     | [] -> env
-    | funcs ->
-        let env' = funcs |> List.fold (fun env x -> makeCDeclStruct env x) env
-        { env' with 
-            Decls = 
-                match env'.Decls with
-                | [] -> []
-                | x ->  List.rev x }
+    | funcs -> 
+        funcs 
+        |> List.fold (fun env x -> 
+            let env, _ = makeCDeclStruct env x
+            env) env
 
 let makeCDeclEnums (env: CEnv) = function
     | [] -> env
     | enums ->
-        let decls = enums |> List.map (fun x -> makeCDeclEnum env x) |> List.map CDecl.Enum
-        { env with Decls = env.Decls @ decls }
+        enums
+        |> List.fold (fun env x ->
+            match tryLookupCType env x with
+            | Some _ -> env
+            | _ ->
+                let env, _ = makeCDeclEnum env x
+                env) env
 
 let makeCDeclFunctions (env: CEnv) = function
     | [] -> env
     | funcs ->
-        let decls = funcs |> List.map (makeCDeclFunction env) |> List.map CDecl.Function
-        { env with Decls = env.Decls @ decls }
+        funcs 
+        |> List.fold (fun env x -> 
+            let env, _ = makeCDeclFunction env x
+            env) env
 
 let makeCDeclFunctionPrototypes (env: CEnv) = function
     | [] -> env
     | funcs ->
-        let decls = funcs |> List.map (makeCDeclFunctionPrototype env) |> List.map CDecl.FunctionPrototype
-        { env with Decls = env.Decls @ decls }
+        funcs 
+        |> List.fold (fun env x -> 
+            let env, _ = makeCDeclFunctionPrototype env x
+            env) env
 
 let makeCDeclFunctionPointers (env: CEnv) = function
     | [] -> env
     | funcPtrs ->
-        let decls = funcPtrs |> List.map (makeCDeclFunctionPointer env) |> List.map CDecl.FunctionPointer
-        { env with Decls = env.Decls @ decls }
+        funcPtrs
+        |> List.fold (fun env x -> 
+            let env, _ = makeCDeclFunctionPointer env x
+            env) env
 
 let makeCDeclGlobalVars (env: CEnv) = function
     | [] -> env
-    | types ->
-        let decls = 
-            types
-            |> List.map (fun (x: Type) ->
-                let name = sprintf "%s_%s" env.Name (x.Name.Replace ("Delegate", ""))
-                makeCDeclVar env name x) 
-            |> List.map GlobalVar
-        { env with Decls = env.Decls @ decls }
+    | (types : Type list) ->
+        types
+        |> List.fold (fun env x ->
+            let name = sprintf "%s_%s" env.Name (x.Name.Replace ("Delegate", ""))
+            let env, _ = makeCDeclGlobalVar env name x
+            env) env
         
 let makeCDeclExterns (env: CEnv) = function
     | [] -> env
-    | types ->
-        let decls = 
-            types
-            |> List.map (fun (x: Type) -> 
-                let name = sprintf "%s_%s" env.Name (x.Name.Replace ("Delegate", ""))
-                makeCDeclExtern env name x) 
-            |> List.map CDecl.Extern
-        { env with Decls = env.Decls @ decls }
+    | (types : Type list) ->
+        types
+        |> List.fold (fun env x ->
+            let name = sprintf "%s_%s" env.Name (x.Name.Replace ("Delegate", ""))
+            let env, _ = makeCDeclExtern env name x
+            env) env
 
 let makeCDecls (env: CEnv) info =
     let funcs = info.Functions
@@ -450,7 +473,7 @@ let makeCDecls (env: CEnv) info =
     let env''''' = makeCDeclGlobalVars env'''' instanceDels
     let env'''''' = makeCDeclFunctions env''''' funcs
     let env''''''' = makeCDeclExterns env'''''' instanceDels
-    env'''''''
+    { env''''''' with Decls = env'''''''.Decls |> List.rev }
 
 //-------------------------------------------------------------------------
 // CEnv
