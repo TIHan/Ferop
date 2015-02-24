@@ -77,7 +77,7 @@ type internal Proxy () =
                 |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
-                        let del = TypeDefinition ("", meth.Name + "Delegate", TypeAttributes.Public ||| TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
+                        let del = TypeDefinition ("", meth.Name + "Delegate", TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
 
                         let ctordel = MethodDefinition (".ctor", MethodAttributes.Public ||| MethodAttributes.CompilerControlled ||| MethodAttributes.RTSpecialName ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, voidType)
                         ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
@@ -114,7 +114,7 @@ type internal Proxy () =
                         let meth = 
                             MethodDefinition (
                                 sprintf "_ferop_set_%s" meth.Name,
-                                MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig,
+                                MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig,
                                 voidType)
 
                         meth.IsPInvokeImpl <- true
@@ -139,7 +139,7 @@ type internal Proxy () =
                 let fields =
                     exportedDels
                     |> Seq.map (fun del ->
-                        let field = FieldDefinition ("_" + del.Name, FieldAttributes.Public ||| FieldAttributes.Static, del)
+                        let field = FieldDefinition ("_" + del.Name, FieldAttributes.Static, del)
                         x.Fields.Add field
                         field)
                     |> Array.ofSeq
