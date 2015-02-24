@@ -95,14 +95,14 @@ type FeropModule = {
             args.Value :?> string
 
 let staticMethods (t: Type) =
-    t.GetMethods ()
-    |> Array.filter (fun x -> 
+    t.GetRuntimeMethods ()
+    |> Seq.filter (fun x -> 
     x.Name <> "GetType" && 
     x.Name <> "GetHashCode" && 
     x.Name <> "Equals" && 
     x.Name <> "ToString")
-    |> Array.filter (fun x -> x.IsStatic)
-    |> List.ofArray
+    |> Seq.filter (fun x -> x.IsStatic)
+    |> List.ofSeq
 
 let methodHasAttribute (typ: Type) (meth: MethodInfo) =
     meth.GetCustomAttributesData ()

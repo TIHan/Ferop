@@ -99,7 +99,9 @@ int _globalX = 500;
 """)>]
 type Tests =
     [<Import; MI (MIO.NoInlining)>]
-    static member testByte (x: byte) : byte = C """ return x; """
+    static member private testByte_private (x: byte) : byte = C """ return x; """
+
+    static member testByte (x: byte) : byte = Tests.testByte_private x
 
     [<Import; MI (MIO.NoInlining)>]
     static member testTwoBytes (x: byte) (y: byte) : byte = C """ return x + y; """

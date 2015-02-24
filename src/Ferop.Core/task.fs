@@ -73,7 +73,7 @@ type internal Proxy () =
 
                 x.Methods
                 |> Array.ofSeq
-                |> Array.filter (fun x -> not x.IsConstructor && x.IsPublic)
+                |> Array.filter (fun x -> not x.IsConstructor)
                 |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
@@ -214,13 +214,13 @@ type internal Proxy () =
 
                 x.Methods
                 |> Array.ofSeq
-                |> Array.filter (fun x -> not x.IsConstructor && x.IsPublic)
+                |> Array.filter (fun x -> not x.IsConstructor)
                 |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
                         ()
                     else
-                        meth.Attributes <- MethodAttributes.Public ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig
+                        meth.Attributes <- meth.Attributes ||| MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig
                         meth.IsPInvokeImpl <- true
                         meth.IsPreserveSig <- true
                         meth.HasSecurity <- true
