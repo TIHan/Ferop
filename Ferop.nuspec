@@ -4,6 +4,7 @@
         <id>Ferop</id>
         <version>1.0.0-beta6</version>
         <title>Ferop</title>
+	<iconUrl>https://github.com/TIHan/Ferop/raw/master/ferop_icon.png?raw=true</iconUrl>
         <authors>Will Smith</authors>
         <owners>Will Smith</owners>
         <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
