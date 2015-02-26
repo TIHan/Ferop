@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+    <metadata>
+        <id>Ferop</id>
+        <version>1.0.0-beta6</version>
+        <title>Ferop</title>
+        <authors>Will Smith</authors>
+        <owners>Will Smith</owners>
+        <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+        <projectUrl>http://github.com/TIHan/Ferop</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>Ferop is a .NET library that allows inline C/C++ to compile and run on Windows/Linux/OSX.</description>
+        <releaseNotes />
+        <copyright />
+        <tags>ferop interop</tags>
+    </metadata>
+    <files>
+        <file src="bin\build\Ferop.targets" target="build\Ferop.targets" />
+        <file src="bin\lib\net45\Ferop.dll" target="lib\net45\Ferop.dll" />
+        <file src="bin\lib\net45\Ferop.XML" target="lib\net45\Ferop.XML" />
+        <file src="bin\Ferop.Core.dll" target="Ferop.Core.dll" />
+        <file src="bin\Ferop.dll" target="Ferop.dll" />
+        <file src="bin\Ferop.xml" target="Ferop.xml" />
+        <file src="bin\FSharp.Core.dll" target="FSharp.Core.dll" />
+        <file src="bin\FSharp.Core.optdata" target="FSharp.Core.optdata" />
+        <file src="bin\FSharp.Core.sigdata" target="FSharp.Core.sigdata" />
+        <file src="bin\FSharp.Core.xml" target="FSharp.Core.xml" />
+        <file src="bin\Mono.Cecil.dll" target="Mono.Cecil.dll" />
+        <file src="bin\Mono.Cecil.Mdb.dll" target="Mono.Cecil.Mdb.dll" />
+        <file src="bin\Mono.Cecil.Pdb.dll" target="Mono.Cecil.Pdb.dll" />
+        <file src="bin\Mono.Cecil.Rocks.dll" target="Mono.Cecil.Rocks.dll" />
+    </files>
+</package>
