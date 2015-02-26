@@ -1,4 +1,4 @@
-Ferop
+![ferop_icon](https://github.com/TIHan/Ferop/blob/master/ferop_icon.png?raw=true)
 =
 
 Ferop is a .NET library that allows inline C/C++ to compile and run on Windows/Linux/OSX.
