@@ -34,11 +34,13 @@ type DrawLine =
 type KeyboardEvent =
     val IsPressed : int
     val KeyCode : int
+   
+type SoundChannel = SoundChannel of nativeint
 
 [<Ferop>]
 [<ClangOsx (
-    "-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers",
-    "-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2"
+    "-DGL_GLEXT_PROTOTYPES -I/Library/Frameworks/SDL2.framework/Headers -I../../include -rpath .",
+    "-F/Library/Frameworks -framework Cocoa -framework OpenGL -framework IOKit -framework SDL2 -rpath . -L../../lib -lfmod"
 )>]
 [<GccLinux ("-I../../include/SDL2", "-lSDL2")>]
 #if __64BIT__
@@ -48,6 +50,7 @@ type KeyboardEvent =
 #endif
 [<Header ("""
 #include <stdio.h>
+#include <fmod.hpp>
 #if defined(__GNUC__)
 #   include "SDL.h"
 #   include "SDL_opengl.h"
@@ -57,6 +60,7 @@ type KeyboardEvent =
 #   include <GL/wglew.h>
 #endif
 """)>]
+[<Cpp>]
 module App =
 
     let inputEvents = ResizeArray<InputEvent> ()
@@ -68,6 +72,54 @@ module App =
                 InputEvent.KeyPressed (char kbEvt.KeyCode) 
             else 
                 InputEvent.KeyReleased (char kbEvt.KeyCode))
+
+    [<Import; MI (MIO.NoInlining)>]
+    let _createSoundChannel () : nativeint =
+        C """
+    FMOD::System     *system;
+    FMOD::Sound      *sound1, *sound2, *sound3;
+    FMOD::Channel    *channel = 0;
+    FMOD::DSP        *dsp;
+    FMOD_RESULT       result;
+    unsigned int      version;
+    void             *extradriverdata = 0;
+
+
+    result = FMOD::System_Create(&system);
+
+    result = system->getVersion(&version);
+
+    result = system->init(32, FMOD_INIT_NORMAL, extradriverdata);
+
+    result = system->createDSPByType(FMOD_DSP_TYPE_FFT, &dsp);
+
+    result = system->createSound("sound.mp3", FMOD_DEFAULT, 0, &sound1);
+    system->playSound(sound1, 0, false, &channel);
+    channel->addDSP(0, dsp);
+
+    return channel;
+        """
+
+    [<Import; MI (MIO.NoInlining)>]
+    let _getSoundChannelVolume (p: nativeint) : single =
+        C """
+        FMOD::Channel *channel = (FMOD::Channel*)p;
+        FMOD::DSP *dsp;
+        float volume;
+
+        channel->getDSP(0, &dsp);
+   
+        FMOD_DSP_PARAMETER_FFT *fft;
+        dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void **)&fft, 0, 0, 0);
+
+        return *fft->spectrum[0];
+        """
+
+    let createSoundChannel () : SoundChannel = SoundChannel (_createSoundChannel ())
+
+    let getSoundChannelVolume (ch: SoundChannel) =
+        match ch with
+        | SoundChannel p -> _getSoundChannelVolume p
 
     [<Import; MI (MIO.NoInlining)>]
     let init () : Application =
@@ -89,7 +141,7 @@ SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 2);
 SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 app.GLContext = SDL_GL_CreateContext ((SDL_Window*)app.Window);
-SDL_GL_SetSwapInterval (0);
+SDL_GL_SetSwapInterval (2);
 
 #if defined(__GNUC__)
 #else
@@ -203,6 +255,12 @@ glVertexAttribPointer (posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
 glEnableVertexAttribArray (posAttrib);
         """
 
+    [<Import; MI (MIO.NoInlining)>]
+    let setUniformColor (uniformColor: int) (r: single) (g: single) (b: single) (a: single) : unit =
+        C """
+glUniform4f (uniformColor, r, g, b, a);
+        """
+
 module Input =
     let processInput () =
         let evts = App.inputEvents |> List.ofSeq
@@ -246,7 +304,7 @@ let inline makeDrawLine rads length (line: DrawLine) = DrawLine (line.Y, makeEnd
 let makeLines degrees length (line: DrawLine) =
 
     let rec makeLines rads length (lines: DrawLine list) cont = function
-        | 7 -> cont lines
+        | 11 -> cont lines
         | n ->
             let ldeg = rads + lrad
             let rdeg = rads + rrad
@@ -258,26 +316,7 @@ let makeLines degrees length (line: DrawLine) =
             makeLines ldeg length (ll :: lines) (fun x ->
                 makeLines rdeg length (rl :: x) cont n) n
 
-    let makeLinesParallel rads length (lines: DrawLine list) cont = function
-            | n ->
-                let ldeg = rads + lrad
-                let rdeg = rads + rrad
-                let ll = makeDrawLine ldeg length lines.Head
-                let rl = makeDrawLine rdeg length lines.Head
-                let n = n + 1
-                let length = length * 0.7f
-
-                let f1 = (makeLines ldeg length (ll :: lines) cont)
-                let f2 = (makeLines rdeg length (rl :: lines) cont)
-
-                let computations = [| f1; f2 |]
-
-                computations
-                |> Array.Parallel.map (fun f -> f n)
-                |> Array.reduce (fun x y -> x @ y)
-
     makeLines (degrees * torad) length [line] (fun x -> x) 0
-    //makeLinesParallel (degrees * torad) length [line] (fun x -> x) 0 
 
 // http://gafferongames.com/game-physics/fix-your-timestep/
 module GameLoop =
@@ -370,6 +409,7 @@ module GameLoop =
 
 [<EntryPoint>]
 let main args =
+    let ch = App.createSoundChannel ()
     let app = init ()
 
     let beginPoint = vec2 (0.f, -1.f)
@@ -386,43 +426,26 @@ let main args =
     let refIsUpPressed = ref false
     let refIsDownPressed = ref false
 
-    GameLoop.start [||] 
+    GameLoop.start ([||], 0.f) 
         (fun () ->
-            GC.Collect ()
             pollInputEvents ())
-        (fun _ time _ ->
-            match Input.processInput () with
-            | [] -> ()
-            | xs ->
-                xs
-                |> List.iter (fun x ->
-                    match x with
-                    | KeyPressed key ->
-                        match key with
-                        | 'R' -> refIsUpPressed := true
-                        | 'Q' -> refIsDownPressed := true
-                        | _ -> ()
-                    | KeyReleased key -> 
-                        match key with
-                        | 'R' -> refIsUpPressed := false
-                        | 'Q' -> refIsDownPressed := false
-                        | _ -> ())
+            // update 30 fps
+        (fun _ time (_, previousLength) ->
+            GC.Collect ()
+            let length = App.getSoundChannelVolume (ch) * 50.f
 
-            let length = !refLength
             let length =
-                if !refIsUpPressed then
-                    length + (0.0005f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
-                else length
-                            
-            let length =
-                if !refIsDownPressed then
-                    length - (0.0005f) * single (TimeSpan.FromTicks(time).TotalMilliseconds)
-                else length
-                       
-            refLength := length
-            makeLines 90.f (length) drawLine
-            |> Array.ofList) 
-        (fun t prevDrawLines drawLines ->
+                if length > previousLength + 0.02f then
+                    previousLength + 0.02f
+                elif length < previousLength - 0.02f then
+                    previousLength - 0.02f
+                else
+                    length
+
+            makeLines 90.f length drawLine
+            |> Array.ofList, length) 
+            // render fast as possible
+        (fun t (prevDrawLines,prev) (drawLines,length) ->
             let t = single t
 
             let lerpedDrawLines =
@@ -436,6 +459,8 @@ let main args =
                             vec2 (lerp prev.Y.X x.Y.X t, lerp prev.Y.Y x.Y.Y t)))
 
             clear ()
+            let l = length + prev
+            App.setUniformColor 0 (1.f - l * 2.f) (length) (1.f - prev * 2.f) 1.0f
             drawVbo lerpedDrawLines vbo
             draw app)
 
