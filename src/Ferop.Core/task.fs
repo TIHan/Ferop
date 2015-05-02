@@ -40,7 +40,7 @@ type internal Proxy () =
 
         asmDef.Modules
         |> Seq.iter (fun m ->
-            m.ReadSymbols ()
+            if m.HasSymbols then m.ReadSymbols ()
 
             let voidType = m.Import(typeof<Void>)
             let objType = m.Import(typeof<obj>)
@@ -189,7 +189,7 @@ type internal Proxy () =
 
         asmDef.Modules
         |> Seq.iter (fun m ->
-            m.ReadSymbols ()
+            if m.HasSymbols then m.ReadSymbols ()
 
             let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
 
@@ -264,12 +264,16 @@ type public WeavingTask () =
         let appDomain = AppDomain.CreateDomain ("Ferop", evidence, domaininfo)
 
         try
-
-            this.Log.LogMessage ("AppDomain Created.")
-            let proxy : Proxy = appDomain.CreateInstanceFromAndUnwrap (currentAsm.Location, typeof<Proxy>.FullName) :?> Proxy
-            this.Log.LogMessage ("Executing...")
-            proxy.Execute (this.AssemblyPath, this.References, this.TargetDirectory)
-            this.Log.LogMessage ("Done.")
+            try
+                this.Log.LogMessage ("AppDomain Created.")
+                let proxy : Proxy = appDomain.CreateInstanceFromAndUnwrap (currentAsm.Location, typeof<Proxy>.FullName) :?> Proxy
+                this.Log.LogMessage ("Executing...")
+                proxy.Execute (this.AssemblyPath, this.References, this.TargetDirectory)
+                this.Log.LogMessage ("Done.")
+            with | ex ->
+                this.Log.LogMessage (ex.Message)
+                this.Log.LogMessage (ex.StackTrace)
+                raise ex
         finally
             AppDomain.Unload appDomain
             this.Log.LogMessage ("AppDomain Unloaded.")            
