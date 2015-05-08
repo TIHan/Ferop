@@ -2,6 +2,7 @@
 module internal Ferop.CWin
 
 open System
+open System.Globalization
 open System.IO
 open System.Diagnostics
 open Microsoft.Win32
@@ -23,7 +24,7 @@ let bat (is64bit: bool) =
     let key =
         registryKey.GetValueNames ()
         |> Array.choose (fun x -> 
-            match Double.TryParse (x) with
+            match Double.TryParse (x, NumberStyles.Number, CultureInfo.InvariantCulture) with
             | (false,_) -> None
             | (true, x) -> 
                 Some x)
