@@ -13,7 +13,7 @@ type Platform =
     | Win = 1
     | Linux = 2
     | Osx = 3
-    //| AppleiOS = 4
+    | iOS = 4
 
 type FeropModule = {
     Name: string
@@ -35,9 +35,17 @@ type FeropModule = {
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<MsvcWinAttribute>.FullName)
 
+    member this.ClangiOSAttribute =
+        this.Attributes
+        |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangiOSAttribute>.FullName)
+
     member this.IsCpp =
         this.Attributes
         |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<CppAttribute>.FullName)
+
+    member this.IsForiOS =
+        this.Attributes
+        |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<ClangiOSAttribute>.FullName)
 
     member this.Header =
         match
@@ -89,6 +97,13 @@ type FeropModule = {
 
     member this.MsvcOptionsWin =
         match this.MsvcOptionsWinAttribute with
+        | None -> ""
+        | Some attr ->
+            let args = Seq.exactlyOne attr.ConstructorArguments
+            args.Value :?> string
+
+    member this.ClangFlagsiOS =
+        match this.ClangiOSAttribute with
         | None -> ""
         | Some attr ->
             let args = Seq.exactlyOne attr.ConstructorArguments
