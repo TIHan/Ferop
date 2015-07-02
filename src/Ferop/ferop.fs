@@ -39,6 +39,10 @@ type FeropAttribute () =
 type ClangOsxAttribute (flags: string, libs: string) =
     inherit Attribute ()
 
+[<AttributeUsageAttribute (AttributeTargets.Class)>]
+type ClangiOSAttribute (flags: string) =
+    inherit Attribute ()
+
 /// Marks a class to allow a hook into the gcc/g++ command line arguments when compiling
 /// C/C++ on Linux. The two hooks are {flags} and {libs}.
 ///

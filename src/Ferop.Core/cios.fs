@@ -12,7 +12,7 @@ let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
 
-let makeArgs flags cFile oFile = sprintf "-Wall -std=c99 -arch i386 %s -c %s -o %s" flags cFile oFile
+let makeArgs flags cFile oFile = sprintf "-Wall -arch i386 %s -c %s -o %s" flags cFile oFile
 
 let makeStaticArgs aFile oFiles = sprintf "rcs %s %s" aFile oFiles
 
@@ -31,6 +31,7 @@ let startClang args = io {
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
+    pinfo.RedirectStandardOutput <- true
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()
@@ -42,6 +43,7 @@ let startAr args = io {
 
     pinfo.UseShellExecute <- false
     pinfo.RedirectStandardError <- true
+    pinfo.RedirectStandardOutput <- true
 
     let p = Process.Start (pinfo)
     p.WaitForExit ()
@@ -51,7 +53,7 @@ let startAr args = io {
 let compileC outputPath modul cgen = io {
     let! _, cFile = writeCGen outputPath modul cgen
     let oFile = makeOFilePath outputPath modul
-    let flags = modul.ClangFlagsOsx
+    let flags = modul.ClangFlagsiOS
 
     let args = makeArgs flags cFile oFile
     do! startClang args

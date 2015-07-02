@@ -87,6 +87,7 @@
     <Compile Include="cwin.fs" />
     <Compile Include="clinux.fs" />
     <Compile Include="cosx.fs" />
+    <Compile Include="cios.fsi" />
     <Compile Include="cios.fs" />
     <Compile Include="compiler.fs" />
     <Compile Include="task.fs" />

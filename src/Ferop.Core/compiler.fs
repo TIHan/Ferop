@@ -32,7 +32,7 @@ let rec makeDllName name = function
     | Platform.Win -> sprintf "%s.dll" name
     | Platform.Linux -> sprintf "lib%s.so" name
     | Platform.Osx -> sprintf "lib%s.dylib" name
-    //| Platform.AppleiOS -> "__Internal"
+    | Platform.iOS -> "__Internal"
     | _ ->
 
     match Environment.OSVersion.Platform with
@@ -50,7 +50,7 @@ let rec compileModule path modul = function
     | Platform.Win -> CWin.compileModule path modul
     | Platform.Linux -> CLinux.compileModule path modul
     | Platform.Osx -> COsx.compileModule path modul
-    //| Platform.AppleiOS -> CiOS.compileModule path modul
+    | Platform.iOS -> CiOS.compileModule path modul
     | _ ->
 
     match Environment.OSVersion.Platform with

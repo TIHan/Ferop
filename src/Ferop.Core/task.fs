@@ -27,6 +27,11 @@ type internal Proxy () =
         |> Seq.exists (fun x ->
             x.AttributeType.FullName.Contains(typ.Name))
 
+    let moduleHasAttribute (typ: Type) (moduleDef: ModuleDefinition) =
+        moduleDef.CustomAttributes
+        |> Seq.exists (fun x ->
+            x.AttributeType.FullName.Contains(typ.Name))
+
     let classes (asm: Assembly) =
         asm.GetTypes ()
         |> Array.filter (fun x -> x.IsClass)
@@ -51,11 +56,16 @@ type internal Proxy () =
             let callingConvType = m.Import(typeof<CallingConvention>)
             let importAttrCtor = m.Import(typeof<ImportAttribute>.GetConstructor(Array.empty))
 
+            let platform =
+                if moduleHasAttribute typeof<ClangiOSAttribute> m
+                then Platform.iOS
+                else Platform.iOS
+
             m.GetTypes ()
             |> Array.ofSeq
             |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Array.iter (fun x ->
-                let name = makeDllName x.Name Platform.Auto
+                let name = makeDllName x.Name platform
 
                 let mref =
                     match
@@ -193,10 +203,15 @@ type internal Proxy () =
 
             let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
 
+            let platform =
+                if moduleHasAttribute typeof<ClangiOSAttribute> m
+                then Platform.iOS
+                else Platform.iOS
+
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
-                let name = makeDllName x.Name Platform.Auto
+                let name = makeDllName x.Name platform
 
                 let mref =
                     match
@@ -231,6 +246,7 @@ type internal Proxy () =
                         meth.CustomAttributes.Add (customAttr)
                 )
             )
+
             m.Write (assemblyPath, WriterParameters (WriteSymbols = true))
         )
 
@@ -238,7 +254,13 @@ type internal Proxy () =
         |> List.iter (fun m ->
             let modul = makeModule asmDef.MainModule.Architecture m
             let cgen = makeCGen modul
-            compileModule targetDirectory modul Platform.Auto cgen)
+
+            let platform =
+                if modul.IsForiOS
+                then Platform.iOS
+                else Platform.Auto
+
+            compileModule targetDirectory modul platform cgen)
 
 [<Serializable>]
 type public WeavingTask () =
