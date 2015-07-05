@@ -59,7 +59,7 @@ type internal Proxy () =
             let platform =
                 if moduleHasAttribute typeof<ClangiOSAttribute> m
                 then Platform.iOS
-                else Platform.iOS
+                else Platform.Auto
 
             m.GetTypes ()
             |> Array.ofSeq
@@ -206,7 +206,7 @@ type internal Proxy () =
             let platform =
                 if moduleHasAttribute typeof<ClangiOSAttribute> m
                 then Platform.iOS
-                else Platform.iOS
+                else Platform.Auto
 
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
