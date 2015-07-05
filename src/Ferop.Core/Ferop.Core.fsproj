@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="io.fs" />
     <Compile Include="ctast.fs" />
+    <Compile Include="cconv.fsi" />
     <Compile Include="cconv.fs" />
     <Compile Include="cgen.fs" />
     <Compile Include="core.fs" />
