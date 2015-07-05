@@ -6,8 +6,6 @@ open System.Diagnostics
 
 open Core
 
-open FSharp.Control.IO
-
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "lib%s.so" modul.Name)
@@ -29,13 +27,13 @@ let makeDynamicArgs libs oFile soName (modul: FeropModule) =
         oFile soName libs
 
 let makeGccStartInfo args (modul: FeropModule) = 
-    if modul.IsCpp
-    then ProcessStartInfo ("g++", args)
-    else ProcessStartInfo ("gcc", args)
+    match modul.Language with
+    | C -> ProcessStartInfo ("gcc", args)
+    | Cpp -> ProcessStartInfo ("g++", args)
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
 
-let startGcc args modul = io {
+let startGcc args modul = async {
     let pinfo = makeGccStartInfo args modul
 
     pinfo.UseShellExecute <- false
@@ -47,7 +45,7 @@ let startGcc args modul = io {
 
     checkProcessError "" p }
 
-let compileC outputPath modul cgen = io {
+let compileC outputPath modul cgen = async {
     let! _, cFile = writeCGen outputPath modul cgen
     let oFile = makeOFilePath outputPath modul
     let flags = modul.GccFlagsLinux
@@ -57,11 +55,11 @@ let compileC outputPath modul cgen = io {
 
     return oFile }
 
-let compileToDynamicLibrary libs oFiles dylibName modul = io {
+let compileToDynamicLibrary libs oFiles dylibName modul = async {
     let args = makeDynamicArgs libs oFiles dylibName modul
     do! startGcc args modul }
 
-let cleanObjectFiles outputPath = io {
+let cleanObjectFiles outputPath = async {
     return
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
@@ -70,8 +68,8 @@ let compileModule outputPath modul cgen =
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.GccLibsLinux
 
-    io {
+    async {
         let! oFile = compileC outputPath modul cgen
         do! compileToDynamicLibrary libs oFile dylibName modul
         return! cleanObjectFiles outputPath }
-    |> IO.run
+    |> Async.RunSynchronously

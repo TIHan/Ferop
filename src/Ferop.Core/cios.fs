@@ -6,8 +6,6 @@ open System.Diagnostics
 
 open Core
 
-open FSharp.Control.IO
-
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeStaticLibraryPath path modul = Path.Combine (path, sprintf "lib%s.a" modul.Name)
@@ -26,7 +24,7 @@ let flattenObjectFiles = List.reduce (fun x y -> sprintf "%s %s" x y)
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
 
-let startClang args = io {
+let startClang args = async {
     let pinfo = makeClangStartInfo args
 
     pinfo.UseShellExecute <- false
@@ -37,7 +35,7 @@ let startClang args = io {
 
     checkProcessError "" p }
 
-let startAr args = io {
+let startAr args = async {
     let pinfo = makeArStartInfo args
 
     pinfo.UseShellExecute <- false
@@ -48,7 +46,7 @@ let startAr args = io {
 
     checkProcessError "" p }
 
-let compileC outputPath modul cgen = io {
+let compileC outputPath modul cgen = async {
     let! _, cFile = writeCGen outputPath modul cgen
     let oFile = makeOFilePath outputPath modul
     let flags = modul.ClangFlagsOsx
@@ -58,11 +56,11 @@ let compileC outputPath modul cgen = io {
 
     return oFile }
 
-let compileToStaticLibrary oFiles libName = io {
+let compileToStaticLibrary oFiles libName = async {
     let args = makeStaticArgs libName oFiles
     do! startAr args }
 
-let cleanObjectFiles outputPath = io {
+let cleanObjectFiles outputPath = async {
     return
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
@@ -70,8 +68,8 @@ let cleanObjectFiles outputPath = io {
 let compileModule outputPath modul cgen =
     let libName = makeStaticLibraryPath outputPath modul
 
-    io {
+    async {
         let! oFile = compileC outputPath modul cgen
         do! compileToStaticLibrary oFile libName
         return! cleanObjectFiles outputPath }
-    |> IO.run
+    |> Async.RunSynchronously

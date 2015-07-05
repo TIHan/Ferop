@@ -6,8 +6,6 @@ open System.Diagnostics
 
 open Core
 
-open FSharp.Control.IO
-
 let makeOFilePath path modul = Path.Combine (path, sprintf "%s.o" modul.Name)
 
 let makeDynamicLibraryPath path (modul: FeropModule) = Path.Combine (path, sprintf "lib%s.dylib" modul.Name)
@@ -35,7 +33,7 @@ let makeArStartInfo args = ProcessStartInfo ("ar", args)
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.o") |> List.ofArray
 
-let startClang args = io {
+let startClang args = async {
     let pinfo = makeClangStartInfo args
 
     pinfo.UseShellExecute <- false
@@ -47,7 +45,7 @@ let startClang args = io {
 
     checkProcessError "" p }
 
-let startAr args = io {
+let startAr args = async {
     let pinfo = makeArStartInfo args
 
     pinfo.UseShellExecute <- false
@@ -59,7 +57,7 @@ let startAr args = io {
 
     checkProcessError "" p }
 
-let compileC outputPath modul cgen = io {
+let compileC outputPath modul cgen = async {
     let! _, cFile = writeCGen outputPath modul cgen
     let oFile = makeOFilePath outputPath modul
     let flags = modul.ClangFlagsOsx
@@ -69,11 +67,11 @@ let compileC outputPath modul cgen = io {
 
     return oFile }
 
-let compileToDynamicLibrary libs oFile dylibName modul = io {
+let compileToDynamicLibrary libs oFile dylibName modul = async {
     let args = makeDynamicArgs libs oFile dylibName modul
     do! startClang args }
 
-let cleanObjectFiles outputPath = io {
+let cleanObjectFiles outputPath = async {
     return
         findAllObjectFiles outputPath
         |> List.iter (fun x -> File.Delete x) }
@@ -82,8 +80,8 @@ let compileModule outputPath modul cgen =
     let dylibName = makeDynamicLibraryPath outputPath modul
     let libs = modul.ClangLibsOsx
 
-    io {
+    async {
         let! oFile = compileC outputPath modul cgen
         do! compileToDynamicLibrary libs oFile dylibName modul
         return! cleanObjectFiles outputPath }
-    |> IO.run
+    |> Async.RunSynchronously

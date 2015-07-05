@@ -17,9 +17,9 @@ open CTypedAST
 type CConvInfo = 
     { 
         Name: string
-        Functions: MethodInfo list
-        ExportedFunctions: MethodInfo list
-        IsCpp: bool 
+        ImportedFunctions: MethodInfo list
+        ExportedFunctions: MethodInfo list 
+        IsCpp: bool
     }
 
 let byteIsOpCode (opCode: OpCode) (x: byte)  = x = byte opCode.Value
@@ -449,7 +449,7 @@ let makeCDeclExterns (env: CEnv) = function
         ) env
 
 let makeCDecls (env: CEnv) info =
-    let funcs = info.Functions
+    let funcs = info.ImportedFunctions
 
     if funcs.IsEmpty then env
     else

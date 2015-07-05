@@ -6,9 +6,9 @@ open CTypedAST
 type CConvInfo = 
     { 
         Name: string
-        Functions: MethodInfo list
+        ImportedFunctions: MethodInfo list
         ExportedFunctions: MethodInfo list
-        IsCpp: bool 
+        IsCpp: bool
     }
 
 
