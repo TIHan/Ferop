@@ -40,7 +40,7 @@ type internal Proxy () =
 
         asmDef.Modules
         |> Seq.iter (fun m ->
-            if m.HasSymbols then m.ReadSymbols ()
+            m.ReadSymbols ()
 
             let voidType = m.Import(typeof<Void>)
             let objType = m.Import(typeof<obj>)
@@ -189,7 +189,7 @@ type internal Proxy () =
 
         asmDef.Modules
         |> Seq.iter (fun m ->
-            if m.HasSymbols then m.ReadSymbols ()
+            m.ReadSymbols ()
 
             let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
 
