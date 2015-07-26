@@ -217,27 +217,33 @@ let generateHeader env extra =
     let decls = generateCDecls CGenContext.Header env.Decls
 
     (sprintf "%s\n%s\n%s\n%s" extra)
-        (if env.IsCpp then """extern "C" {"""
-        else "") 
+        (
+            if env.IsCpp
+            then """extern "C" {"""
+            else ""
+        ) 
         decls
-        (if env.IsCpp then """}"""
-        else "") 
+        (
+            if env.IsCpp 
+            then """}"""
+            else ""
+        ) 
     |> generateMainHeaderCode env.Name
 
 let generateSource (env: CEnv) extra =
     (generateHeaderIncludeCode env.Name) +
     extra + "\n" +
-    (if env.IsCpp
-    then """extern "C" {
-""" 
-    else "")
+    (
+        if env.IsCpp
+        then """extern "C" {"""
+        else "" 
+    )
     + generateCDecls CGenContext.Source env.Decls +
-    (if env.IsCpp
-    then
-        """
-}
-"""
-    else "")
+    (
+        if env.IsCpp
+        then """}"""
+        else ""
+    )
 
 let generate env extraHeader extraSource =
     { Header = generateHeader env extraHeader; Source = generateSource env extraSource }

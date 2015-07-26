@@ -6,7 +6,6 @@ open System.Reflection
 open System.Diagnostics
 
 open Ferop
-open FSharp.Control.IO
 
 type Platform =
     | Auto = 0
@@ -14,6 +13,11 @@ type Platform =
     | Linux = 2
     | Osx = 3
     | iOS = 4
+
+type Language =
+    | C
+    | Cpp
+    //| ObjC
 
 type FeropModule = {
     Name: string
@@ -39,9 +43,13 @@ type FeropModule = {
         this.Attributes
         |> Seq.tryFind (fun x -> x.AttributeType.FullName = typeof<ClangiOSAttribute>.FullName)
 
-    member this.IsCpp =
-        this.Attributes
-        |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<CppAttribute>.FullName)
+    member this.Language =
+        let isCpp =
+            this.Attributes
+            |> Seq.exists (fun x -> x.AttributeType.FullName = typeof<CppAttribute>.FullName)
+        if isCpp
+        then Cpp
+        else C
 
     member this.IsForiOS =
         this.Attributes
@@ -155,18 +163,26 @@ open CConversion
 open CGeneration
 
 let makeCConvInfo (modul: FeropModule) = 
-    { Name = modul.Name; Functions = modul.Functions; ExportedFunctions = modul.ExportedFunctions; IsCpp = modul.IsCpp }
+    { 
+        Name = modul.Name
+        ImportedFunctions = modul.Functions
+        ExportedFunctions = modul.ExportedFunctions
+        IsCpp =
+            match modul.Language with
+            | Cpp -> true
+            | _ -> false
+    }
 
 let makeCGen (modul: FeropModule) =
     let env = makeCEnv <| makeCConvInfo modul
     generate env modul.Header modul.Source
 
-let writeCGen outputPath modul cgen = io {
+let writeCGen outputPath modul cgen = async {
     let hFile = makeHFilePath outputPath modul
     let cFile = 
-        if modul.IsCpp
-        then makeCppFilePath outputPath modul
-        else makeCFilePath outputPath modul
+        match modul.Language with
+        | C -> makeCFilePath outputPath modul
+        | Cpp -> makeCppFilePath outputPath modul
 
     File.WriteAllText (hFile, cgen.Header)
     File.WriteAllText (cFile, cgen.Source)

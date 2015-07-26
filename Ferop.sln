@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Core", "src\Ferop.Core\Ferop.Core.fsproj", "{90A45EB2-1122-4BFF-A921-04D926400AC0}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop", "src\Ferop\Ferop.fsproj", "{2D2A5797-D145-4D3E-8291-9EB02972CAA7}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Profile7", "src\Ferop\Ferop.Profile7.fsproj", "{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,14 @@ Global
 		{2D2A5797-D145-4D3E-8291-9EB02972CAA7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2D2A5797-D145-4D3E-8291-9EB02972CAA7}.Release|x64.ActiveCfg = Release|Any CPU
 		{2D2A5797-D145-4D3E-8291-9EB02972CAA7}.Release|x86.ActiveCfg = Release|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Release|x64.ActiveCfg = Release|Any CPU
+		{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

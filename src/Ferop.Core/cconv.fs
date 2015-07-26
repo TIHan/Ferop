@@ -14,11 +14,13 @@ open Microsoft.FSharp.Quotations.Patterns
  
 open CTypedAST
 
-type CConvInfo = { 
-    Name: string
-    Functions: MethodInfo list
-    ExportedFunctions: MethodInfo list
-    IsCpp: bool }
+type CConvInfo = 
+    { 
+        Name: string
+        ImportedFunctions: MethodInfo list
+        ExportedFunctions: MethodInfo list 
+        IsCpp: bool
+    }
 
 let byteIsOpCode (opCode: OpCode) (x: byte)  = x = byte opCode.Value
 
@@ -239,9 +241,9 @@ let makeParameterTypes env infos = infos |> List.ofArray |> List.map (makeParame
 
 let makeCExprFallback (env: CEnv) (meth: MethodInfo) =
     match meth.GetParameters () with
-    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> && methodHasAttributeType typeof<CompilerGeneratedAttribute> meth ->
+    | [|x|] when x.ParameterType.BaseType = typeof<MulticastDelegate> && meth.Name.Contains("__ferop_set_exported__") ->
         let typ = x.ParameterType
-        let name = sprintf "%s_%s" env.Name (typ.Name.Replace ("Delegate", ""))
+        let name = sprintf "%s_%s" env.Name (typ.Name.Replace ("__ferop_exported__", ""))
         Text <| sprintf "%s = ptr;" name
     | _ -> failwithf "Function, %A, not supported." meth.Name
 
@@ -254,7 +256,7 @@ let makeCDeclFunction env (meth: MethodInfo) : CEnv * (CDeclFunction option) =
     let name = makeCFunctionName env meth
     let parameters = meth.GetParameters () |> makeParameters env
     let expr =
-        if methodHasAttributeType typeof<CompilerGeneratedAttribute> meth
+        if meth.Name.Contains("__ferop_set_exported__")
         then makeCExprFallback env meth
         else makeCExpr meth
 
@@ -419,21 +421,35 @@ let makeCDeclGlobalVars (env: CEnv) = function
     | (types : Type list) ->
         types
         |> List.fold (fun env x ->
-            let name = sprintf "%s_%s" env.Name (x.Name.Replace ("Delegate", ""))
-            let env, _ = makeCDeclGlobalVar env name x
-            env) env
+            match x.Name.Contains("__ferop_exported__") with
+            | true ->
+                let name = sprintf "%s_%s" env.Name (x.Name.Replace ("__ferop_exported__", ""))
+                let env, _ = makeCDeclGlobalVar env name x
+                env
+            | _ ->
+                let name = sprintf "%s_%s" env.Name x.Name
+                let env, _ = makeCDeclGlobalVar env name x
+                env
+        ) env
         
 let makeCDeclExterns (env: CEnv) = function
     | [] -> env
     | (types : Type list) ->
         types
         |> List.fold (fun env x ->
-            let name = sprintf "%s_%s" env.Name (x.Name.Replace ("Delegate", ""))
-            let env, _ = makeCDeclExtern env name x
-            env) env
+            match x.Name.Contains("__ferop_exported__") with
+            | true ->
+                let name = sprintf "%s_%s" env.Name (x.Name.Replace ("__ferop_exported__", ""))
+                let env, _ = makeCDeclExtern env name x
+                env
+            | _ ->
+                let name = sprintf "%s_%s" env.Name x.Name
+                let env, _ = makeCDeclExtern env name x
+                env
+        ) env
 
 let makeCDecls (env: CEnv) info =
-    let funcs = info.Functions
+    let funcs = info.ImportedFunctions
 
     if funcs.IsEmpty then env
     else
@@ -450,7 +466,7 @@ let makeCDecls (env: CEnv) info =
     // an extern function.
     let instanceDels =
         dels
-        |> List.filter (typeHasAttributeType typeof<CompilerGeneratedAttribute>)
+        |> List.filter (fun x -> x.Name.Contains("__ferop_exported__"))
 
     let structs =
         funcs @ exportedFuncs

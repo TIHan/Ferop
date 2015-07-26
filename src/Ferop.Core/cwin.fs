@@ -8,7 +8,6 @@ open System.Diagnostics
 open Microsoft.Win32
 
 open Core
-open FSharp.Control.IO
 
 let bat (is64bit: bool) =
     let registryKeyPath = "SOFTWARE\\Microsoft\\VisualStudio\\SxS\\Vs7"
@@ -59,10 +58,10 @@ let makeMsvcStartInfo outputPath args = ProcessStartInfo (makeBatPath outputPath
 
 let findAllObjectFiles path = Directory.GetFiles (path, "*.obj") |> List.ofArray
 
-let writeBat outputPath is64bit = io {
+let writeBat outputPath is64bit = async {
     File.WriteAllText (makeBatPath outputPath, bat is64bit) }
 
-let startMsvc outputPath args = io {
+let startMsvc outputPath args = async {
     let pinfo = makeMsvcStartInfo outputPath args
 
     pinfo.UseShellExecute <- false
@@ -79,7 +78,7 @@ let startMsvc outputPath args = io {
 
     checkProcessError msg p }
 
-let compileToDynamicLibrary outputPath modul cgen = io {
+let compileToDynamicLibrary outputPath modul cgen = async {
     let! _, cFile = writeCGen outputPath modul cgen
     let options = modul.MsvcOptionsWin
     let dllName = makeDynamicLibraryPath outputPath modul
@@ -89,6 +88,6 @@ let compileToDynamicLibrary outputPath modul cgen = io {
     do! startMsvc outputPath args }
 
 let compileModule outputPath modul cgen =
-    io {
+    async {
         do! compileToDynamicLibrary outputPath modul cgen }
-    |> IO.run
+    |> Async.RunSynchronously

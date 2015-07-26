@@ -51,7 +51,6 @@ type internal Proxy () =
             let objType = m.Import(typeof<obj>)
             let nativeintType = m.Import(typeof<nativeint>)
             let delType = m.Import(typeof<MulticastDelegate>)
-            let compilerGeneratedAttrCtor = m.Import(typeof<CompilerGeneratedAttribute>.GetConstructor(Array.empty))
             let unmanagedFnPtrCtor = m.Import(typeof<UnmanagedFunctionPointerAttribute>.GetConstructor([|typeof<CallingConvention>|]))
             let callingConvType = m.Import(typeof<CallingConvention>)
             let importAttrCtor = m.Import(typeof<ImportAttribute>.GetConstructor(Array.empty))
@@ -87,7 +86,7 @@ type internal Proxy () =
                 |> Array.filter (fun x -> methodHasAttribute typeof<ImportAttribute> x || methodHasAttribute typeof<ExportAttribute> x)
                 |> Array.iter (fun meth ->
                     if methodHasAttribute typeof<ExportAttribute> meth then
-                        let del = TypeDefinition ("", meth.Name + "Delegate", TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
+                        let del = TypeDefinition ("", meth.Name + "__ferop_exported__", TypeAttributes.Sealed ||| TypeAttributes.Serializable, delType)
 
                         let ctordel = MethodDefinition (".ctor", MethodAttributes.Public ||| MethodAttributes.CompilerControlled ||| MethodAttributes.RTSpecialName ||| MethodAttributes.SpecialName ||| MethodAttributes.HideBySig, voidType)
                         ctordel.Parameters.Add (ParameterDefinition ("'object'", ParameterAttributes.None, objType))
@@ -98,9 +97,6 @@ type internal Proxy () =
 
                         let delmeth = MethodDefinition ("Invoke", MethodAttributes.Public ||| MethodAttributes.Virtual ||| MethodAttributes.HideBySig, meth.ReturnType)
                         delmeth.ImplAttributes <- delmeth.ImplAttributes ||| MethodImplAttributes.Runtime
-
-                        let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
-                        del.CustomAttributes.Add (customAttr)
 
                         let customAttr = CustomAttribute (unmanagedFnPtrCtor)
                         customAttr.ConstructorArguments.Add (CustomAttributeArgument (callingConvType, CallingConvention.Cdecl))
@@ -123,7 +119,7 @@ type internal Proxy () =
 
                         let meth = 
                             MethodDefinition (
-                                sprintf "_ferop_set_%s" meth.Name,
+                                sprintf "__ferop_set_exported__%s" meth.Name,
                                 MethodAttributes.Static ||| MethodAttributes.PInvokeImpl ||| MethodAttributes.HideBySig,
                                 voidType)
 
@@ -133,9 +129,6 @@ type internal Proxy () =
                         meth.PInvokeInfo <-
                             PInvokeInfo (PInvokeAttributes.CallConvCdecl ||| PInvokeAttributes.CharSetAnsi, sprintf "%s__%s" x.Name meth.Name, mref)
                         meth.Parameters.Add (ParameterDefinition ("ptr", ParameterAttributes.None, del))
-
-                        let customAttr = CustomAttribute (compilerGeneratedAttrCtor)
-                        meth.CustomAttributes.Add (customAttr)
 
                         let customAttr = CustomAttribute (importAttrCtor)
                         meth.CustomAttributes.Add (customAttr)
