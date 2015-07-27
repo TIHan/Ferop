@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Ferop</id>
-        <version>1.0.0-beta8</version>
+        <version>1.0.0-beta9</version>
         <title>Ferop</title>
 	<iconUrl>https://github.com/TIHan/Ferop/raw/master/ferop_icon.png?raw=true</iconUrl>
         <authors>Will Smith</authors>
@@ -17,10 +17,12 @@
     </metadata>
     <files>
         <file src="bin\build\Ferop.targets" target="build\Ferop.targets" />
-        <file src="bin\lib\net45\Ferop.dll" target="lib\net45\Ferop.dll" />
-        <file src="bin\lib\net45\Ferop.XML" target="lib\net45\Ferop.XML" />
-        <file src="bin\lib\portable-net45+netcore45\Ferop.dll" target="lib\portable-net45+netcore45\Ferop.dll" />
-        <file src="bin\lib\portable-net45+netcore45\Ferop.XML" target="lib\portable-net45+netcore45\Ferop.XML" />
+        <file src="bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\Ferop.dll" target="lib\portable-net45+monoandroid10+monotouch10+xamarinios10\Ferop.dll" />
+        <file src="bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\Ferop.XML" target="lib\portable-net45+monoandroid10+monotouch10+xamarinios10\Ferop.XML" />
+        <file src="bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.dll" target="lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.dll" />
+        <file src="bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.XML" target="lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.XML" />
+        <file src="bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.optdata" target="lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.optdata" />
+        <file src="bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.sigdata" target="lib\portable-net45+monoandroid10+monotouch10+xamarinios10\FSharp.Core.sigdata" />
         <file src="bin\Ferop.Core.dll" target="Ferop.Core.dll" />
         <file src="bin\Ferop.dll" target="Ferop.dll" />
         <file src="bin\Ferop.xml" target="Ferop.xml" />
