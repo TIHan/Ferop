@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{CF699286-13E2-49C4-9919-817CE60B80B6}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Core", "src\Ferop.Core\Ferop.Core.fsproj", "{90A45EB2-1122-4BFF-A921-04D926400AC0}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop", "src\Ferop\Ferop.fsproj", "{88E06223-2026-42F8-BE6D-B03E3ED3FE4B}"

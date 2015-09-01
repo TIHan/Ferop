@@ -1,0 +1,6 @@
+source https://www.nuget.org/api/v2/
+
+nuget Nuget.CommandLine
+nuget FsUnit 1.2.1.0 framework: >= net45
+nuget Mono.Cecil 0.9.6.1 framework: >= net45
+nuget NUnit 2.6.3 framework: >= net45
