@@ -1,6 +1,7 @@
 NUGET
   remote: https://www.nuget.org/api/v2
   specs:
+    FSharp.Core (3.1.2.5)
     FsUnit (1.2.1.0) - framework: >= net45
       NUnit (>= 2.6.2)
     Mono.Cecil (0.9.6.1) - framework: >= net45
