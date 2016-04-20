@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
+# Visual Studio 2012
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{C3E51615-BFFC-4F7C-ADA9-649D1DBE8EDE}"
@@ -8,7 +8,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{C3E516
 		paket.dependencies = paket.dependencies
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Ferop.Tests", "src\Ferop.Tests\Ferop.Tests.fsproj", "{6AFEE669-397C-4339-8146-1FDC54D1FA6E}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Ferop.Tests", "src\Ferop.Tests\Ferop.Tests.fsproj", "{6AFEE669-397C-4339-8146-1FDC54D1FA6E}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FeropiOS.Tests", "src\FeropiOS.Tests\FeropiOS.Tests.fsproj", "{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,21 +18,51 @@ Global
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Debug|iPhoneSimulator = Debug|iPhoneSimulator
+		Release|iPhone = Release|iPhone
+		Release|iPhoneSimulator = Release|iPhoneSimulator
+		Debug|iPhone = Debug|iPhone
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|iPhone.ActiveCfg = Debug|x64
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|iPhone.Build.0 = Debug|x64
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|iPhoneSimulator.ActiveCfg = Debug|x64
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|iPhoneSimulator.Build.0 = Debug|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x64.ActiveCfg = Debug|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x64.Build.0 = Debug|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x86.ActiveCfg = Debug|x86
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Debug|x86.Build.0 = Debug|x86
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|iPhone.ActiveCfg = Release|x64
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|iPhone.Build.0 = Release|x64
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|iPhoneSimulator.ActiveCfg = Release|x64
+		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|iPhoneSimulator.Build.0 = Release|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x64.ActiveCfg = Release|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x64.Build.0 = Release|x64
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x86.ActiveCfg = Release|x86
 		{6AFEE669-397C-4339-8146-1FDC54D1FA6E}.Release|x86.Build.0 = Release|x86
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|iPhone.ActiveCfg = Debug|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|iPhone.Build.0 = Debug|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|x64.ActiveCfg = Debug|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|x64.Build.0 = Debug|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|x86.ActiveCfg = Debug|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Debug|x86.Build.0 = Debug|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|iPhone.ActiveCfg = Release|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|iPhone.Build.0 = Release|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|x64.ActiveCfg = Release|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|x64.Build.0 = Release|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|x86.ActiveCfg = Release|iPhone
+		{97964A8D-EA1E-4CD7-8B48-A7F6CDD074BD}.Release|x86.Build.0 = Release|iPhone
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
+	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = src\Ferop.Tests\Ferop.Tests.fsproj
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

@@ -27,11 +27,6 @@ type internal Proxy () =
         |> Seq.exists (fun x ->
             x.AttributeType.FullName.Contains(typ.Name))
 
-    let moduleHasAttribute (typ: Type) (moduleDef: ModuleDefinition) =
-        moduleDef.CustomAttributes
-        |> Seq.exists (fun x ->
-            x.AttributeType.FullName.Contains(typ.Name))
-
     let classes (asm: Assembly) =
         asm.GetTypes ()
         |> Array.filter (fun x -> x.IsClass)
@@ -55,15 +50,15 @@ type internal Proxy () =
             let callingConvType = m.Import(typeof<CallingConvention>)
             let importAttrCtor = m.Import(typeof<ImportAttribute>.GetConstructor(Array.empty))
 
-            let platform =
-                if moduleHasAttribute typeof<ClangiOSAttribute> m
-                then Platform.iOS
-                else Platform.Auto
-
             m.GetTypes ()
             |> Array.ofSeq
             |> Array.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Array.iter (fun x ->
+                let platform =
+                    if hasAttribute typeof<ClangiOSAttribute> x
+                    then Platform.iOS
+                    else Platform.Auto
+
                 let name = makeDllName x.Name platform
 
                 let mref =
@@ -196,14 +191,14 @@ type internal Proxy () =
 
             let unSecuAttrCtor = m.Import(typeof<SuppressUnmanagedCodeSecurityAttribute>.GetConstructor(Array.empty))
 
-            let platform =
-                if moduleHasAttribute typeof<ClangiOSAttribute> m
-                then Platform.iOS
-                else Platform.Auto
-
             m.GetTypes ()
             |> Seq.filter (fun x -> x.HasMethods && hasAttribute typeof<FeropAttribute> x)
             |> Seq.iter (fun x -> 
+                let platform =
+                    if hasAttribute typeof<ClangiOSAttribute> x
+                    then Platform.iOS
+                    else Platform.Auto
+
                 let name = makeDllName x.Name platform
 
                 let mref =

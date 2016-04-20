@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -24,9 +24,7 @@
     <PlatformTarget>
     </PlatformTarget>
     <MtouchUseRefCounting>true</MtouchUseRefCounting>
-    <MtouchI18n>
-    </MtouchI18n>
-    <MtouchExtraArgs>-cxx -gcc_flags "-I/Users/willsmith/Wwise/Wwise_v2014.1.5_build_5282/SDK/include -L${TargetDir} -L/Users/willsmith/Wwise/Wwise_v2014.1.5_build_5282/SDK/iOS/Release-iphonesimulator/lib -lTests -lAkMemoryMgr -lAkStreamMgr -lAkSoundEngine -lCommunicationCentral -framework CoreFoundation -framework CoreAudio -framework AVFoundation -framework AudioToolbox"</MtouchExtraArgs>
+    <MtouchExtraArgs>-cxx -gcc_flags "-L${TargetDir} -lTests -framework CoreFoundation -framework CoreAudio -framework AVFoundation -framework AudioToolbox"</MtouchExtraArgs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <DebugSymbols>false</DebugSymbols>
@@ -80,7 +78,7 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="Xamarin.iOS" />
     <Reference Include="Ferop">
-      <HintPath>..\..\bin\lib\Net45\Ferop.dll</HintPath>
+      <HintPath>..\..\bin\Ferop.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +90,7 @@
   <ItemGroup>
     <None Include="Info.plist" />
     <None Include="Entitlements.plist" />
+    <Compile Include="TestViewController.fs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppDelegate.fs" />

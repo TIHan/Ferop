@@ -35,16 +35,16 @@ let rec makeDllName name = function
     | Platform.iOS -> "__Internal"
     | _ ->
 
-    match Environment.OSVersion.Platform with
-    | x when 
-        x = PlatformID.Win32NT ||
-        x = PlatformID.Win32S ||
-        x = PlatformID.WinCE -> makeDllName name Platform.Win
-    | x when x = PlatformID.Unix -> 
-        if isRunningOnMac ()
-        then makeDllName name Platform.Osx
-        else makeDllName name Platform.Linux
-    | _ -> failwith "OS not supported."
+        match Environment.OSVersion.Platform with
+        | x when 
+            x = PlatformID.Win32NT ||
+            x = PlatformID.Win32S ||
+            x = PlatformID.WinCE -> makeDllName name Platform.Win
+        | x when x = PlatformID.Unix -> 
+            if isRunningOnMac ()
+            then makeDllName name Platform.Osx
+            else makeDllName name Platform.Linux
+        | _ -> failwith "OS not supported."
 
 let rec compileModule path modul = function
     | Platform.Win -> CWin.compileModule path modul
@@ -53,13 +53,13 @@ let rec compileModule path modul = function
     | Platform.iOS -> CiOS.compileModule path modul
     | _ ->
 
-    match Environment.OSVersion.Platform with
-    | x when 
-        x = PlatformID.Win32NT ||
-        x = PlatformID.Win32S ||
-        x = PlatformID.WinCE -> compileModule path modul Platform.Win
-    | x when x = PlatformID.Unix -> 
-        if isRunningOnMac ()
-        then compileModule path modul Platform.Osx
-        else compileModule path modul Platform.Linux
-    | _ -> failwith "OS not supported."
+        match Environment.OSVersion.Platform with
+        | x when 
+            x = PlatformID.Win32NT ||
+            x = PlatformID.Win32S ||
+            x = PlatformID.WinCE -> compileModule path modul Platform.Win
+        | x when x = PlatformID.Unix -> 
+            if isRunningOnMac ()
+            then compileModule path modul Platform.Osx
+            else compileModule path modul Platform.Linux
+        | _ -> failwith "OS not supported."
