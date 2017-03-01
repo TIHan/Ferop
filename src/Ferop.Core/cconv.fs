@@ -322,7 +322,7 @@ let rec makeCFields env (typ: Type) : CEnv * CField list =
                     let env, _ = makeCDeclStruct env x.FieldType
                     env
                 else
-                    failwith "Improper type, %s." x.FieldType.Name
+                    failwithf "Improper type, %s." x.FieldType.Name
 
             env, makeCField (lookupCType env x.FieldType) name :: fields
         | Some ctype -> env, makeCField ctype name :: fields) (env, [])

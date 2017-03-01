@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>FeropiOS.Tests</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>FeropiOSTests</AssemblyName>
+    <AssemblyName>FeropiOS.Tests</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
     <DebugSymbols>true</DebugSymbols>
@@ -70,19 +70,6 @@
     <PlatformTarget>
     </PlatformTarget>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.FSharp.targets" />
-  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
-  <ItemGroup>
-    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Contents.json">
-      <InProject>false</InProject>
-    </ImageAsset>
-    <InterfaceDefinition Include="Resources\LaunchScreen.xib" />
-    <None Include="Info.plist" />
-    <None Include="Entitlements.plist" />
-    <Compile Include="TestViewController.fs" />
-    <Compile Include="AppDelegate.fs" />
-    <Compile Include="Main.fs" />
-  </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
@@ -94,4 +81,21 @@
       <HintPath>..\..\bin\Ferop.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Contents.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterfaceDefinition Include="Resources\LaunchScreen.xib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Info.plist" />
+    <None Include="Entitlements.plist" />
+    <Compile Include="TestViewController.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AppDelegate.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.FSharp.targets" />
+  <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
 </Project>
