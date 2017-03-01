@@ -7,6 +7,12 @@ open System.Runtime.InteropServices
 
 open Ferop
 
+type Test () =
+    
+    interface ITest with
+
+        member this.Test f = f ()
+
 #nowarn "51"
 
 type [<Struct>] RecursiveStruct50 =

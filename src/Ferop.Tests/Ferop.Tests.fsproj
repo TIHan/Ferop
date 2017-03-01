@@ -70,6 +70,13 @@
       <HintPath>..\..\bin\lib\portable-net45+monoandroid10+monotouch10+xamarinios10\Ferop.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Foom.Tests.PCL\Foom.Tests.PCL.fsproj">
+      <Name>Foom.Tests.PCL</Name>
+      <Project>{fc68760a-cbbd-43b7-ae3e-7c0e527b6fdc}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="..\..\bin\build\Ferop.targets" Condition="Exists('..\..\bin\build\Ferop.targets')" />
   <Import Project="..\..\.paket\paket.targets" />
   <Choose>
