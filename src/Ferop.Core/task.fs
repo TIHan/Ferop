@@ -38,7 +38,10 @@ type internal Proxy () =
     member this.Execute (assemblyPath: string, references: string, targetDirectory: string) : unit = 
         System.AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve (
             System.ResolveEventHandler (fun _ args ->
-                Assembly.ReflectionOnlyLoad (args.Name)
+                if (args.Name.Contains ("FSharp")) then
+                    Assembly.ReflectionOnlyLoad ("FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")
+                else
+                    Assembly.ReflectionOnlyLoad (args.Name)
             )
         )
 
