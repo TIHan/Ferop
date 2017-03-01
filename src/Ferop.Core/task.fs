@@ -36,6 +36,12 @@ type internal Proxy () =
         |> List.ofArray
 
     member this.Execute (assemblyPath: string, references: string, targetDirectory: string) : unit = 
+        System.AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve (
+            System.ResolveEventHandler (fun _ args ->
+                Assembly.ReflectionOnlyLoad (args.Name)
+            )
+        )
+
         let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath)
 
         asmDef.Modules
@@ -173,15 +179,15 @@ type internal Proxy () =
         let load (x: string) = Assembly.ReflectionOnlyLoadFrom (x)
         let asm = load (assemblyPath + "tmp")
 
-        let refAsms =
-            references.Split(';')
-            |> Array.map (fun x -> load x)
+       // let refAsms =
+        references.Split(';')
+        |> Array.iter (fun x -> load x |> ignore)
 
-        asm.GetReferencedAssemblies ()
-        |> Array.filter (fun x -> not (refAsms |> Array.exists (fun y -> y.FullName = x.FullName)))
-        |> Array.iter (fun x -> 
-            try Assembly.ReflectionOnlyLoad x.FullName |> ignore
-            with | _ -> ())
+//        asm.GetReferencedAssemblies ()
+//        |> Array.filter (fun x -> not (refAsms |> Array.exists (fun y -> y.FullName = x.FullName)))
+//        |> Array.iter (fun x -> 
+//            try Assembly.ReflectionOnlyLoad x.FullName |> ignore
+//            with | _ -> ())
 
         let asmDef = AssemblyDefinition.ReadAssembly (assemblyPath + "tmp", ReaderParameters (ReadSymbols = true))  
 
