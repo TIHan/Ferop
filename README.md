@@ -1,6 +1,8 @@
 ![ferop_icon](https://github.com/TIHan/Ferop/blob/master/ferop_icon.png?raw=true)
 =
 
+<h3>Ferop is not maintained but still exists as a reference to the idea of having inline C/C++ code inside of .NET</h3>
+
 Ferop is a .NET library that allows inline C/C++ to compile and run on Windows/Linux/OSX.
 
 iOS and Android support is planned.
@@ -9,6 +11,7 @@ Quick Start
 -
 
 <h3>F#</h3>
+
 ```fsharp
 open Ferop
 
@@ -25,6 +28,7 @@ let main args =
 ```
 
 <h3>C#</h3>
+
 ```csharp
 namespace Native
 {
@@ -50,6 +54,7 @@ namespace Native
 ```
 
 <h3>VB</h3>
+
 ```vb
 Imports Ferop
 
